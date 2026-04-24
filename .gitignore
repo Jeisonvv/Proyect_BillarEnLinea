@@ -1,0 +1,25 @@
+# Archivos de entorno
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Dependencias
+**/node_modules/
+
+# Builds y salidas generadas
+**/.next/
+**/dist/
+**/build/
+**/coverage/
+**/out/
+
+# Logs
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.pnpm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
