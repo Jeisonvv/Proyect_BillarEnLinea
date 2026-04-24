@@ -70,7 +70,7 @@ export function LoginForm() {
               ? error.message
               : error instanceof Error
                 ? error.message
-                : "No fue posible iniciar sesion.",
+                : "No fue posible iniciar sesion valija.",
         });
       }
     });
