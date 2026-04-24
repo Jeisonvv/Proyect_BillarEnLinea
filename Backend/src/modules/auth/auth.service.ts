@@ -19,6 +19,21 @@ export class AuthNestService {
     return createWebUserService(data);
   }
 
+  async getCurrentUser(userId: string) {
+    const user = await User.findOne({
+      _id: userId,
+      deletedAt: { $exists: false },
+    });
+
+    if (!user) {
+      const error = new Error('Usuario autenticado no encontrado.') as Error & { status?: number };
+      error.status = 404;
+      throw error;
+    }
+
+    return this.buildAuthenticatedUserPayload(user);
+  }
+
   async login(data: LoginDto) {
     if (!data.email || !data.password) {
       throw new Error('email y password son obligatorios.');

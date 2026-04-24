@@ -1,13 +1,16 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
   Post,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { clearAuthCookie, setAuthCookie } from '../../utils/auth-token.js';
 import type { ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto } from './dto/auth.dto.js';
 import { AuthNestService } from './auth.service.js';
@@ -15,6 +18,21 @@ import { AuthNestService } from './auth.service.js';
 @Controller('api/auth')
 export class AuthNestController {
   constructor(private readonly authService: AuthNestService) {}
+
+  @Get('me')
+  @UseGuards(AuthGuard)
+  async me(@Req() req: Request) {
+    if (!req.user?.id) {
+      throw new HttpException({ ok: false, message: 'Token de autenticación requerido.' }, HttpStatus.UNAUTHORIZED);
+    }
+
+    try {
+      return await this.authService.getCurrentUser(req.user.id);
+    } catch (error: any) {
+      const status = error.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
 
   @Post('register')
   async register(@Body() body: RegisterDto) {
