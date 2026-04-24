@@ -23,12 +23,12 @@ La referencia oficial del entorno es .env.example.
 Ejemplo local:
 
 ```env
-PORT=3000
+PORT=3001
 NODE_ENV=development
 MONGODB_URI=mongodb://127.0.0.1:27017/billar_en_linea
 JWT_SECRET=un_secreto_largo_y_aleatorio
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
-FRONTEND_URL=http://localhost:5173
+ALLOWED_ORIGINS=http://localhost:3000
+FRONTEND_URL=http://localhost:3000
 AUTH_COOKIE_NAME=auth_token
 AUTH_COOKIE_SAME_SITE=lax
 AUTH_COOKIE_SECURE=false
