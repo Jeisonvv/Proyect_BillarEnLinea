@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { ApiError } from "@/lib/api/client";
 import { getCurrentSession, loginWeb, logoutWeb } from "@/lib/api/auth";
@@ -118,7 +119,7 @@ export function LoginForm() {
           className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-base text-white outline-none placeholder:text-stone-500 focus:border-accent"
           type="password"
           name="password"
-          placeholder="Tu clave"
+          placeholder="ejemplo: password123"
           autoComplete="current-password"
           required
         />
@@ -131,6 +132,23 @@ export function LoginForm() {
       >
         {isPending ? "Ingresando..." : "Iniciar sesion"}
       </button>
+
+      {state.kind !== "success" && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link
+            className="rounded-full border border-white/10 bg-white/8 px-5 py-3 text-center text-sm font-semibold text-stone-100 transition hover:bg-white/14"
+            href="/register"
+          >
+            Registrarme
+          </Link>
+          <Link
+            className="rounded-full border border-white/10 bg-white/8 px-5 py-3 text-center text-sm font-semibold text-stone-100 transition hover:bg-white/14"
+            href="/forgot-password"
+          >
+            Olvide mi contraseña
+          </Link>
+        </div>
+      )}
 
       {state.kind === "success" && (
         <button

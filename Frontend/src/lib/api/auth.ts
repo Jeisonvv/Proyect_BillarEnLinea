@@ -5,6 +5,14 @@ export type LoginInput = {
   password: string;
 };
 
+export type RegisterInput = {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  identityDocument: string;
+};
+
 export type AuthenticatedUser = {
   id?: string;
   name?: string;
@@ -24,6 +32,42 @@ export type LogoutResponse = {
   message: string;
 };
 
+export type ForgotPasswordInput = {
+  email: string;
+};
+
+export type ForgotPasswordResponse = {
+  ok: boolean;
+  message: string;
+  data?: {
+    resetToken?: string;
+    expiresAt?: string;
+    resetUrl?: string;
+    emailSent?: boolean;
+  };
+};
+
+export type ResetPasswordInput = {
+  token: string;
+  password: string;
+};
+
+export type ResetPasswordResponse = {
+  ok: boolean;
+  message: string;
+};
+
+export type RegisterResponse = {
+  ok: boolean;
+  data: {
+    id?: string;
+    name?: string;
+    email?: string;
+    identityDocument?: string;
+    role?: string;
+  };
+};
+
 export async function getCurrentSession() {
   return getJson<CurrentSessionResponse>("/api/auth/me", {
     credentials: "include",
@@ -34,6 +78,18 @@ export async function logoutWeb() {
   return postJson<LogoutResponse, Record<string, never>>("/api/auth/logout", {}, {
     credentials: "include",
   });
+}
+
+export async function forgotPassword(input: ForgotPasswordInput) {
+  return postJson<ForgotPasswordResponse, ForgotPasswordInput>("/api/auth/forgot-password", input);
+}
+
+export async function resetPassword(input: ResetPasswordInput) {
+  return postJson<ResetPasswordResponse, ResetPasswordInput>("/api/auth/reset-password", input);
+}
+
+export async function registerWeb(input: RegisterInput) {
+  return postJson<RegisterResponse, RegisterInput>("/api/auth/register", input);
 }
 
 export async function loginWeb(input: LoginInput) {
