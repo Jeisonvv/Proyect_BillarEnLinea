@@ -1,15 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4efe6;
-  --foreground: #1f1a17;
-  --surface: rgba(255, 250, 242, 0.82);
-  --surface-strong: #fffaf2;
-  --muted: #6b6259;
-  --line: rgba(61, 43, 31, 0.12);
-  --accent: #b5532f;
-  --accent-strong: #7d2d14;
-  --accent-soft: #eec6a7;
+  --background: #0b0b0d;
+  --foreground: #ffffff;
+  --surface: rgba(22, 24, 28, 0.9);
+  --surface-strong: #16181c;
+  --muted: rgba(255, 255, 255, 0.7);
+  --line: rgba(246, 196, 79, 0.18);
+  --accent: #f6c44f;
+  --accent-strong: #d89b1d;
+  --accent-soft: rgba(246, 196, 79, 0.18);
+  --secondary: #0d6eae;
+  --secondary-soft: rgba(13, 110, 174, 0.16);
+  --dark-surface: #16181c;
 }
 
 @theme inline {
@@ -22,11 +25,20 @@
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-accent-soft: var(--accent-soft);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-secondary: var(--secondary);
+  --color-secondary-soft: var(--secondary-soft);
+  --color-dark-surface: var(--dark-surface);
+  --font-sans: var(--font-poppins);
+  --font-mono: var(--font-poppins);
+  --font-display: var(--font-bebas-neue);
 }
 
 * {
+  box-sizing: border-box;
+}
+
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -38,11 +50,33 @@ body {
   min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-poppins), sans-serif;
   background-image:
-    radial-gradient(circle at top left, rgba(181, 83, 47, 0.24), transparent 34%),
-    radial-gradient(circle at 85% 15%, rgba(42, 87, 68, 0.18), transparent 26%),
-    linear-gradient(180deg, #f7f1e8 0%, #efe5d8 52%, #f8f3ed 100%);
+    radial-gradient(circle at 12% 10%, rgba(246, 196, 79, 0.24), transparent 24%),
+    radial-gradient(circle at 84% 16%, rgba(13, 110, 174, 0.18), transparent 24%),
+    radial-gradient(circle at 50% 32%, rgba(246, 196, 79, 0.08), transparent 36%),
+    linear-gradient(180deg, #0b0b0d 0%, #16181c 42%, #0b0b0d 100%);
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  display: none;
+  pointer-events: none;
+  opacity: 0.14;
+  background-image:
+    linear-gradient(rgba(246, 196, 79, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(246, 196, 79, 0.08) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at center, black, transparent 78%);
+}
+
+@media (min-width: 768px) {
+  body::before {
+    display: block;
+  }
 }
 
 a {
@@ -51,5 +85,24 @@ a {
 }
 
 ::selection {
-  background: rgba(181, 83, 47, 0.18);
+  background: rgba(246, 196, 79, 0.36);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.font-display {
+  font-family: var(--font-bebas-neue), sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.font-subtitle {
+  font-family: var(--font-poppins), sans-serif;
+}
+
+.defer-render {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 960px;
 }

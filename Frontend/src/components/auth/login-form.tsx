@@ -1,7 +1,9 @@
 "use client";
 
+
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { getCurrentSession, loginWeb, logoutWeb } from "@/lib/api/auth";
 
@@ -16,6 +18,7 @@ const initialState: LoginState = { kind: "loading" };
 export function LoginForm() {
   const [state, setState] = useState<LoginState>(initialState);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   useEffect(() => {
     let isActive = true;
@@ -63,6 +66,8 @@ export function LoginForm() {
           userName: response.user.name ?? response.user.email,
         });
         form.reset();
+        // Redirigir a home después de login exitoso
+        router.push("/home");
       } catch (error) {
         setState({
           kind: "error",
