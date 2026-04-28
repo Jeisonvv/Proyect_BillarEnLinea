@@ -163,6 +163,7 @@ Base path: /api/transmissions
 Base path: /api/tournaments
 
 - POST /api/tournaments: crea un torneo.
+- DELETE /api/tournaments/:id: elimina un torneo y sus entidades relacionadas.
 - GET /api/tournaments: lista torneos con filtros y paginacion.
 - GET /api/tournaments/:id: obtiene el detalle de un torneo.
 - GET /api/tournaments/:id/registrations: lista las inscripciones de un torneo.
@@ -183,6 +184,12 @@ Base path: /api/tournaments
 - POST /api/tournaments/:id/generate-adjustment-round: genera la ronda de ajuste.
 - POST /api/tournaments/:id/generate-bracket-from-groups: genera bracket usando resultados de grupos.
 - POST /api/tournaments/:id/notify-groups: prepara notificaciones para grupos del torneo.
+
+## Uploads
+
+Base path: /api/uploads
+
+- POST /api/uploads/images: sube una imagen a Cloudinary y devuelve la URL publica.
 
 ## Acceso por tipo
 

@@ -1,5 +1,5 @@
 import type { LandingProduct } from "@/lib/api/public-content";
-import { humanizeToken, formatMoney } from "./utils";
+import { formatMoney, humanizeToken } from "./utils";
 
 export function ProductCard({ item }: { item: LandingProduct }) {
   return (

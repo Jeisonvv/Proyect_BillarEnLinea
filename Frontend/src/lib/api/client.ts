@@ -93,3 +93,19 @@ export async function postJson<TResponse, TBody>(
     body: JSON.stringify(body),
   });
 }
+
+export async function postFormData<TResponse>(
+  path: string,
+  body: FormData,
+  init?: RequestInit,
+): Promise<TResponse> {
+  const headers = new Headers(init?.headers);
+  headers.delete("Content-Type");
+
+  return requestJson<TResponse>(path, {
+    ...init,
+    method: "POST",
+    headers,
+    body,
+  });
+}

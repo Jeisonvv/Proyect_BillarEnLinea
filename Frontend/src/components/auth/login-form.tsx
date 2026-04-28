@@ -105,7 +105,7 @@ export function LoginForm() {
   }
 
   return (
-    <form className="grid gap-4" onSubmit={handleSubmit}>
+    <form className="grid gap-4" method="post" onSubmit={handleSubmit}>
       <label className="grid gap-2">
         <span className="text-sm font-medium text-stone-200">Email</span>
         <input

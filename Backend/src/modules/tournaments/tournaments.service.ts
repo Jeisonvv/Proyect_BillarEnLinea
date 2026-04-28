@@ -8,6 +8,8 @@ import {
   autoCreateGroupsService,
   createGroupsService,
   createTournamentService,
+  createTournamentForActorService,
+  deleteTournamentService,
   generateAdjustmentRoundService,
   generateBracketFromGroupsService,
   generateBracketService,
@@ -17,6 +19,7 @@ import {
   getGroupStandingsService,
   getPendingPaymentsService,
   getTournamentByIdService,
+  getTournamentBySlugService,
   getTournamentRegistrationsService,
   getTournamentResultsService,
   listTournamentsService,
@@ -46,6 +49,14 @@ export class TournamentsNestService {
     return createTournamentService(data);
   }
 
+  createTournamentForActor(data: CreateTournamentDto, actorId: string) {
+    return createTournamentForActorService(data, actorId);
+  }
+
+  deleteTournament(id: string) {
+    return deleteTournamentService(id);
+  }
+
   listTournaments(query: ListTournamentsQueryDto) {
     return listTournamentsService({
       ...(query.status !== undefined && { status: query.status }),
@@ -57,6 +68,10 @@ export class TournamentsNestService {
 
   getTournamentById(id: string) {
     return getTournamentByIdService(id);
+  }
+
+  getTournamentBySlug(slug: string) {
+    return getTournamentBySlugService(slug);
   }
 
   getTournamentRegistrations(id: string, status?: string) {

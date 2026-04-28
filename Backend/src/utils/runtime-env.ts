@@ -8,6 +8,12 @@ const WOMPI_ENV_KEYS = [
   'WOMPI_ORDERS_REDIRECT_URL',
 ] as const;
 
+const CLOUDINARY_ENV_KEYS = [
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_API_KEY',
+  'CLOUDINARY_API_SECRET',
+] as const;
+
 type RuntimeEnvShape = Partial<Record<string, string | undefined>>;
 
 function hasNonEmptyValue(value: string | undefined) {
@@ -66,6 +72,18 @@ export function validateRuntimeEnv(env: RuntimeEnvShape = process.env) {
   if (missingWompiVariables.length > 0) {
     throw new Error(
       `La configuración de Wompi está incompleta. Faltan: ${missingWompiVariables.join(', ')}.`,
+    );
+  }
+
+  const cloudinaryConfigRequested = CLOUDINARY_ENV_KEYS.some((name) => hasNonEmptyValue(env[name]));
+  if (!cloudinaryConfigRequested) {
+    return;
+  }
+
+  const missingCloudinaryVariables = CLOUDINARY_ENV_KEYS.filter((name) => !hasNonEmptyValue(env[name]));
+  if (missingCloudinaryVariables.length > 0) {
+    throw new Error(
+      `La configuración de Cloudinary está incompleta. Faltan: ${missingCloudinaryVariables.join(', ')}.`,
     );
   }
 }

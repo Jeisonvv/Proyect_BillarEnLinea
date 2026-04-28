@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
@@ -36,12 +37,29 @@ export class TournamentsNestController {
   @Post()
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.STAFF)
-  async createTournament(@Body() body: CreateTournamentDto) {
+  async createTournament(@Req() req: Request, @Body() body: CreateTournamentDto) {
+    if (!req.user?.id) {
+      throw new HttpException({ ok: false, message: 'No autenticado.' }, HttpStatus.UNAUTHORIZED);
+    }
+
     try {
-      const tournament = await this.tournamentsService.createTournament(body);
+      const tournament = await this.tournamentsService.createTournamentForActor(body, req.user.id);
       return { ok: true, data: tournament };
     } catch (error: any) {
       throw new HttpException({ ok: false, message: error.message }, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  async deleteTournament(@Param('id') id: string) {
+    try {
+      const result = await this.tournamentsService.deleteTournament(id);
+      return { ok: true, message: 'Torneo eliminado correctamente.', data: result };
+    } catch (error: any) {
+      const status = error.message === 'Torneo no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
 
@@ -54,6 +72,17 @@ export class TournamentsNestController {
       return { ok: true, data: tournaments, pagination: { total, page, limit } };
     } catch (error: any) {
       throw new HttpException({ ok: false, message: error.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get('slug/:slug')
+  async getTournamentBySlug(@Param('slug') slug: string) {
+    try {
+      const data = await this.tournamentsService.getTournamentBySlug(slug);
+      return { ok: true, data };
+    } catch (error: any) {
+      const status = error.message === 'Torneo no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
+      throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
 

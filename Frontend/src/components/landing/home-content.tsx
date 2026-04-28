@@ -1,64 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import type {
-  LandingEvent,
-  LandingPost,
-  LandingProduct,
-  LandingRaffle,
   LandingSnapshot,
-  LandingTournament,
 } from "@/lib/api/public-content";
+import { EmptyState } from "@/components/content/EmptyState";
+import { EventCard } from "@/components/content/EventCard";
+import { MetricCard } from "@/components/content/MetricCard";
+import { PostCard } from "@/components/content/PostCard";
+import { ProductCard } from "@/components/content/ProductCard";
+import { RaffleCard } from "@/components/content/RaffleCard";
+import { SectionHeading } from "@/components/content/SectionHeading";
+import { TournamentCard } from "@/components/content/TournamentCard";
 import { absoluteUrl, siteConfig } from "@/lib/site";
-
-const dateFormatter = new Intl.DateTimeFormat("es-CO", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-});
-
-const moneyFormatter = new Intl.NumberFormat("es-CO", {
-  style: "currency",
-  currency: "COP",
-  maximumFractionDigits: 0,
-});
-
-function humanizeToken(value: string | null) {
-  if (!value) {
-    return "Disponible pronto";
-  }
-
-  return value
-    .toLowerCase()
-    .split(/[_\s-]+/)
-    .filter(Boolean)
-    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
-    .join(" ");
-}
-
-function formatDate(value: string | null) {
-  if (!value) {
-    return "Fecha por anunciar";
-  }
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-
-  return dateFormatter.format(parsed);
-}
-
-function formatMoney(value: number | null) {
-  if (value === null) {
-    return "Consulta precio";
-  }
-
-  if (value <= 0) {
-    return "Entrada libre";
-  }
-
-  return moneyFormatter.format(value);
-}
 
 function getStructuredData(snapshot: LandingSnapshot) {
   return {
@@ -120,143 +73,6 @@ function getStructuredData(snapshot: LandingSnapshot) {
       },
     ],
   };
-}
-
-function MetricCard({ value, label, note }: { value: string; label: string; note: string }) {
-  return (
-    <article className="rounded-[1.6rem] border border-white/10 bg-white/8 p-5 backdrop-blur-sm">
-      <p className="font-mono text-[0.68rem] uppercase tracking-[0.34em] text-white/50">{label}</p>
-      <p className="mt-4 font-display text-4xl leading-none text-white">{value}</p>
-      <p className="mt-3 text-sm leading-6 text-white/70">{note}</p>
-    </article>
-  );
-}
-
-function SectionHeading({
-  eyebrow,
-  title,
-  description,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="max-w-3xl space-y-4">
-      <p className="font-mono text-xs uppercase tracking-[0.34em] text-accent">{eyebrow}</p>
-      <h2 className="font-display text-3xl leading-tight text-foreground sm:text-4xl lg:text-5xl">{title}</h2>
-      <p className="max-w-2xl text-sm leading-7 text-muted sm:text-base lg:text-lg">{description}</p>
-    </div>
-  );
-}
-
-function EmptyState({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="rounded-[1.5rem] border border-dashed border-line bg-white/5 p-5">
-      <p className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-accent-soft">{title}</p>
-      <p className="mt-3 text-sm leading-7 text-muted">{body}</p>
-    </div>
-  );
-}
-
-function TournamentCard({ item }: { item: LandingTournament }) {
-  return (
-    <article className="rounded-[1.55rem] border border-white/10 bg-white/6 p-5 transition duration-300 hover:-translate-y-1 hover:bg-white/10">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-white/55">{humanizeToken(item.status)}</p>
-          <h3 className="mt-3 text-xl font-semibold text-white">{item.name}</h3>
-        </div>
-        <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/65">{humanizeToken(item.format)}</span>
-      </div>
-      <div className="mt-5 grid gap-3 text-sm text-white/70 md:grid-cols-2">
-        <p>{formatDate(item.startDate)}</p>
-        <p>{formatMoney(item.entryFee)}</p>
-      </div>
-      <p className="mt-4 text-sm leading-7 text-white/70">
-        {item.maxParticipants ? `${item.maxParticipants} cupos pensados para una jornada bien armada.` : "Agenda competitiva con foco en experiencia, ritmo y comunidad."}
-      </p>
-    </article>
-  );
-}
-
-function EventCard({ item }: { item: LandingEvent }) {
-  return (
-    <article className="rounded-[1.45rem] border border-line bg-[linear-gradient(180deg,rgba(10,18,28,0.96),rgba(8,14,22,0.9))] p-5 shadow-[0_22px_50px_rgba(5,8,14,0.3)] transition duration-300 hover:-translate-y-1">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-accent-soft">{humanizeToken(item.tier)}</span>
-        <span className="rounded-full border border-line px-3 py-1 text-xs text-white/70">{humanizeToken(item.status)}</span>
-      </div>
-      <h3 className="mt-4 text-2xl font-semibold text-white">{item.name}</h3>
-      <p className="mt-3 text-sm leading-7 text-white/70">
-        {`${humanizeToken(item.type)}${item.featured ? " destacado" : " curado"} para jugadores, marcas y publico que sigue el billar de cerca.`}
-      </p>
-      <div className="mt-5 flex flex-wrap gap-3 text-sm text-white/72">
-        <span>{formatDate(item.startDate)}</span>
-        <span>{formatMoney(item.entryFee)}</span>
-        {item.endDate ? <span>hasta {formatDate(item.endDate)}</span> : null}
-      </div>
-    </article>
-  );
-}
-
-function RaffleCard({ item }: { item: LandingRaffle }) {
-  return (
-    <article className="rounded-[1.45rem] border border-line bg-black/85 p-5 text-stone-100 shadow-[0_28px_60px_rgba(8,10,9,0.22)]">
-      <div className="flex items-center justify-between gap-3">
-        <span className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-stone-500">{humanizeToken(item.saleStatus ?? item.status)}</span>
-        <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-stone-300">{formatMoney(item.ticketPrice)}</span>
-      </div>
-      <h3 className="mt-4 text-2xl font-semibold text-white">{item.name}</h3>
-      <p className="mt-3 text-sm leading-7 text-stone-300">{item.prize ?? "Premios pensados para mantener activa a la comunidad y premiar su participacion."}</p>
-      <p className="mt-5 text-sm text-stone-400">Sorteo: {formatDate(item.drawDate)}</p>
-    </article>
-  );
-}
-
-function PostCard({ item }: { item: LandingPost }) {
-  return (
-    <article className="rounded-[1.5rem] border border-line bg-[linear-gradient(180deg,rgba(9,14,22,0.94),rgba(11,18,28,0.9))] p-6 shadow-[0_22px_60px_rgba(5,7,11,0.32)] transition duration-300 hover:-translate-y-1">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-accent-soft">Noticias</span>
-        <span className="text-sm text-white/55">{formatDate(item.publishedAt)}</span>
-      </div>
-      <h3 className="mt-4 text-2xl font-semibold text-white">{item.title}</h3>
-      <p className="mt-4 text-sm leading-7 text-white/72">
-        {item.excerpt ?? "Cobertura, analisis y contexto para seguir el billar nacional e internacional sin perder el hilo de la temporada."}
-      </p>
-      <div className="mt-5 flex flex-wrap gap-2">
-        {(item.tags.length > 0 ? item.tags : ["billar", "actualidad"]).slice(0, 3).map((tag) => (
-          <span key={tag} className="rounded-full border border-line px-3 py-1 text-xs text-white/68">
-            {tag}
-          </span>
-        ))}
-      </div>
-    </article>
-  );
-}
-
-function ProductCard({ item }: { item: LandingProduct }) {
-  return (
-    <article className="rounded-[1.55rem] border border-line bg-[linear-gradient(180deg,rgba(14,20,30,0.96),rgba(8,13,20,0.92))] p-5 shadow-[0_22px_55px_rgba(3,6,10,0.32)] transition duration-300 hover:-translate-y-1">
-      <div className="rounded-[1.2rem] border border-[rgba(246,196,79,0.22)] bg-[linear-gradient(135deg,rgba(246,196,79,0.12),rgba(13,110,174,0.12))] p-4">
-        <p className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-accent-soft">{humanizeToken(item.category)}</p>
-        <h3 className="mt-3 text-xl font-semibold text-white">{item.name}</h3>
-        <p className="mt-4 text-sm leading-7 text-white/72">{item.description ?? "Equipamiento seleccionado para jugadores que exigen precision, presencia y rendimiento."}</p>
-      </div>
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <p className="text-lg font-semibold text-accent-soft">{formatMoney(item.basePrice)}</p>
-        <p className="text-sm text-white/60">{item.stock && item.stock > 0 ? `${item.stock} disponibles` : "Stock por confirmar"}</p>
-      </div>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {(item.tags.length > 0 ? item.tags : ["premium", "seleccion curada"]).slice(0, 2).map((tag) => (
-          <span key={tag} className="rounded-full border border-line px-3 py-1 text-xs text-white/68">
-            {tag}
-          </span>
-        ))}
-      </div>
-    </article>
-  );
 }
 
 export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {

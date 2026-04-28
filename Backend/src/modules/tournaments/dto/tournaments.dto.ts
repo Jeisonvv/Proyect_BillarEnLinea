@@ -1,4 +1,21 @@
-import { ArrayNotEmpty, IsArray, IsBoolean, IsDateString, IsInt, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ArrayNotEmpty, IsArray, IsBoolean, IsDateString, IsEnum, IsInt, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
+import { TournamentFormat, TournamentStatus } from '../../../models/enums.js';
+
+export class TournamentPrizeDto {
+  @IsInt()
+  @Min(1)
+  position!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  description!: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  amount?: number;
+}
 
 export class CreateTournamentDto {
   @IsOptional()
@@ -8,11 +25,38 @@ export class CreateTournamentDto {
 
   @IsOptional()
   @IsString()
-  format?: string;
+  @IsNotEmpty()
+  slug?: string;
 
   @IsOptional()
   @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  shortDescription?: string;
+
+  @IsOptional()
+  @IsString()
+  formatDetails?: string;
+
+  @IsOptional()
+  @IsEnum(TournamentFormat)
+  format?: string;
+
+  @IsOptional()
+  @IsEnum(TournamentStatus)
   status?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  allowedCategories?: string[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  currentParticipants?: number;
 
   @IsOptional()
   @IsDateString()
@@ -20,7 +64,19 @@ export class CreateTournamentDto {
 
   @IsOptional()
   @IsDateString()
+  endDate?: string;
+
+  @IsOptional()
+  @IsDateString()
   registrationDeadline?: string;
+
+  @IsOptional()
+  @IsDateString()
+  discount20Deadline?: string;
+
+  @IsOptional()
+  @IsDateString()
+  discount10Deadline?: string;
 
   @IsOptional()
   @IsNumber()
@@ -33,8 +89,71 @@ export class CreateTournamentDto {
   maxParticipants?: number;
 
   @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TournamentPrizeDto)
+  prizes?: TournamentPrizeDto[];
+
+  @IsOptional()
+  @IsString()
+  venueName?: string;
+
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsString()
+  streamUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  contactPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  seoTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  seoDescription?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
+
+  @IsOptional()
+  @IsDateString()
+  publishedAt?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(3)
+  playersPerGroup?: number;
+
+  @IsOptional()
   @IsBoolean()
   withHandicap?: boolean;
+
+  @IsOptional()
+  @IsMongoId()
+  createdBy?: string;
 
   [key: string]: unknown;
 }

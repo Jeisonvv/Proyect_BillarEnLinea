@@ -27,7 +27,10 @@ export interface IPrize {
  */
 export interface ITournament {
   name: string;
+  slug: string;
   description?: string;
+  shortDescription?: string;
+  formatDetails?: string;
   format: TournamentFormat;       // Cómo se estructura la competencia
   status: TournamentStatus;       // En qué etapa está el torneo
 
@@ -44,9 +47,18 @@ export interface ITournament {
   discount20Deadline?: Date;   // Hasta cuándo aplica el 20% de descuento
   discount10Deadline?: Date;   // Hasta cuándo aplica el 10% de descuento
 
+  venueName?: string;  // Nombre comercial del club o sede
   location?: string;   // Dirección del lugar si es presencial
+  address?: string;    // Dirección detallada para mapas y SEO local
+  city?: string;
+  country?: string;
   streamUrl?: string;  // Link de YouTube/Facebook si hay transmisión
   imageUrl?: string;   // Imagen promocional del torneo
+  contactPhone?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  isFeatured: boolean;
+  publishedAt?: Date;
 
   /**
    * Cuántos jugadores van en cada grupo de la fase inicial.
@@ -117,6 +129,32 @@ function normalizeOptionalDate(value: unknown) {
   return value;
 }
 
+function slugifyTournamentValue(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "torneo";
+}
+
+async function ensureUniqueTournamentSlug(tournament: ITournamentDocument) {
+  const TournamentModel = tournament.constructor as mongoose.Model<ITournamentDocument>;
+  const rawValue = tournament.name;
+  const baseSlug = slugifyTournamentValue(rawValue);
+
+  let candidate = baseSlug;
+  let suffix = 2;
+
+  while (await TournamentModel.exists({ slug: candidate, _id: { $ne: tournament._id } })) {
+    candidate = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+
+  tournament.slug = candidate;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // ESQUEMA PRINCIPAL
 // ─────────────────────────────────────────────────────────────────────────────
@@ -128,7 +166,16 @@ const tournamentSchema = new Schema<ITournamentDocument>(
       required: true,
       trim: true,
     },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
     description: String,
+    shortDescription: String,
+    formatDetails: String,
     format: {
       type: String,
       enum: Object.values(TournamentFormat),
@@ -180,9 +227,27 @@ const tournamentSchema = new Schema<ITournamentDocument>(
       type: Date,
       set: normalizeOptionalDate,
     },
+    venueName: String,
     location: String,
+    address: String,
+    city: String,
+    country: {
+      type: String,
+      default: 'Colombia',
+    },
     streamUrl: String,
     imageUrl: String,
+    contactPhone: String,
+    seoTitle: String,
+    seoDescription: String,
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+    publishedAt: {
+      type: Date,
+      set: normalizeOptionalDate,
+    },
     playersPerGroup: {
       type: Number,
       min: 3,  // Mínimo 3 jugadores por grupo
@@ -213,6 +278,9 @@ const tournamentSchema = new Schema<ITournamentDocument>(
 // Para listar torneos próximos o en curso (la query más común en la web)
 tournamentSchema.index({ status: 1, startDate: 1 });
 
+// Para resolver páginas públicas por URL amigable sin lookup por ObjectId
+tournamentSchema.index({ slug: 1 }, { unique: true });
+
 // Para filtrar torneos por categoría de jugador cuando un usuario quiere inscribirse
 tournamentSchema.index({ allowedCategories: 1, status: 1 });
 
@@ -236,8 +304,10 @@ tournamentSchema.virtual("isRegistrationOpen").get(function (
   return this.status === TournamentStatus.OPEN && deadlineNotPassed;
 });
 
-tournamentSchema.pre("validate", function () {
+tournamentSchema.pre("validate", async function () {
   const tournament = this as ITournamentDocument;
+
+  await ensureUniqueTournamentSlug(tournament);
 
   if (tournament.entryFee <= 0) {
     throw new Error("El costo de inscripción del torneo debe ser mayor a 0.");

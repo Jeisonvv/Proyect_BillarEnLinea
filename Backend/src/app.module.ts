@@ -11,6 +11,7 @@ import { ProductsModule } from './modules/products/products.module.js';
 import { RafflesModule } from './modules/raffles/raffles.module.js';
 import { TournamentsModule } from './modules/tournaments/tournaments.module.js';
 import { TransmissionsModule } from './modules/transmissions/transmissions.module.js';
+import { UploadsModule } from './modules/uploads/uploads.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 
 @Module({
@@ -27,6 +28,7 @@ import { UsersModule } from './modules/users/users.module.js';
 		ProductsModule,
 		PostsModule,
 		TransmissionsModule,
+		UploadsModule,
 		LeadSessionsModule,
 	],
 })

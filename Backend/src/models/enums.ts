@@ -134,6 +134,8 @@ export enum TournamentStatus {
 export enum TournamentFormat {
   SINGLE_ELIMINATION = "SINGLE_ELIMINATION", // Eliminación directa: pierde → fuera
   DOUBLE_ELIMINATION = "DOUBLE_ELIMINATION", // Necesitas perder 2 veces para salir
+  GROUPS = "GROUPS",                         // Fase de grupos sin eliminación posterior
+  GROUPS_AND_ELIMINATION = "GROUPS_AND_ELIMINATION", // Grupos y luego bracket eliminatorio
   ROUND_ROBIN = "ROUND_ROBIN",               // Todos juegan contra todos
   SWISS = "SWISS",                           // Sistema suizo: común en billar y ajedrez
 }

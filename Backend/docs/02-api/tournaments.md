@@ -82,15 +82,37 @@ Payload minimo recomendado:
 ```json
 {
   "name": "Copa Billar en Linea",
-  "format": "SINGLE_ELIMINATION",
+  "format": "GROUPS_AND_ELIMINATION",
+  "formatDetails": "Grupos de 3, clasifican 2 por grupo y luego cuadro de eliminacion directa.",
   "status": "OPEN",
   "startDate": "2026-05-20T09:00:00.000Z",
   "registrationDeadline": "2026-05-18T23:59:59.000Z",
   "entryFee": 50000,
   "maxParticipants": 32,
+  "playersPerGroup": 3,
   "withHandicap": false
 }
 ```
+
+Valores validos para format:
+
+- SINGLE_ELIMINATION
+- DOUBLE_ELIMINATION
+- GROUPS
+- GROUPS_AND_ELIMINATION
+- ROUND_ROBIN
+- SWISS
+
+### DELETE /api/tournaments/:id
+
+Acceso: ADMIN, STAFF
+
+Elimina el torneo y su informacion relacionada:
+
+- grupos
+- partidos de grupos y eliminacion
+- inscripciones
+- transacciones de pago ligadas a inscripciones del torneo
 
 ### POST /api/tournaments/:id/register
 

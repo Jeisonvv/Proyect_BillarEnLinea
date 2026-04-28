@@ -166,6 +166,19 @@ function getTournamentFinalPaymentDeadline(tournament: {
   return getEarlierDate(oneDayBeforeStart, tournament.registrationDeadline);
 }
 
+function buildWompiTournamentReturnUrl(reference: string) {
+  const baseUrl = getWompiRedirectUrl("tournaments");
+
+  try {
+    const url = new URL(baseUrl);
+    url.searchParams.set("reference", reference);
+    return url.toString();
+  } catch {
+    const separator = baseUrl.includes("?") ? "&" : "?";
+    return `${baseUrl}${separator}reference=${encodeURIComponent(reference)}`;
+  }
+}
+
 function resolveTournamentCheckoutPricing(tournament: {
   entryFee: number;
   startDate: Date;
@@ -956,7 +969,7 @@ export async function createWompiCheckoutForTournament(
   }).lean();
 
   const paymentReference = generatePaymentReference("TOURNAMENT", tournamentId);
-  const redirectUrl = getWompiRedirectUrl("tournaments");
+  const redirectUrl = buildWompiTournamentReturnUrl(paymentReference);
   const phoneData = splitPhone(user.phone ?? null);
   const channel = getCheckoutChannel(params.channel);
   const now = Date.now();
@@ -1302,6 +1315,68 @@ export async function createWompiCheckoutForOrder(
       total: order.total,
       status: order.status,
       items: order.items,
+    },
+  };
+}
+
+export async function getTournamentWompiReturnByReference(reference: string) {
+  const normalizedReference = reference.trim();
+
+  if (!normalizedReference) {
+    throw new Error("La referencia del pago es obligatoria.");
+  }
+
+  const payment = await PaymentTransaction.findOne({
+    provider: PaymentProvider.WOMPI,
+    payableType: PaymentPayableType.TOURNAMENT_REGISTRATION,
+    reference: normalizedReference,
+  }).lean();
+
+  if (!payment) {
+    throw new Error("Pago no encontrado.");
+  }
+
+  const registration = await TournamentRegistration.findById(payment.payableId)
+    .select("_id tournament status playerCategory paidAt paymentReference")
+    .lean();
+
+  if (!registration) {
+    throw new Error("Inscripción no encontrada.");
+  }
+
+  const tournament = await Tournament.findById(registration.tournament)
+    .select("_id name slug startDate imageUrl status entryFee")
+    .lean();
+
+  if (!tournament) {
+    throw new Error("Torneo no encontrado.");
+  }
+
+  return {
+    payment: {
+      reference: payment.reference,
+      status: payment.status,
+      amountInCents: payment.amountInCents,
+      currency: payment.currency,
+      redirectUrl: payment.redirectUrl,
+      ...(payment.expiresAt ? { expiresAt: payment.expiresAt } : {}),
+      ...(payment.externalTransactionId ? { transactionId: payment.externalTransactionId } : {}),
+    },
+    registration: {
+      id: registration._id,
+      status: registration.status,
+      playerCategory: registration.playerCategory,
+      ...(registration.paidAt ? { paidAt: registration.paidAt } : {}),
+      ...(registration.paymentReference ? { paymentReference: registration.paymentReference } : {}),
+    },
+    tournament: {
+      id: tournament._id,
+      name: tournament.name,
+      slug: tournament.slug,
+      status: tournament.status,
+      entryFee: tournament.entryFee,
+      ...(tournament.startDate ? { startDate: tournament.startDate } : {}),
+      ...(tournament.imageUrl ? { imageUrl: tournament.imageUrl } : {}),
     },
   };
 }

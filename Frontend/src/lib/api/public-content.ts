@@ -1,6 +1,26 @@
 // Funciones individuales para obtener cada colección
 export async function getLandingTournaments(limit = 3) {
-  return fetchCollection(`/api/tournaments?limit=${limit}`, normalizeTournament);
+  try {
+    const payload = await getJson<ApiListResponse>(`/api/tournaments?limit=${limit}`, {
+      cache: "no-store",
+    });
+
+    const items = getItems(payload)
+      .map((item) => (isRecord(item) ? normalizeTournament(item) : null))
+      .filter((item): item is LandingTournament => item !== null);
+
+    return {
+      items,
+      total: getTotal(payload, items.length),
+      error: null,
+    };
+  } catch (error) {
+    return {
+      items: [],
+      total: 0,
+      error: formatError(error),
+    };
+  }
 }
 
 export async function getLandingEvents(limit = 3) {
@@ -40,6 +60,7 @@ export type CollectionState<T> = {
 
 export type LandingTournament = {
   id: string;
+  slug: string;
   name: string;
   image: string | null;
   format: string | null;
@@ -47,6 +68,54 @@ export type LandingTournament = {
   startDate: string | null;
   entryFee: number | null;
   maxParticipants: number | null;
+};
+
+export type TournamentDetail = {
+  id: string;
+  slug: string;
+  name: string;
+  image: string | null;
+  description: string | null;
+  shortDescription: string | null;
+  format: string | null;
+  formatDetails: string | null;
+  status: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  registrationDeadline: string | null;
+  entryFee: number | null;
+  maxParticipants: number | null;
+  currentParticipants: number | null;
+  venueName: string | null;
+  location: string | null;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  streamUrl: string | null;
+  contactPhone: string | null;
+  allowedCategories: string[];
+  totalRegistrations: number | null;
+  confirmedRegistrations: number | null;
+  registrations: Array<{
+    id: string;
+    status: string | null;
+    playerCategory: string | null;
+    handicap: number | null;
+    notes: string | null;
+    createdAt: string | null;
+    user: {
+      id: string | null;
+      name: string | null;
+      phone: string | null;
+      avatarUrl: string | null;
+      playerCategory: string | null;
+    } | null;
+  }>;
+  prizes: Array<{
+    position: number;
+    description: string;
+    amount: number | null;
+  }>;
 };
 
 export type LandingEvent = {
@@ -161,6 +230,17 @@ function pickStringArray(record: JsonRecord, keys: string[]) {
   return [];
 }
 
+function pickRecordArray(record: JsonRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+    if (Array.isArray(value)) {
+      return value.filter(isRecord);
+    }
+  }
+
+  return [];
+}
+
 function resolveApiAssetUrl(value: string | null) {
   if (!value) {
     return null;
@@ -223,10 +303,11 @@ function normalizeTournament(record: JsonRecord): LandingTournament | null {
 
 
   const images = pickStringArray(record, ["images"]);
-  const image = pickString(record, ["image", "coverImage", "banner", "poster"]);
+  const image = pickString(record, ["image", "imageUrl", "coverImage", "banner", "poster"]);
 
   return {
     id,
+    slug: pickString(record, ["slug"]) ?? id,
     name,
     image: resolveApiAssetUrl(images[0] ?? image),
     format: pickString(record, ["format"]),
@@ -234,6 +315,75 @@ function normalizeTournament(record: JsonRecord): LandingTournament | null {
     startDate: pickString(record, ["startDate"]),
     entryFee: pickNumber(record, ["entryFee"]),
     maxParticipants: pickNumber(record, ["maxParticipants"]),
+  };
+}
+
+function normalizeTournamentDetail(record: JsonRecord): TournamentDetail | null {
+  const name = pickString(record, ["name", "title"]);
+  const id = pickString(record, ["_id", "id"]);
+  const slug = pickString(record, ["slug"]);
+
+  if (!name || !id || !slug) {
+    return null;
+  }
+
+  const images = pickStringArray(record, ["images"]);
+  const image = pickString(record, ["image", "imageUrl", "coverImage", "banner", "poster"]);
+  const prizes = pickRecordArray(record, ["prizes"]).map((prize) => ({
+    position: pickNumber(prize, ["position"]) ?? 0,
+    description: pickString(prize, ["description"]) ?? "Premio por anunciar",
+    amount: pickNumber(prize, ["amount"]),
+  })).filter((prize) => prize.position > 0);
+  const registrations = pickRecordArray(record, ["registrations"]).map((registration) => {
+    const user = isRecord(registration.user) ? registration.user : null;
+
+    return {
+      id: pickString(registration, ["_id", "id"]) ?? `${pickString(user ?? {}, ["_id", "id"]) ?? "inscrito"}-${pickString(registration, ["createdAt"]) ?? "row"}`,
+      status: pickString(registration, ["status"]),
+      playerCategory: pickString(registration, ["playerCategory"]),
+      handicap: pickNumber(registration, ["handicap"]),
+      notes: pickString(registration, ["notes"]),
+      createdAt: pickString(registration, ["createdAt"]),
+      user: user
+        ? {
+          id: pickString(user, ["_id", "id"]),
+          name: pickString(user, ["name"]),
+          phone: pickString(user, ["phone"]),
+          avatarUrl: resolveApiAssetUrl(pickString(user, ["avatarUrl"])),
+          playerCategory: pickString(user, ["playerCategory"]),
+        }
+        : null,
+    };
+  });
+
+  return {
+    id,
+    slug,
+    name,
+    image: resolveApiAssetUrl(images[0] ?? image),
+    description: pickString(record, ["description"]),
+    shortDescription: pickString(record, ["shortDescription"]),
+    format: pickString(record, ["format"]),
+    formatDetails: pickString(record, ["formatDetails"]),
+    status: pickString(record, ["status"]),
+    startDate: pickString(record, ["startDate"]),
+    endDate: pickString(record, ["endDate"]),
+    registrationDeadline: pickString(record, ["registrationDeadline"]),
+    entryFee: pickNumber(record, ["entryFee"]),
+    maxParticipants: pickNumber(record, ["maxParticipants"]),
+    currentParticipants: pickNumber(record, ["currentParticipants"]),
+    venueName: pickString(record, ["venueName"]),
+    location: pickString(record, ["location"]),
+    address: pickString(record, ["address"]),
+    city: pickString(record, ["city"]),
+    country: pickString(record, ["country"]),
+    streamUrl: pickString(record, ["streamUrl"]),
+    contactPhone: pickString(record, ["contactPhone"]),
+    allowedCategories: pickStringArray(record, ["allowedCategories"]),
+    totalRegistrations: pickNumber(record, ["totalRegistrations"]),
+    confirmedRegistrations: pickNumber(record, ["confirmedRegistrations"]),
+    registrations,
+    prizes,
   };
 }
 
@@ -368,4 +518,20 @@ export async function getLandingSnapshot(): Promise<LandingSnapshot> {
       products: products.total,
     },
   };
+}
+
+export async function getTournamentDetailBySlug(slug: string) {
+  try {
+    const payload = await getJson<{ data?: unknown }>(`/api/tournaments/slug/${encodeURIComponent(slug)}`, {
+      cache: "no-store",
+    });
+
+    if (!isRecord(payload) || !isRecord(payload.data)) {
+      return null;
+    }
+
+    return normalizeTournamentDetail(payload.data);
+  } catch {
+    return null;
+  }
 }

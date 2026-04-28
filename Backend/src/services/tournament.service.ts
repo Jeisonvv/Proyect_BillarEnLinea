@@ -44,6 +44,14 @@ interface RegisterTournamentParams {
   notes?: string;
 }
 
+function toTournamentObjectId(id: string, fieldName = 'Tournament ID') {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error(`${fieldName} inválido.`);
+  }
+
+  return new mongoose.Types.ObjectId(id);
+}
+
 function mapTournamentRegistrationForResponse(registration: any) {
   const user = registration.user && typeof registration.user === "object"
     ? registration.user
@@ -72,6 +80,58 @@ function mapTournamentRegistrationForResponse(registration: any) {
  */
 export async function createTournamentService(data: Record<string, unknown>) {
   return Tournament.create(data);
+}
+
+export async function createTournamentForActorService(
+  data: Record<string, unknown>,
+  actorId: string,
+) {
+  const createdBy = toTournamentObjectId(actorId, 'createdBy');
+
+  return Tournament.create({
+    ...data,
+    createdBy,
+  });
+}
+
+export async function deleteTournamentService(id: string) {
+  const tournamentId = toTournamentObjectId(id);
+
+  const tournament = await Tournament.findById(tournamentId)
+    .select('_id name')
+    .lean();
+
+  if (!tournament) {
+    throw new Error('Torneo no encontrado.');
+  }
+
+  const registrations = await TournamentRegistration.find({ tournament: tournamentId })
+    .select('_id')
+    .lean();
+  const registrationIds = registrations.map((registration) => registration._id);
+
+  const [deletedMatches, deletedGroups, deletedRegistrations, deletedPayments] = await Promise.all([
+    Match.deleteMany({ tournament: tournamentId }),
+    TournamentGroup.deleteMany({ tournament: tournamentId }),
+    TournamentRegistration.deleteMany({ tournament: tournamentId }),
+    registrationIds.length > 0
+      ? PaymentTransaction.deleteMany({
+        payableType: PaymentPayableType.TOURNAMENT_REGISTRATION,
+        payableId: { $in: registrationIds },
+      })
+      : Promise.resolve({ deletedCount: 0 }),
+  ]);
+
+  await Tournament.deleteOne({ _id: tournamentId });
+
+  return {
+    tournamentId: tournament._id,
+    tournamentName: tournament.name,
+    deletedMatches: deletedMatches.deletedCount ?? 0,
+    deletedGroups: deletedGroups.deletedCount ?? 0,
+    deletedRegistrations: deletedRegistrations.deletedCount ?? 0,
+    deletedPayments: deletedPayments.deletedCount ?? 0,
+  };
 }
 
 function resolveTournamentChannel(channel?: string) {
@@ -349,17 +409,7 @@ export async function listTournamentsService(params: ListTournamentsParams) {
   return { tournaments, total };
 }
 
-/**
- * Devuelve el detalle completo de un torneo:
- * datos del torneo + todas sus inscripciones + grupos actuales.
- */
-export async function getTournamentByIdService(id: string) {
-  const tournament = await Tournament.findById(id)
-    .populate("createdBy", "name avatarUrl")
-    .lean();
-
-  if (!tournament) throw new Error("Torneo no encontrado.");
-
+async function buildTournamentDetailResponse(tournament: any) {
   const [registrations, groups] = await Promise.all([
     TournamentRegistration.find({ tournament: tournament._id })
       .populate("user", "name phone avatarUrl playerCategory")
@@ -381,6 +431,30 @@ export async function getTournamentByIdService(id: string) {
     confirmedRegistrations: confirmedCount,
     groups: groups.map((g) => ({ totalPlayers: g.players.length, ...g })),
   };
+}
+
+/**
+ * Devuelve el detalle completo de un torneo:
+ * datos del torneo + todas sus inscripciones + grupos actuales.
+ */
+export async function getTournamentByIdService(id: string) {
+  const tournament = await Tournament.findById(id)
+    .populate("createdBy", "name avatarUrl")
+    .lean();
+
+  if (!tournament) throw new Error("Torneo no encontrado.");
+
+  return buildTournamentDetailResponse(tournament);
+}
+
+export async function getTournamentBySlugService(slug: string) {
+  const tournament = await Tournament.findOne({ slug: slug.trim().toLowerCase() })
+    .populate("createdBy", "name avatarUrl")
+    .lean();
+
+  if (!tournament) throw new Error("Torneo no encontrado.");
+
+  return buildTournamentDetailResponse(tournament);
 }
 
 /**
