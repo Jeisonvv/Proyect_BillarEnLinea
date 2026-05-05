@@ -65,6 +65,15 @@ export enum PlayerCategory {
   ELITE = "ELITE",     // Nivel profesional / competitivo
 }
 
+// ── Tipos de documento de identidad ──────────────────────────────────────────
+// Documentos aceptados para usuarios adultos y empresas.
+export enum IdentityDocumentType {
+  CEDULA_CIUDADANIA = "CEDULA_CIUDADANIA",
+  CEDULA_EXTRANJERIA = "CEDULA_EXTRANJERIA",
+  PASAPORTE = "PASAPORTE",
+  NIT = "NIT",
+}
+
 // ── Áreas de interés ──────────────────────────────────────────────────────────
 // Con qué parte del negocio ha interactuado el usuario.
 // Se registra en el array interests[] del usuario para saber qué le gusta.

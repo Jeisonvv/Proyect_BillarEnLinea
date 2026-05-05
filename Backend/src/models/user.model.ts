@@ -18,6 +18,7 @@ import {
   UserSource,
   UserStatus,
   PlayerCategory,
+  IdentityDocumentType,
   InterestType,
   UserRole,
 } from "./enums.js";
@@ -126,6 +127,7 @@ export interface IUser {
   // Datos básicos del perfil
   name?: string;
   phone?: string;     // Número de teléfono (String para incluir código de país: +57...)
+  identityDocumentType?: IdentityDocumentType;
   identityDocument?: string; // Documento de identidad normalizado para evitar cuentas duplicadas
   avatarUrl?: string; // URL de la foto de perfil
 
@@ -338,6 +340,10 @@ const userSchema = new Schema<IUserDocument, IUserModel>(
 
     name: { type: String, trim: true },
     phone: { type: String, trim: true },
+    identityDocumentType: {
+      type: String,
+      enum: Object.values(IdentityDocumentType),
+    },
     identityDocument: {
       type: String,
       set: normalizeIdentityDocument,

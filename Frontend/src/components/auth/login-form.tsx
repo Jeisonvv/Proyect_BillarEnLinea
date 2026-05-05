@@ -2,52 +2,24 @@
 
 
 import Link from "next/link";
-import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
-import { getCurrentSession, loginWeb, logoutWeb } from "@/lib/api/auth";
+import { loginWeb } from "@/lib/api/auth";
 
 type LoginState = {
-  kind: "loading" | "idle" | "success" | "error";
+  kind: "idle" | "submitting" | "error";
   message?: string;
-  userName?: string;
 };
 
-const initialState: LoginState = { kind: "loading" };
+const initialState: LoginState = { kind: "idle" };
 
 export function LoginForm() {
   const [state, setState] = useState<LoginState>(initialState);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
-
-  useEffect(() => {
-    let isActive = true;
-
-    void (async () => {
-      try {
-        const response = await getCurrentSession();
-        if (!isActive) {
-          return;
-        }
-
-        setState({
-          kind: "success",
-          message: "Sesion detectada desde la cookie actual del backend.",
-          userName: response.user.name ?? response.user.email,
-        });
-      } catch {
-        if (!isActive) {
-          return;
-        }
-
-        setState({ kind: "idle" });
-      }
-    })();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
+  const searchParams = useSearchParams();
+  const nextHref = searchParams.get("next");
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,16 +30,12 @@ export function LoginForm() {
     const password = String(formData.get("password") ?? "");
 
     startTransition(async () => {
+      setState({ kind: "submitting" });
+
       try {
-        const response = await loginWeb({ email, password });
-        setState({
-          kind: "success",
-          message: "Sesion iniciada. La cookie del backend ya quedo creada en el navegador.",
-          userName: response.user.name ?? response.user.email,
-        });
+        await loginWeb({ email, password });
         form.reset();
-        // Redirigir a home después de login exitoso
-        router.push("/home");
+        router.push(nextHref && nextHref.startsWith("/") ? nextHref : "/home");
       } catch (error) {
         setState({
           kind: "error",
@@ -77,28 +45,6 @@ export function LoginForm() {
               : error instanceof Error
                 ? error.message
                 : "No fue posible iniciar sesion valija.",
-        });
-      }
-    });
-  }
-
-  function handleLogout() {
-    startTransition(async () => {
-      try {
-        const response = await logoutWeb();
-        setState({
-          kind: "idle",
-          message: response.message,
-        });
-      } catch (error) {
-        setState({
-          kind: "error",
-          message:
-            error instanceof ApiError
-              ? error.message
-              : error instanceof Error
-                ? error.message
-                : "No fue posible cerrar sesion.",
         });
       }
     });
@@ -133,56 +79,34 @@ export function LoginForm() {
       <button
         className="mt-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-70"
         type="submit"
-        disabled={isPending || state.kind === "success"}
+        disabled={isPending || state.kind === "submitting"}
       >
         {isPending ? "Ingresando..." : "Iniciar sesion"}
       </button>
 
-      {state.kind !== "success" && (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Link
-            className="rounded-full border border-white/10 bg-white/8 px-5 py-3 text-center text-sm font-semibold text-stone-100 transition hover:bg-white/14"
-            href="/register"
-          >
-            Registrarme
-          </Link>
-          <Link
-            className="rounded-full border border-white/10 bg-white/8 px-5 py-3 text-center text-sm font-semibold text-stone-100 transition hover:bg-white/14"
-            href="/forgot-password"
-          >
-            Olvide mi contraseña
-          </Link>
-        </div>
-      )}
-
-      {state.kind === "success" && (
-        <button
-          className="rounded-full border border-white/10 bg-white/8 px-5 py-3 text-sm font-semibold text-stone-100 transition hover:bg-white/14 disabled:cursor-not-allowed disabled:opacity-70"
-          type="button"
-          disabled={isPending}
-          onClick={handleLogout}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link
+          className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/8 px-5 py-3 text-center text-sm font-semibold text-stone-100 transition hover:bg-white/14"
+          href="/register"
         >
-          {isPending ? "Cerrando sesion..." : "Cerrar sesion"}
-        </button>
-      )}
+          Registrarme
+        </Link>
+        <Link
+          className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/8 px-5 py-3 text-center text-sm font-semibold text-stone-100 transition hover:bg-white/14"
+          href="/forgot-password"
+        >
+          Olvide mi contraseña
+        </Link>
+      </div>
 
       <div className="min-h-14 rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-3 text-sm leading-6 text-stone-300">
-        {state.kind === "loading" && (
-          <p>Consultando si ya existe una sesion guardada en el navegador...</p>
-        )}
-
         {state.kind === "idle" && (
           <p>
-            {state.message ?? "Este formulario llama a POST /api/auth/login con credentials: include para que el backend escriba la cookie httpOnly."}
+            {state.message ?? "Ingresa con tu correo y contraseña para continuar tu recorrido dentro de la plataforma."}
           </p>
         )}
 
-        {state.kind === "success" && (
-          <p>
-            {state.message}
-            {state.userName ? ` Usuario autenticado: ${state.userName}.` : ""}
-          </p>
-        )}
+        {state.kind === "submitting" && <p>Validando tus datos para iniciar sesion...</p>}
 
         {state.kind === "error" && <p>{state.message}</p>}
       </div>

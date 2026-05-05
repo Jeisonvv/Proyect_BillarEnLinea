@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Bebas_Neue, Poppins } from "next/font/google";
+import { PublicSiteShell } from "@/components/navigation/PublicSiteShell";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import "./globals.css";
 
@@ -87,7 +88,9 @@ export default function RootLayout({
       lang="es"
       className={`${bodyFont.variable} ${displayFont.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <PublicSiteShell>{children}</PublicSiteShell>
+      </body>
     </html>
   );
 }

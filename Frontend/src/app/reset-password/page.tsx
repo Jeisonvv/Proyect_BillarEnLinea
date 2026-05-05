@@ -1,5 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
+
+export const metadata: Metadata = {
+  title: "Nueva contraseña",
+  description: "Define una nueva contraseña para recuperar el acceso a tu cuenta de Billar en Linea.",
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 type ResetPasswordPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -21,10 +31,10 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
               </span>
               <div className="space-y-4">
                 <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">
-                  Define una nueva contraseña para tu cuenta.
+                  Define una nueva contraseña para seguir en movimiento.
                 </h1>
                 <p className="max-w-xl text-base leading-8 text-muted sm:text-lg">
-                  Esta ruta espera un token de recuperacion en la URL y lo envía al backend junto con la nueva contraseña. Si el token expiró o es inválido, el backend devuelve el error estructurado y la UI lo muestra.
+                  El siguiente paso es simple: crea una nueva contraseña y vuelve a entrar para continuar con tu experiencia dentro de la plataforma.
                 </p>
               </div>
             </div>

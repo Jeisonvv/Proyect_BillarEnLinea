@@ -10,7 +10,9 @@ export type RegisterInput = {
   email: string;
   password: string;
   phone: string;
+  identityDocumentType: "CEDULA_CIUDADANIA" | "CEDULA_EXTRANJERIA" | "PASAPORTE" | "NIT";
   identityDocument: string;
+  playerCategory: "TERCERA" | "SEGUNDA" | "PRIMERA" | "ELITE";
 };
 
 export type AuthenticatedUser = {
@@ -63,6 +65,7 @@ export type RegisterResponse = {
     id?: string;
     name?: string;
     email?: string;
+    identityDocumentType?: string;
     identityDocument?: string;
     role?: string;
   };

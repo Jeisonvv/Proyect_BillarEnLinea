@@ -1,5 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
+
+export const metadata: Metadata = {
+  title: "Recuperar acceso",
+  description: "Recupera el acceso a tu cuenta de Billar en Linea para seguir conectado con torneos, eventos, rifas y tienda.",
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default function ForgotPasswordPage() {
   return (
@@ -13,10 +23,10 @@ export default function ForgotPasswordPage() {
               </span>
               <div className="space-y-4">
                 <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">
-                  Recupera el acceso sin salir del flujo real del backend.
+                  Recupera tu acceso y vuelve a la plataforma.
                 </h1>
                 <p className="max-w-xl text-base leading-8 text-muted sm:text-lg">
-                  Esta pantalla llama al endpoint de recuperacion existente y te deja continuar con correo real o con el enlace temporal de desarrollo que expone el backend cuando no hay proveedor SMTP activo.
+                  Si olvidaste tu contraseña, te ayudamos a retomar tu cuenta para que continúes explorando torneos, eventos, rifas y productos.
                 </p>
               </div>
             </div>

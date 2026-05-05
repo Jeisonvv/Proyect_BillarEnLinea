@@ -96,12 +96,12 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       <div className="min-h-14 rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-3 text-sm leading-6 text-stone-300">
         {!token && (
           <p>
-            Falta el token en la URL. Vuelve a abrir el enlace del correo o usa el enlace de desarrollo generado en la pantalla anterior.
+            No encontramos un enlace valido para continuar. Vuelve a abrir el enlace recibido para completar el cambio de contraseña.
           </p>
         )}
 
         {token && state.kind === "idle" && (
-          <p>El token ya está presente. Solo falta definir la nueva contraseña.</p>
+          <p>Ya puedes definir tu nueva contraseña para volver a ingresar a la plataforma.</p>
         )}
 
         {state.kind === "success" && (

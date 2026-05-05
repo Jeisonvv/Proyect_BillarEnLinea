@@ -59,7 +59,9 @@ export interface CreateWebUserParams {
   email?: string;
   password?: string;
   phone?: string;
+  identityDocumentType?: string;
   identityDocument?: string;
+  playerCategory?: string;
 }
 
 export interface CreateAdminUserResult {
@@ -190,10 +192,18 @@ export async function createUserService(data: Record<string, unknown>) {
 }
 
 export async function createWebUserService(params: CreateWebUserParams) {
-  const { name, email, password, phone, identityDocument } = params;
+  const {
+    name,
+    email,
+    password,
+    phone,
+    identityDocumentType,
+    identityDocument,
+    playerCategory,
+  } = params;
 
-  if (!name || !email || !password || !phone || !identityDocument) {
-    throw new Error("name, email, phone, identityDocument y password son obligatorios.");
+  if (!name || !email || !password || !phone || !identityDocumentType || !identityDocument) {
+    throw new Error("name, email, phone, identityDocumentType, identityDocument y password son obligatorios.");
   }
 
   if (password.length < 8) {
@@ -206,7 +216,9 @@ export async function createWebUserService(params: CreateWebUserParams) {
   return createUserService({
     name: name.trim(),
     phone,
+    identityDocumentType,
     identityDocument,
+    ...(playerCategory ? { playerCategory } : {}),
     status: UserStatus.NEW,
     role: UserRole.CUSTOMER,
     identities: [{ provider: Channel.WEB, providerId: normalizedEmail }],

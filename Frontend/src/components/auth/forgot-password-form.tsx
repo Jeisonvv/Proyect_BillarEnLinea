@@ -74,7 +74,7 @@ export function ForgotPasswordForm() {
       <div className="min-h-14 rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-3 text-sm leading-6 text-stone-300">
         {state.kind === "idle" && (
           <p>
-            Envias tu email y el backend genera un token de recuperacion. En desarrollo, tambien puede devolver el enlace directo para probar el flujo sin correo real.
+            Comparte tu correo y te ayudaremos a continuar el proceso para recuperar el acceso a tu cuenta.
           </p>
         )}
 
@@ -83,15 +83,10 @@ export function ForgotPasswordForm() {
             <p>{state.message}</p>
             {state.resetUrl && (
               <p>
-                En este entorno puedes continuar directamente aqui: {" "}
+                Puedes continuar el proceso directamente aqui: {" "}
                 <Link className="font-medium text-accent-soft underline underline-offset-4" href={state.resetUrl.replace(/^https?:\/\/[^/]+/, "") }>
-                  abrir recuperacion
+                  continuar recuperacion
                 </Link>
-              </p>
-            )}
-            {state.resetToken && (
-              <p className="break-all text-xs text-stone-400">
-                Token temporal de desarrollo: {state.resetToken}
               </p>
             )}
           </div>

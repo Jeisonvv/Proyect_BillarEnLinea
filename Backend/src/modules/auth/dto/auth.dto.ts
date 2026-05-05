@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IdentityDocumentType, PlayerCategory } from '../../../models/enums.js';
 
 export class RegisterDto {
   @IsString()
@@ -19,6 +20,12 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty()
   identityDocument!: string;
+
+  @IsEnum(IdentityDocumentType)
+  identityDocumentType!: IdentityDocumentType;
+
+  @IsEnum(PlayerCategory)
+  playerCategory!: PlayerCategory;
 }
 
 export class LoginDto {

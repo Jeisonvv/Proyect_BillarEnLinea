@@ -1,5 +1,5 @@
 import { IsEmail, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, MinLength } from 'class-validator';
-import { PlayerCategory, UserRole, UserStatus } from '../../../models/enums.js';
+import { IdentityDocumentType, PlayerCategory, UserRole, UserStatus } from '../../../models/enums.js';
 
 export class UpdateConversationStateDto {
   @IsString()
@@ -39,6 +39,10 @@ export class CreateUserDto {
   identityDocument?: string;
 
   @IsOptional()
+  @IsEnum(IdentityDocumentType)
+  identityDocumentType?: IdentityDocumentType;
+
+  @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
 
@@ -75,6 +79,10 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   identityDocument?: string;
+
+  @IsOptional()
+  @IsEnum(IdentityDocumentType)
+  identityDocumentType?: IdentityDocumentType;
 
   @IsOptional()
   @IsEnum(UserRole)
