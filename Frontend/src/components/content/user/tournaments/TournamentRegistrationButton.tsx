@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, postJson } from "@/lib/api/client";
-import { getCurrentSession } from "@/lib/api/auth";
-import { getJson } from "@/lib/api/client";
 import type { TournamentDetail } from "@/lib/api/public-content";
+import { fetchSelfTournamentRegistrationState, type SelfTournamentRegistrationState } from "./registration-state";
 
 type TournamentRegistrationButtonProps = {
   tournamentId: string;
@@ -21,8 +20,7 @@ type TournamentRegistrationButtonProps = {
     label: string | null;
   }>;
   registrations: TournamentDetail["registrations"];
-  initialRegistrationStatus?: string | null;
-  initialGroupStageSlotId?: string | null;
+  initialSelfRegistrationState?: SelfTournamentRegistrationState | null;
 };
 
 type RegistrationResponse = {
@@ -51,39 +49,6 @@ type WompiCheckoutConfig = {
     phoneNumber?: string;
   };
 };
-
-type TournamentRegistrationsResponse = {
-  data?: TournamentRegistrationItem[];
-};
-
-type TournamentRegistrationItem = {
-  status?: string;
-  groupStageSlotId?: string;
-  user?: {
-    _id?: string;
-  } | null;
-};
-
-async function fetchRegistrationStatus(tournamentId: string) {
-  const session = await getCurrentSession().catch(() => null);
-  const currentUserId = session?.user?.id;
-
-  if (!currentUserId) {
-    return null;
-  }
-
-  const payload = await getJson<TournamentRegistrationsResponse>(`/api/tournaments/${tournamentId}/registrations`, {
-    credentials: "include",
-  });
-
-  const registrations = Array.isArray(payload.data) ? payload.data : [];
-  const currentRegistration = registrations.find((registration) => registration.user?._id === currentUserId);
-
-  return {
-    status: typeof currentRegistration?.status === "string" ? currentRegistration.status : null,
-    groupStageSlotId: typeof currentRegistration?.groupStageSlotId === "string" ? currentRegistration.groupStageSlotId : null,
-  };
-}
 
 function formatSlotDate(value: string | null) {
   if (!value) {
@@ -165,6 +130,10 @@ function buildWompiCheckoutUrl(config: WompiCheckoutConfig) {
   return `${config.checkoutUrl}?${params.toString()}`;
 }
 
+function getGroupStageSlotId(state: SelfTournamentRegistrationState | null | undefined) {
+  return state?.registration?.groupStageSlotId ?? "";
+}
+
 export function TournamentRegistrationButton({
   tournamentId,
   isOpen,
@@ -173,15 +142,15 @@ export function TournamentRegistrationButton({
   groupStageTables,
   groupStageSlots,
   registrations,
-  initialRegistrationStatus = null,
-  initialGroupStageSlotId = null,
+  initialSelfRegistrationState = null,
 }: TournamentRegistrationButtonProps) {
   const router = useRouter();
   const [feedback, setFeedback] = useState<string>("");
-  const [registrationStatus, setRegistrationStatus] = useState<string | null>(null);
-  const [selectedGroupStageSlotId, setSelectedGroupStageSlotId] = useState<string>(initialGroupStageSlotId ?? "");
+  const [selfRegistrationState, setSelfRegistrationState] = useState<SelfTournamentRegistrationState | null>(initialSelfRegistrationState);
+  const [selectedGroupStageSlotId, setSelectedGroupStageSlotId] = useState<string>(getGroupStageSlotId(initialSelfRegistrationState));
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const syncRegistrationStateRef = useRef<(options?: { showLoadingState?: boolean }) => Promise<void>>(async () => {});
 
   const slotCapacity = groupStageTables && playersPerGroup
     ? groupStageTables * playersPerGroup
@@ -207,21 +176,21 @@ export function TournamentRegistrationButton({
   const selectedSlot = slotsWithAvailability.find((slot) => slot.id === selectedGroupStageSlotId) ?? null;
 
   useEffect(() => {
-    if (initialRegistrationStatus !== null) {
+    if (initialSelfRegistrationState !== null) {
       return;
     }
 
     let isActive = true;
 
-    void fetchRegistrationStatus(tournamentId)
-      .then((nextStatus) => {
+    void fetchSelfTournamentRegistrationState(tournamentId)
+      .then((nextState) => {
         if (!isActive) {
           return;
         }
 
-        setRegistrationStatus(nextStatus?.status ?? null);
-        if (nextStatus?.groupStageSlotId) {
-          setSelectedGroupStageSlotId(nextStatus.groupStageSlotId);
+        setSelfRegistrationState(nextState);
+        if (nextState?.registration?.groupStageSlotId) {
+          setSelectedGroupStageSlotId(nextState.registration.groupStageSlotId);
         }
       })
       .catch(() => {
@@ -229,13 +198,13 @@ export function TournamentRegistrationButton({
           return;
         }
 
-        setRegistrationStatus(null);
+        setSelfRegistrationState(null);
       });
 
     return () => {
       isActive = false;
     };
-  }, [initialRegistrationStatus, tournamentId]);
+  }, [initialSelfRegistrationState, tournamentId]);
 
   async function syncRegistrationState(options?: { showLoadingState?: boolean }) {
     if (options?.showLoadingState) {
@@ -243,29 +212,62 @@ export function TournamentRegistrationButton({
     }
 
     try {
-      const nextStatus = await fetchRegistrationStatus(tournamentId);
-      setRegistrationStatus(nextStatus?.status ?? null);
-      if (nextStatus?.groupStageSlotId) {
-        setSelectedGroupStageSlotId(nextStatus.groupStageSlotId);
+      const nextState = await fetchSelfTournamentRegistrationState(tournamentId);
+      setSelfRegistrationState(nextState);
+      if (nextState?.registration?.groupStageSlotId) {
+        setSelectedGroupStageSlotId(nextState.registration.groupStageSlotId);
       }
     } catch {
-      setRegistrationStatus(null);
+      setSelfRegistrationState(null);
     } finally {
       setIsCheckingStatus(false);
     }
   }
 
-  const effectiveRegistrationStatus = registrationStatus ?? initialRegistrationStatus;
-  const hasActiveRegistration = effectiveRegistrationStatus === "PENDING"
-    || effectiveRegistrationStatus === "CONFIRMED"
-    || effectiveRegistrationStatus === "WAITLIST";
+  useEffect(() => {
+    syncRegistrationStateRef.current = syncRegistrationState;
+  });
+
+  const effectiveRegistrationStatus = selfRegistrationState?.registration?.status ?? null;
+  const pendingReason = selfRegistrationState?.pendingReason ?? null;
+  const canPay = selfRegistrationState?.canPay ?? false;
+  const canResumePendingPayment = effectiveRegistrationStatus === "PENDING"
+    && pendingReason === "PAYMENT_UNDER_REVIEW";
+  const hasBlockingRegistration = effectiveRegistrationStatus === "CONFIRMED"
+    || effectiveRegistrationStatus === "WAITLIST"
+    || pendingReason === "CATEGORY_REVIEW";
   const disabled = !isOpen
     || isFull
     || areAllSlotsFull
     || isPending
     || isCheckingStatus
-    || hasActiveRegistration
+    || hasBlockingRegistration
     || (requiresGroupStageSlot && !selectedGroupStageSlotId);
+
+  useEffect(() => {
+    if (pendingReason !== "PAYMENT_UNDER_REVIEW") {
+      return;
+    }
+
+    const expiresAt = selfRegistrationState?.payment?.expiresAt;
+    if (!expiresAt) {
+      return;
+    }
+
+    const expirationTime = new Date(expiresAt).getTime();
+    if (Number.isNaN(expirationTime)) {
+      return;
+    }
+
+    const timeoutMs = expirationTime - Date.now();
+    const timeoutId = window.setTimeout(() => {
+      void syncRegistrationStateRef.current();
+    }, Math.max(timeoutMs, 0) + 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [pendingReason, selfRegistrationState?.payment?.expiresAt]);
 
   function getIdleLabel() {
     if (effectiveRegistrationStatus === "CONFIRMED") {
@@ -273,6 +275,18 @@ export function TournamentRegistrationButton({
     }
 
     if (effectiveRegistrationStatus === "PENDING") {
+      if (pendingReason === "CATEGORY_REVIEW") {
+        return "Pendiente por categoría";
+      }
+
+      if (pendingReason === "PAYMENT_UNDER_REVIEW") {
+        return "Continuar pago";
+      }
+
+      if (canPay) {
+        return "Pagar inscripción";
+      }
+
       return "Inscripción pendiente";
     }
 
@@ -304,27 +318,30 @@ export function TournamentRegistrationButton({
 
     startTransition(async () => {
       try {
+        const shouldResumePayment = effectiveRegistrationStatus === "PENDING" && (canPay || canResumePendingPayment);
+        const endpoint = shouldResumePayment
+          ? `/api/tournaments/${tournamentId}/wompi/checkout`
+          : `/api/tournaments/${tournamentId}/register-self`;
         const response = await postJson<RegistrationResponse, { groupStageSlotId?: string }>(
-          `/api/tournaments/${tournamentId}/register-self`,
+          endpoint,
           {
             ...(selectedGroupStageSlotId ? { groupStageSlotId: selectedGroupStageSlotId } : {}),
           },
           { credentials: "include" },
         );
 
-        if (response.requiresPayment) {
+        if (response.requiresPayment || shouldResumePayment) {
           const wompiUrl = buildWompiCheckoutUrl(response.data ?? {});
 
           if (!wompiUrl) {
             setFeedback("Tu inscripción fue creada, pero no se pudo preparar la redirección al pago.");
-            setRegistrationStatus(response.registrationStatus ?? "PENDING");
+            await syncRegistrationState({ showLoadingState: true });
             return;
           }
 
           window.location.assign(wompiUrl);
           return;
         } else {
-          setRegistrationStatus(response.registrationStatus ?? null);
           setFeedback(response.message ?? "Inscripción realizada correctamente.");
         }
 
@@ -363,11 +380,11 @@ export function TournamentRegistrationButton({
               setFeedback("");
               setSelectedGroupStageSlotId(event.target.value);
             }}
-            disabled={hasActiveRegistration || isPending || isCheckingStatus}
+            disabled={hasBlockingRegistration || isPending || isCheckingStatus}
           >
             <option value="">Selecciona un horario</option>
             {slotsWithAvailability.map((slot) => (
-              <option key={slot.id} value={slot.id} disabled={slot.isFull && slot.id !== initialGroupStageSlotId}>
+              <option key={slot.id} value={slot.id} disabled={slot.isFull && slot.id !== initialSelfRegistrationState?.registration?.groupStageSlotId}>
                 {buildSlotLabel(slot)}{slot.remaining !== null ? ` · ${slot.remaining} cupos` : ""}
               </option>
             ))}

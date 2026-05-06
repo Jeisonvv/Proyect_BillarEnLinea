@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { ArrayNotEmpty, IsArray, IsBoolean, IsDateString, IsEnum, IsInt, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
-import { TournamentFormat, TournamentStatus } from '../../../models/enums.js';
+import { PaymentMethod, RegistrationStatus, TournamentFormat, TournamentStatus } from '../../../models/enums.js';
 
 export class TournamentPrizeDto {
   @IsInt()
@@ -191,6 +191,88 @@ export class CreateTournamentDto {
   [key: string]: unknown;
 }
 
+export class UpdateAdminTournamentDto {
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  shortDescription?: string;
+
+  @IsOptional()
+  @IsString()
+  formatDetails?: string;
+
+  @IsOptional()
+  @IsEnum(TournamentStatus)
+  status?: string;
+
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  registrationDeadline?: string;
+
+  @IsOptional()
+  @IsString()
+  venueName?: string;
+
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsString()
+  streamUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  contactPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  seoTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  seoDescription?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
+
+  [key: string]: unknown;
+}
+
 export class ListTournamentsQueryDto {
   @IsOptional()
   @IsString()
@@ -299,6 +381,24 @@ export class UpdateTournamentHandicapDto {
   @IsNumber()
   @Min(0)
   handicap!: number;
+}
+
+export class UpdateTournamentRegistrationStatusDto {
+  @IsEnum(RegistrationStatus)
+  status!: string;
+
+  @IsOptional()
+  @IsEnum(PaymentMethod)
+  paymentMethod?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  paymentReference?: string;
+
+  @IsOptional()
+  @IsDateString()
+  paidAt?: string;
 }
 
 export class TournamentGroupInputDto {

@@ -26,7 +26,9 @@ import type {
   ListTournamentsQueryDto,
   RegisterTournamentPlayerDto,
   SelfRegisterTournamentDto,
+  UpdateAdminTournamentDto,
   UpdateTournamentHandicapDto,
+  UpdateTournamentRegistrationStatusDto,
 } from './dto/tournaments.dto.js';
 import { TournamentsNestService } from './tournaments.service.js';
 
@@ -47,6 +49,19 @@ export class TournamentsNestController {
       return { ok: true, data: tournament };
     } catch (error: any) {
       throw new HttpException({ ok: false, message: error.message }, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  async updateTournament(@Param('id') id: string, @Body() body: UpdateAdminTournamentDto) {
+    try {
+      const tournament = await this.tournamentsService.updateTournament(id, body);
+      return { ok: true, data: tournament };
+    } catch (error: any) {
+      const status = error.message === 'Torneo no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
 
@@ -104,6 +119,22 @@ export class TournamentsNestController {
       return { ok: true, total: registrations.length, data: registrations };
     } catch (error: any) {
       throw new HttpException({ ok: false, message: error.message }, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Get(':id/self-registration-status')
+  @UseGuards(AuthGuard)
+  async getTournamentSelfRegistrationStatus(@Req() req: Request, @Param('id') id: string) {
+    if (!req.user?.id) {
+      throw new HttpException({ ok: false, message: 'No autenticado.' }, HttpStatus.UNAUTHORIZED);
+    }
+
+    try {
+      const data = await this.tournamentsService.getTournamentSelfRegistrationState(id, req.user.id);
+      return { ok: true, data };
+    } catch (error: any) {
+      const status = error.message === 'Torneo no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
 
@@ -230,6 +261,29 @@ export class TournamentsNestController {
       return { ok: true, message: `Handicap actualizado a ${parsed}.`, data: registration };
     } catch (error: any) {
       const status = error.message.includes('no encontrado') || error.message.includes('Inscripción no encontrada')
+        ? HttpStatus.NOT_FOUND
+        : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
+  @Patch(':id/registrations/:userId/status')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  async updateRegistrationStatus(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Body() body: UpdateTournamentRegistrationStatusDto,
+  ) {
+    try {
+      const registration = await this.tournamentsService.setRegistrationStatus(id, userId, body);
+      return {
+        ok: true,
+        message: `Estado de inscripción actualizado a ${body.status}.`,
+        data: registration,
+      };
+    } catch (error: any) {
+      const status = error.message.includes('no encontrado')
         ? HttpStatus.NOT_FOUND
         : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);

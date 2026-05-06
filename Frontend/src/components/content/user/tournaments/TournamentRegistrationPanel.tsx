@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCurrentSession } from "@/lib/api/auth";
 import type { TournamentDetail } from "@/lib/api/public-content";
 import { TournamentRegistrationButton } from "./TournamentRegistrationButton";
+import { fetchSelfTournamentRegistrationState, type SelfTournamentRegistrationState } from "./registration-state";
 
 type TournamentRegistrationPanelProps = {
   tournamentId: string;
@@ -15,13 +15,21 @@ type TournamentRegistrationPanelProps = {
   groupStageSlots: TournamentDetail["groupStageSlots"];
 };
 
-function getRegistrationMessage(status: string | null) {
+function getRegistrationMessage(status: string | null, pendingReason: SelfTournamentRegistrationState["pendingReason"]) {
   if (status === "CONFIRMED") {
     return "Ya estás inscrito en este torneo. Tu cupo ya fue confirmado y no necesitas volver a registrarte.";
   }
 
   if (status === "PENDING") {
-    return "Ya tienes una inscripción creada en este torneo. Tu registro sigue pendiente de confirmación.";
+    if (pendingReason === "CATEGORY_REVIEW") {
+      return "Ya tienes una inscripción creada en este torneo, pero sigue pendiente porque tu categoría aún no ha sido definida. Un administrador debe revisarla antes de confirmar tu cupo.";
+    }
+
+    if (pendingReason === "PAYMENT_UNDER_REVIEW") {
+      return "Ya tienes una inscripción creada en este torneo y tu pago está en proceso de validación. Cuando sea aprobado, tu cupo quedará confirmado.";
+    }
+
+    return "Ya tienes una inscripción creada en este torneo, pero el pago aún no se ha completado. Puedes usar el botón para pagarlo en cualquier momento y continuar con la confirmación.";
   }
 
   if (status === "WAITLIST") {
@@ -40,39 +48,33 @@ export function TournamentRegistrationPanel({
   groupStageTables,
   groupStageSlots,
 }: TournamentRegistrationPanelProps) {
-  const [registrationStatus, setRegistrationStatus] = useState<string | null>(null);
-  const [groupStageSlotId, setGroupStageSlotId] = useState<string | null>(null);
+  const [selfRegistrationState, setSelfRegistrationState] = useState<SelfTournamentRegistrationState | null>(null);
 
   useEffect(() => {
     let isActive = true;
 
-    void getCurrentSession()
-      .then((session) => {
+    void fetchSelfTournamentRegistrationState(tournamentId)
+      .then((nextState) => {
         if (!isActive) {
           return;
         }
 
-        const currentUserId = typeof session?.user?.id === "string" ? session.user.id : null;
-        const currentRegistration = currentUserId
-          ? registrations.find((registration) => registration.user?.id === currentUserId) ?? null
-          : null;
-
-        setRegistrationStatus(currentRegistration?.status ?? null);
-        setGroupStageSlotId(currentRegistration?.groupStageSlotId ?? null);
+        setSelfRegistrationState(nextState);
       })
       .catch(() => {
         if (!isActive) {
           return;
         }
 
-        setRegistrationStatus(null);
-        setGroupStageSlotId(null);
+        setSelfRegistrationState(null);
       });
 
     return () => {
       isActive = false;
     };
-  }, [registrations, tournamentId]);
+  }, [tournamentId]);
+
+  const registrationStatus = selfRegistrationState?.registration?.status ?? null;
 
   const hasRegistration = registrationStatus === "CONFIRMED"
     || registrationStatus === "PENDING"
@@ -82,7 +84,7 @@ export function TournamentRegistrationPanel({
     <section className="rounded-[1.8rem] border border-[rgba(246,196,79,0.16)] bg-[linear-gradient(180deg,rgba(246,196,79,0.08),rgba(255,255,255,0.03))] p-5">
       <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Registro</p>
       <p className={`mt-4 text-sm leading-7 ${hasRegistration ? "text-emerald-100/88" : "text-white/78"}`}>
-        {getRegistrationMessage(registrationStatus)}
+        {getRegistrationMessage(registrationStatus, selfRegistrationState?.pendingReason ?? null)}
       </p>
       <div className="mt-4">
         <TournamentRegistrationButton
@@ -93,8 +95,7 @@ export function TournamentRegistrationPanel({
           groupStageTables={groupStageTables}
           groupStageSlots={groupStageSlots}
           registrations={registrations}
-          initialRegistrationStatus={registrationStatus}
-          initialGroupStageSlotId={groupStageSlotId}
+          initialSelfRegistrationState={selfRegistrationState}
         />
       </div>
     </section>

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { AdminSectionScaffold, formatAdminDate, formatAdminMoney, humanizeAdminToken } from "@/components/content/admin/shared/AdminSectionScaffold";
 import { getLandingSnapshot } from "@/lib/api/public-content";
@@ -32,31 +33,52 @@ export default async function AdminTournamentsPage() {
 
       <div className="grid gap-4">
         {tournaments.length > 0 ? tournaments.map((tournament) => (
-          <article key={tournament.id} className="rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="space-y-2">
-                <p className="text-xl font-semibold text-white">{tournament.name}</p>
-                <p className="text-sm leading-7 text-white/64">Inicio: {formatAdminDate(tournament.startDate)}</p>
+          <article key={tournament.id} className="overflow-hidden rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
+            <div className="grid gap-5 lg:grid-cols-[11rem_minmax(0,1fr)] lg:items-start">
+              <div className="relative overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(135deg,rgba(246,196,79,0.16),rgba(13,110,174,0.16),rgba(255,255,255,0.04))] aspect-[4/5] min-h-[12rem]">
+                {tournament.image ? (
+                  <Image
+                    src={tournament.image}
+                    alt={`Imagen del torneo ${tournament.name}`}
+                    fill
+                    sizes="(min-width: 1024px) 11rem, (min-width: 768px) 30vw, 100vw"
+                    className="object-cover object-center"
+                  />
+                ) : null}
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0.08),rgba(8,10,14,0.18),rgba(8,10,14,0.88))]" />
+                <div className="absolute inset-x-0 bottom-0 p-4">
+                  <p className="text-[0.65rem] uppercase tracking-[0.24em] text-white/54">Visual torneo</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{tournament.image ? "Imagen cargada" : "Sin imagen"}</p>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/78">{humanizeAdminToken(tournament.format)}</span>
-                <span className="rounded-full border border-[rgba(246,196,79,0.2)] bg-[rgba(246,196,79,0.12)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[rgba(255,233,174,0.96)]">{humanizeAdminToken(tournament.status)}</span>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
-              <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Inscripción</p>
-                <p className="mt-2 text-base font-semibold text-white">{formatAdminMoney(tournament.entryFee)}</p>
-              </div>
-              <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Cupos</p>
-                <p className="mt-2 text-base font-semibold text-white">{tournament.maxParticipants ?? "Por definir"}</p>
-              </div>
-              <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Acción</p>
-                <div className="mt-2 flex flex-wrap gap-3">
-                  <Link className="text-sm font-semibold text-[#f6c44f] transition hover:text-white" href="/home/torneos">Ir al listado</Link>
-                  <Link className="text-sm font-semibold text-white/72 transition hover:text-white" href={`/home/torneos/${tournament.slug}`}>Abrir detalle</Link>
+              <div>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <p className="text-xl font-semibold text-white">{tournament.name}</p>
+                    <p className="text-sm leading-7 text-white/64">Inicio: {formatAdminDate(tournament.startDate)}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/78">{humanizeAdminToken(tournament.format)}</span>
+                    <span className="rounded-full border border-[rgba(246,196,79,0.2)] bg-[rgba(246,196,79,0.12)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[rgba(255,233,174,0.96)]">{humanizeAdminToken(tournament.status)}</span>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
+                    <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Inscripción</p>
+                    <p className="mt-2 text-base font-semibold text-white">{formatAdminMoney(tournament.entryFee)}</p>
+                  </div>
+                  <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
+                    <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Cupos</p>
+                    <p className="mt-2 text-base font-semibold text-white">{tournament.maxParticipants ?? "Por definir"}</p>
+                  </div>
+                  <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
+                    <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Acción</p>
+                    <div className="mt-2 flex flex-wrap gap-3">
+                      <Link className="text-sm font-semibold text-[#f6c44f] transition hover:text-white" href={`/admin/torneos/${tournament.slug}`}>Administrar</Link>
+                      <Link className="text-sm font-semibold text-[#f6c44f] transition hover:text-white" href="/home/torneos">Ir al listado</Link>
+                      <Link className="text-sm font-semibold text-white/72 transition hover:text-white" href={`/home/torneos/${tournament.slug}`}>Abrir detalle</Link>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

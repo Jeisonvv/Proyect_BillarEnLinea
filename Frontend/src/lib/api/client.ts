@@ -94,6 +94,24 @@ export async function postJson<TResponse, TBody>(
   });
 }
 
+export async function patchJson<TResponse, TBody>(
+  path: string,
+  body: TBody,
+  init?: RequestInit,
+): Promise<TResponse> {
+  const headers = new Headers(init?.headers);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  return requestJson<TResponse>(path, {
+    ...init,
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+  });
+}
+
 export async function postFormData<TResponse>(
   path: string,
   body: FormData,

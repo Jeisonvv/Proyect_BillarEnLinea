@@ -223,6 +223,7 @@ function resolveTournamentCheckoutPricing(tournament: {
       expiresAt,
     } satisfies TournamentCheckoutPricing;
   }
+
   return {
     pricingType: "FULL",
     discountPercentage: 0,
@@ -246,6 +247,13 @@ function mapWompiProviderMethodToPaymentMethod(method?: string) {
     default:
       return undefined;
   }
+}
+
+function buildWompiMethodSummary(providerMethod?: string) {
+  return {
+    providerMethod: providerMethod ?? null,
+    normalizedPaymentMethod: mapWompiProviderMethodToPaymentMethod(providerMethod) ?? null,
+  };
 }
 
 function getExistingRaffleResponseData(
@@ -1360,6 +1368,7 @@ export async function getTournamentWompiReturnByReference(reference: string) {
       status: payment.status,
       amountInCents: payment.amountInCents,
       currency: payment.currency,
+      ...buildWompiMethodSummary(payment.providerMethod),
       redirectUrl: payment.redirectUrl,
       ...(payment.expiresAt ? { expiresAt: payment.expiresAt } : {}),
       ...(payment.externalTransactionId ? { transactionId: payment.externalTransactionId } : {}),
@@ -1368,6 +1377,7 @@ export async function getTournamentWompiReturnByReference(reference: string) {
       id: registration._id,
       status: registration.status,
       playerCategory: registration.playerCategory,
+      paymentMethod: registration.paymentMethod ?? null,
       ...(registration.paidAt ? { paidAt: registration.paidAt } : {}),
       ...(registration.paymentReference ? { paymentReference: registration.paymentReference } : {}),
     },

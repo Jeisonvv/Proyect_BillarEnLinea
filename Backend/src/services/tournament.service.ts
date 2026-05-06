@@ -7,6 +7,7 @@ import PaymentTransaction from "../models/payment-transaction.model.js";
 import User from "../models/user.model.js";
 import {
   Channel,
+  PaymentMethod,
   PaymentPayableType,
   PaymentProvider,
   PaymentTransactionStatus,
@@ -45,6 +46,13 @@ interface RegisterTournamentParams {
   groupStageSlotId?: string;
 }
 
+interface UpdateTournamentRegistrationStatusParams {
+  status: string;
+  paymentMethod?: string;
+  paymentReference?: string;
+  paidAt?: string;
+}
+
 const ACTIVE_GROUP_STAGE_SLOT_STATUSES = [
   RegistrationStatus.PENDING,
   RegistrationStatus.CONFIRMED,
@@ -77,6 +85,54 @@ function mapTournamentRegistrationForResponse(registration: any) {
   };
 }
 
+function deriveSelfRegistrationPendingReason(
+  registration: {
+    status?: string;
+    playerCategory?: string;
+  } | null,
+  payment: {
+    status?: string;
+    expiresAt?: Date | null;
+  } | null,
+) {
+  if (!registration || registration.status !== RegistrationStatus.PENDING) {
+    return null;
+  }
+
+  if (registration.playerCategory === PlayerCategory.SIN_DEFINIR) {
+    return "CATEGORY_REVIEW";
+  }
+
+  if (payment?.status === PaymentTransactionStatus.PENDING) {
+    if (payment.expiresAt && payment.expiresAt.getTime() <= Date.now()) {
+      return "PAYMENT_REQUIRED";
+    }
+
+    return "PAYMENT_UNDER_REVIEW";
+  }
+
+  return "PAYMENT_REQUIRED";
+}
+
+function normalizeWompiProviderMethod(providerMethod?: string | null) {
+  if (!providerMethod) {
+    return null;
+  }
+
+  switch (providerMethod.toUpperCase()) {
+    case PaymentMethod.CARD:
+      return PaymentMethod.CARD;
+    case PaymentMethod.NEQUI:
+      return PaymentMethod.NEQUI;
+    case PaymentMethod.DAVIPLATA:
+      return PaymentMethod.DAVIPLATA;
+    case PaymentMethod.TRANSFER:
+      return PaymentMethod.TRANSFER;
+    default:
+      return null;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SERVICIOS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -98,6 +154,74 @@ export async function createTournamentForActorService(
     ...data,
     createdBy,
   });
+}
+
+export async function updateTournamentAdminService(id: string, data: Record<string, unknown>) {
+  const tournamentId = toTournamentObjectId(id);
+  const tournament = await Tournament.findById(tournamentId);
+
+  if (!tournament) {
+    throw new Error('Torneo no encontrado.');
+  }
+
+  const allowedFields = [
+    'name',
+    'description',
+    'shortDescription',
+    'formatDetails',
+    'status',
+    'startDate',
+    'endDate',
+    'registrationDeadline',
+    'venueName',
+    'location',
+    'address',
+    'city',
+    'country',
+    'streamUrl',
+    'imageUrl',
+    'contactPhone',
+    'seoTitle',
+    'seoDescription',
+    'tags',
+  ] as const;
+
+  let hasChanges = false;
+
+  for (const field of allowedFields) {
+    if (!(field in data)) {
+      continue;
+    }
+
+    const value = data[field];
+
+    if (field === 'tags') {
+      tournament.set(
+        field,
+        Array.isArray(value)
+          ? value.map((tag) => String(tag).trim()).filter(Boolean)
+          : [],
+      );
+      hasChanges = true;
+      continue;
+    }
+
+    if (typeof value === 'string') {
+      tournament.set(field, value.trim().length > 0 ? value.trim() : undefined);
+      hasChanges = true;
+      continue;
+    }
+
+    tournament.set(field, value);
+    hasChanges = true;
+  }
+
+  if (!hasChanges) {
+    return tournament.toObject();
+  }
+
+  await tournament.save();
+  return tournament.toObject();
 }
 
 export async function deleteTournamentService(id: string) {
@@ -566,6 +690,78 @@ export async function getTournamentRegistrationsService(
   return registrations.map(mapTournamentRegistrationForResponse);
 }
 
+export async function getTournamentSelfRegistrationStateService(
+  tournamentId: string,
+  userId: string,
+) {
+  const tournamentObjectId = toTournamentObjectId(tournamentId);
+  const userObjectId = toTournamentObjectId(userId, "User ID");
+
+  const tournament = await Tournament.findById(tournamentObjectId)
+    .select("_id")
+    .lean();
+
+  if (!tournament) {
+    throw new Error("Torneo no encontrado.");
+  }
+
+  const registration = await TournamentRegistration.findOne({
+    tournament: tournamentObjectId,
+    user: userObjectId,
+  })
+    .select("_id status playerCategory groupStageSlotId paymentMethod paymentReference paidAt")
+    .lean();
+
+  if (!registration) {
+    return {
+      registration: null,
+      payment: null,
+      pendingReason: null,
+      canPay: false,
+    };
+  }
+
+  const payment = await PaymentTransaction.findOne({
+    provider: PaymentProvider.WOMPI,
+    payableType: PaymentPayableType.TOURNAMENT_REGISTRATION,
+    payableId: registration._id,
+  })
+    .select("_id status reference expiresAt externalTransactionId providerMethod redirectUrl createdAt updatedAt")
+    .sort({ updatedAt: -1 })
+    .lean();
+
+  const pendingReason = deriveSelfRegistrationPendingReason(registration, payment);
+  const canPay = pendingReason === "PAYMENT_REQUIRED";
+
+  return {
+    registration: {
+      id: registration._id,
+      status: registration.status,
+      playerCategory: registration.playerCategory,
+      groupStageSlotId: registration.groupStageSlotId ?? null,
+      paymentMethod: registration.paymentMethod ?? null,
+      paymentReference: registration.paymentReference ?? null,
+      paidAt: registration.paidAt ?? null,
+    },
+    payment: payment
+      ? {
+        id: payment._id,
+        status: payment.status,
+        reference: payment.reference,
+        expiresAt: payment.expiresAt ?? null,
+        transactionId: payment.externalTransactionId ?? null,
+        providerMethod: payment.providerMethod ?? null,
+        normalizedPaymentMethod: normalizeWompiProviderMethod(payment.providerMethod),
+        redirectUrl: payment.redirectUrl ?? null,
+        createdAt: payment.createdAt,
+        updatedAt: payment.updatedAt,
+      }
+      : null,
+    pendingReason,
+    canPay,
+  };
+}
+
 /**
  * Genera el bracket de eliminación directa para un torneo.
  * Devuelve los partidos creados con populate completo.
@@ -954,6 +1150,114 @@ export async function updateHandicapService(
   }
 
   return registration;
+}
+
+export async function setTournamentRegistrationStatusService(
+  tournamentId: string,
+  userId: string,
+  data: UpdateTournamentRegistrationStatusParams,
+) {
+  if (!Object.values(RegistrationStatus).includes(data.status as RegistrationStatus)) {
+    throw new Error('Estado de inscripción inválido.');
+  }
+
+  if (
+    data.paymentMethod !== undefined
+    && !Object.values(PaymentMethod).includes(data.paymentMethod as PaymentMethod)
+  ) {
+    throw new Error('Método de pago inválido.');
+  }
+
+  const nextStatus = data.status as RegistrationStatus;
+  const tournament = await Tournament.findById(tournamentId)
+    .select('_id status currentParticipants maxParticipants')
+    .lean();
+
+  if (!tournament) {
+    throw new Error('Torneo no encontrado.');
+  }
+
+  if ([TournamentStatus.IN_PROGRESS, TournamentStatus.FINISHED].includes(tournament.status)) {
+    throw new Error('No puedes cambiar inscripciones cuando el torneo ya está en curso o finalizado.');
+  }
+
+  const registration = await TournamentRegistration.findOne({
+    tournament: tournamentId,
+    user: userId,
+  })
+    .select('_id status paidAt')
+    .lean();
+
+  if (!registration) {
+    throw new Error('Inscripción no encontrada para este jugador en el torneo.');
+  }
+
+  const previousStatus = registration.status as RegistrationStatus;
+  const wasConfirmed = previousStatus === RegistrationStatus.CONFIRMED;
+  const willBeConfirmed = nextStatus === RegistrationStatus.CONFIRMED;
+
+  if (willBeConfirmed && ![TournamentStatus.OPEN, TournamentStatus.CLOSED].includes(tournament.status)) {
+    throw new Error('El torneo no admite confirmaciones manuales en su estado actual.');
+  }
+
+  if (!wasConfirmed && willBeConfirmed) {
+    const seatReserved = await Tournament.updateOne(
+      {
+        _id: tournament._id,
+        currentParticipants: { $lt: tournament.maxParticipants },
+      },
+      { $inc: { currentParticipants: 1 } },
+    );
+
+    if (seatReserved.modifiedCount === 0) {
+      throw new Error('El torneo ya no tiene cupos disponibles para confirmar la inscripción.');
+    }
+  }
+
+  if (wasConfirmed && !willBeConfirmed) {
+    await Tournament.updateOne(
+      {
+        _id: tournament._id,
+        currentParticipants: { $gt: 0 },
+      },
+      { $inc: { currentParticipants: -1 } },
+    );
+  }
+
+  const paidAt = willBeConfirmed
+    ? (data.paidAt ? new Date(data.paidAt) : registration.paidAt ?? new Date())
+    : undefined;
+
+  if (data.paidAt && Number.isNaN(paidAt?.getTime() ?? Number.NaN)) {
+    throw new Error('La fecha de pago es inválida.');
+  }
+
+  await TournamentRegistration.updateOne(
+    { _id: registration._id },
+    {
+      $set: {
+        status: nextStatus,
+        ...(willBeConfirmed && { paidAt }),
+        ...(willBeConfirmed && data.paymentMethod !== undefined && { paymentMethod: data.paymentMethod }),
+        ...(willBeConfirmed && data.paymentReference !== undefined && { paymentReference: data.paymentReference.trim() }),
+      },
+      $unset: {
+        ...(!willBeConfirmed ? { paidAt: '' } : {}),
+        ...(!willBeConfirmed ? { paymentMethod: '' } : {}),
+        ...(!willBeConfirmed ? { paymentReference: '' } : {}),
+      },
+    },
+  );
+
+  const updatedRegistration = await TournamentRegistration.findById(registration._id)
+    .populate('user', 'name phone avatarUrl playerCategory')
+    .lean();
+
+  if (!updatedRegistration) {
+    throw new Error('No fue posible cargar la inscripción actualizada.');
+  }
+
+  return mapTournamentRegistrationForResponse(updatedRegistration);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

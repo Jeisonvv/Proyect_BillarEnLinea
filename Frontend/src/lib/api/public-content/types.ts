@@ -23,6 +23,8 @@ export type TournamentDetail = {
   image: string | null;
   description: string | null;
   shortDescription: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
   format: string | null;
   formatDetails: string | null;
   status: string | null;
@@ -55,6 +57,7 @@ export type TournamentDetail = {
   registrations: Array<{
     id: string;
     status: string | null;
+    paymentMethod: string | null;
     playerCategory: string | null;
     handicap: number | null;
     notes: string | null;

@@ -21,11 +21,14 @@ import {
   getTournamentByIdService,
   getTournamentBySlugService,
   getTournamentRegistrationsService,
+  getTournamentSelfRegistrationStateService,
   getTournamentResultsService,
   listTournamentsService,
   registerPlayerService,
+  setTournamentRegistrationStatusService,
   selfRegisterToTournamentService,
   updateHandicapService,
+  updateTournamentAdminService,
 } from '../../services/tournament.service.js';
 import type {
   AddTournamentPlayerToGroupDto,
@@ -36,6 +39,8 @@ import type {
   ListTournamentsQueryDto,
   RegisterTournamentPlayerDto,
   SelfRegisterTournamentDto,
+  UpdateAdminTournamentDto,
+  UpdateTournamentRegistrationStatusDto,
 } from './dto/tournaments.dto.js';
 
 interface ActorContext {
@@ -51,6 +56,10 @@ export class TournamentsNestService {
 
   createTournamentForActor(data: CreateTournamentDto, actorId: string) {
     return createTournamentForActorService(data, actorId);
+  }
+
+  updateTournament(id: string, data: UpdateAdminTournamentDto) {
+    return updateTournamentAdminService(id, data as Record<string, unknown>);
   }
 
   deleteTournament(id: string) {
@@ -78,6 +87,10 @@ export class TournamentsNestService {
     return getTournamentRegistrationsService(id, status);
   }
 
+  getTournamentSelfRegistrationState(id: string, userId: string) {
+    return getTournamentSelfRegistrationStateService(id, userId);
+  }
+
   registerPlayer(id: string, userId: string, data: RegisterTournamentPlayerDto) {
     return registerPlayerService(id, userId, {
       ...(data.handicap !== undefined && { handicap: data.handicap }),
@@ -103,6 +116,15 @@ export class TournamentsNestService {
 
   updateHandicap(tournamentId: string, userId: string, handicap: number) {
     return updateHandicapService(tournamentId, userId, handicap);
+  }
+
+  setRegistrationStatus(tournamentId: string, userId: string, data: UpdateTournamentRegistrationStatusDto) {
+    return setTournamentRegistrationStatusService(tournamentId, userId, {
+      status: data.status,
+      ...(data.paymentMethod !== undefined && { paymentMethod: data.paymentMethod }),
+      ...(data.paymentReference !== undefined && { paymentReference: data.paymentReference }),
+      ...(data.paidAt !== undefined && { paidAt: data.paidAt }),
+    });
   }
 
   getPendingPayments(id: string) {

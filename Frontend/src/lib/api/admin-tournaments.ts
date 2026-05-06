@@ -1,4 +1,4 @@
-import { postFormData, postJson } from "@/lib/api/client";
+import { patchJson, postFormData, postJson } from "@/lib/api/client";
 
 export const TOURNAMENT_FORMATS = [
   "SINGLE_ELIMINATION",
@@ -25,9 +25,59 @@ export const PLAYER_CATEGORIES = [
   "ELITE",
 ] as const;
 
+export const TOURNAMENT_REGISTRATION_STATUSES = [
+  "PENDING",
+  "CONFIRMED",
+  "CANCELLED",
+  "WAITLIST",
+] as const;
+
+export const PAYMENT_METHODS = [
+  "CASH",
+  "TRANSFER",
+  "CARD",
+  "NEQUI",
+  "DAVIPLATA",
+] as const;
+
 export type TournamentFormat = (typeof TOURNAMENT_FORMATS)[number];
 export type TournamentStatus = (typeof TOURNAMENT_STATUSES)[number];
 export type PlayerCategory = (typeof PLAYER_CATEGORIES)[number];
+export type TournamentRegistrationStatus = (typeof TOURNAMENT_REGISTRATION_STATUSES)[number];
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export type UpdateTournamentRegistrationStatusInput = {
+  status: TournamentRegistrationStatus;
+  paymentMethod?: PaymentMethod;
+  paymentReference?: string;
+  paidAt?: string;
+};
+
+export type UpdateAdminTournamentInput = {
+  name?: string;
+  description?: string;
+  shortDescription?: string;
+  formatDetails?: string;
+  status?: TournamentStatus;
+  startDate?: string;
+  endDate?: string;
+  registrationDeadline?: string;
+  venueName?: string;
+  location?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  streamUrl?: string;
+  imageUrl?: string;
+  contactPhone?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  tags?: string[];
+};
+
+export type UpdateTournamentHandicapInput = {
+  handicap: number;
+};
 
 export type UploadImageResponse = {
   ok: boolean;
@@ -101,6 +151,69 @@ export type CreateTournamentResponse = {
   };
 };
 
+export type UpdateTournamentRegistrationStatusResponse = {
+  ok: boolean;
+  message?: string;
+  data: {
+    _id?: string;
+    status?: string;
+    paidAt?: string;
+    paymentMethod?: string;
+    paymentReference?: string;
+    user?: {
+      _id?: string;
+      name?: string | null;
+      phone?: string | null;
+      avatarUrl?: string | null;
+      playerCategory?: string | null;
+    };
+  };
+};
+
+export type UpdateAdminTournamentResponse = {
+  ok: boolean;
+  data: {
+    _id?: string;
+    slug?: string;
+    name?: string;
+    description?: string;
+    shortDescription?: string;
+    formatDetails?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    registrationDeadline?: string;
+    venueName?: string;
+    location?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    streamUrl?: string;
+    imageUrl?: string;
+    contactPhone?: string;
+    seoTitle?: string;
+    seoDescription?: string;
+    tags?: string[];
+  };
+};
+
+export type UpdateTournamentHandicapResponse = {
+  ok: boolean;
+  message?: string;
+  data: {
+    _id?: string;
+    handicap?: number;
+    status?: string;
+    user?: {
+      _id?: string;
+      name?: string | null;
+      phone?: string | null;
+      avatarUrl?: string | null;
+      playerCategory?: string | null;
+    };
+  };
+};
+
 export async function uploadTournamentImage(file: File, name?: string) {
   const formData = new FormData();
   formData.append("file", file);
@@ -121,4 +234,38 @@ export async function createTournamentAdmin(input: CreateTournamentInput) {
   return postJson<CreateTournamentResponse, CreateTournamentInput>("/api/tournaments", input, {
     credentials: "include",
   });
+}
+
+export async function updateTournamentAdmin(tournamentId: string, input: UpdateAdminTournamentInput) {
+  return patchJson<UpdateAdminTournamentResponse, UpdateAdminTournamentInput>(`/api/tournaments/${tournamentId}`, input, {
+    credentials: "include",
+  });
+}
+
+export async function updateTournamentRegistrationStatusAdmin(
+  tournamentId: string,
+  userId: string,
+  input: UpdateTournamentRegistrationStatusInput,
+) {
+  return patchJson<UpdateTournamentRegistrationStatusResponse, UpdateTournamentRegistrationStatusInput>(
+    `/api/tournaments/${tournamentId}/registrations/${userId}/status`,
+    input,
+    {
+      credentials: "include",
+    },
+  );
+}
+
+export async function updateTournamentHandicapAdmin(
+  tournamentId: string,
+  userId: string,
+  input: UpdateTournamentHandicapInput,
+) {
+  return patchJson<UpdateTournamentHandicapResponse, UpdateTournamentHandicapInput>(
+    `/api/tournaments/${tournamentId}/registrations/${userId}/handicap`,
+    input,
+    {
+      credentials: "include",
+    },
+  );
 }

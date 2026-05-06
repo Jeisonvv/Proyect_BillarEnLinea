@@ -1,6 +1,16 @@
 import Link from "next/link";
 import { ReactNode } from "react";
 
+const adminDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "America/Bogota",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
 export function formatAdminDate(value: string | null) {
   if (!value) {
     return "Sin fecha definida";
@@ -11,10 +21,7 @@ export function formatAdminDate(value: string | null) {
     return value;
   }
 
-  return new Intl.DateTimeFormat("es-CO", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(parsed);
+  return adminDateFormatter.format(parsed).replace(",", " ·");
 }
 
 export function formatAdminMoney(value: number | null) {

@@ -304,8 +304,8 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
                       </div>
 
                       <div className="flex items-center justify-end pr-3">
-                        <span className="inline-flex rounded-[1rem] bg-[linear-gradient(180deg,#f6c44f,#e79f14)] px-3.5 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[#18233f] shadow-[0_10px_24px_rgba(231,159,20,0.24)] md:px-4 md:py-2.5 md:text-[0.74rem]">
-                          Activo
+                        <span className="text-right text-[0.82rem] font-medium leading-6 text-white/78 md:text-[0.9rem]">
+                          {formatShortDate(registration.createdAt)}
                         </span>
                       </div>
                     </article>

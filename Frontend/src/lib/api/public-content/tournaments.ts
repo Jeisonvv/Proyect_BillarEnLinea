@@ -64,6 +64,7 @@ function normalizeTournamentDetail(record: JsonRecord): TournamentDetail | null 
     return {
       id: pickString(registration, ["_id", "id"]) ?? `${pickString(user ?? {}, ["_id", "id"]) ?? "inscrito"}-${pickString(registration, ["createdAt"]) ?? "row"}`,
       status: pickString(registration, ["status"]),
+      paymentMethod: pickString(registration, ["paymentMethod"]),
       playerCategory: pickString(registration, ["playerCategory"]),
       handicap: pickNumber(registration, ["handicap"]),
       notes: pickString(registration, ["notes"]),
@@ -88,6 +89,8 @@ function normalizeTournamentDetail(record: JsonRecord): TournamentDetail | null 
     image: resolveApiAssetUrl(images[0] ?? image),
     description: pickString(record, ["description"]),
     shortDescription: pickString(record, ["shortDescription"]),
+    seoTitle: pickString(record, ["seoTitle"]),
+    seoDescription: pickString(record, ["seoDescription"]),
     format: pickString(record, ["format"]),
     formatDetails: pickString(record, ["formatDetails"]),
     status: pickString(record, ["status"]),
