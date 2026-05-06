@@ -1,11 +1,9 @@
-import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
-
-const AUTH_COOKIE_NAMES = ["billar_auth", "auth_token"];
+import { getServerSession } from "@/lib/auth/server-session";
 
 function getIntentMessage(intent?: string) {
   switch (intent) {
@@ -38,27 +36,10 @@ export default async function LoginPage({
 }) {
   const { next, intent } = await searchParams;
   const nextHref = next && next.startsWith("/") ? next : "/home";
-  const cookieStore = await cookies();
-  const authCookie = AUTH_COOKIE_NAMES
-    .map((cookieName) => ({ cookieName, value: cookieStore.get(cookieName)?.value ?? null }))
-    .find((entry) => entry.value);
+  const session = await getServerSession();
 
-  if (authCookie?.value) {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001"}/api/auth/me`,
-        {
-          headers: {
-            Cookie: `${authCookie.cookieName}=${authCookie.value}`,
-          },
-          cache: "no-store",
-        },
-      );
-
-      if (response.ok) {
-        redirect(nextHref);
-      }
-    } catch {}
+  if (session) {
+    redirect(nextHref);
   }
 
   const accessPrompt = intent ? getIntentMessage(intent) : null;

@@ -26,6 +26,7 @@ import {
 export interface ITournamentRegistration {
   user: mongoose.Types.ObjectId;       // Qué jugador se inscribió
   tournament: mongoose.Types.ObjectId; // A qué torneo se inscribió
+  groupStageSlotId?: mongoose.Types.ObjectId;
 
   status: RegistrationStatus; // Estado actual de la inscripción
   playerCategory: PlayerCategory; // Categoría del jugador al momento de inscribirse
@@ -95,6 +96,9 @@ const tournamentRegistrationSchema = new Schema<
       ref: "Tournament",
       required: true,
     },
+    groupStageSlotId: {
+      type: Schema.Types.ObjectId,
+    },
     status: {
       type: String,
       enum: Object.values(RegistrationStatus),
@@ -144,6 +148,9 @@ tournamentRegistrationSchema.index(
 // Para listar todas las inscripciones de un torneo filtradas por estado
 // (ej: "dame todos los jugadores CONFIRMADOS del torneo X")
 tournamentRegistrationSchema.index({ tournament: 1, status: 1 });
+
+// Para validar rápidamente el cupo de una franja específica.
+tournamentRegistrationSchema.index({ tournament: 1, groupStageSlotId: 1, status: 1 });
 
 // Para ver el historial de torneos de un usuario
 tournamentRegistrationSchema.index({ user: 1, status: 1 });

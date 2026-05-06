@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { TournamentCard } from "@/components/content/TournamentCard";
+import { TournamentCard } from "@/components/content/user/tournaments";
 import { getLandingTournaments } from "@/lib/api/public-content";
 
 export const metadata: Metadata = {

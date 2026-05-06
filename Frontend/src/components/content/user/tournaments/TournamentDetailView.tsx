@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { TournamentDetail } from "@/lib/api/public-content";
 import { TournamentRegistrationPanel } from "./TournamentRegistrationPanel";
-import { formatMoney, humanizeToken } from "./utils";
+import { formatMoney, humanizeToken } from "../shared/utils";
 
 function formatLongDate(value: string | null) {
   if (!value) {
@@ -17,6 +17,21 @@ function formatLongDate(value: string | null) {
   return new Intl.DateTimeFormat("es-CO", {
     dateStyle: "full",
     timeStyle: "short",
+  }).format(parsed);
+}
+
+function formatShortDate(value: string | null) {
+  if (!value) {
+    return "Por anunciar";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("es-CO", {
+    dateStyle: "medium",
   }).format(parsed);
 }
 
@@ -39,6 +54,9 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
   const isFull = tournament.currentParticipants !== null
     && tournament.maxParticipants !== null
     && tournament.currentParticipants >= tournament.maxParticipants;
+  const slotCapacity = tournament.groupStageTables !== null && tournament.playersPerGroup !== null
+    ? tournament.groupStageTables * tournament.playersPerGroup
+    : null;
 
   return (
     <main className="mx-auto grid w-full max-w-[1500px] gap-6 px-4 py-6 sm:px-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(22rem,0.92fr)] xl:px-10 2xl:px-14">
@@ -148,7 +166,29 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
                 isOpen={isOpen}
                 isFull={isFull}
                 registrations={tournament.registrations}
+                playersPerGroup={tournament.playersPerGroup}
+                groupStageTables={tournament.groupStageTables}
+                groupStageSlots={tournament.groupStageSlots}
               />
+
+              {tournament.groupStageSlots.length > 0 ? (
+                <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5">
+                  <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Agenda de grupos</p>
+                  <p className="mt-4 text-sm leading-7 text-white/74">
+                    {tournament.groupStageTables !== null ? `${tournament.groupStageTables} mesas disponibles` : "Mesas por confirmar"}
+                    {slotCapacity !== null ? ` · ${slotCapacity} jugadores maximos por franja` : ""}
+                  </p>
+                  <div className="mt-4 grid gap-3">
+                    {tournament.groupStageSlots.map((slot) => (
+                      <article key={slot.id} className="rounded-[1.25rem] border border-white/8 bg-black/18 p-4">
+                        <p className="text-sm font-semibold text-white">{slot.label ?? "Horario de grupos"}</p>
+                        <p className="mt-2 text-sm leading-7 text-white/74">{formatShortDate(slot.date)}</p>
+                        <p className="text-sm leading-7 text-white/62">{[slot.startTime, slot.endTime].filter(Boolean).join(" - ") || "Horario por anunciar"}</p>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
 
               <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5">
                 <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Sede</p>

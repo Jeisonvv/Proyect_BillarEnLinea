@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { LandingTournament } from "@/lib/api/public-content";
-import { formatDate, formatMoney, humanizeToken } from "./utils";
+import { formatDate, formatMoney, humanizeToken } from "../shared/utils";
 
 export function TournamentCard({ item }: { item: LandingTournament }) {
   const statusLabel = humanizeToken(item.status);

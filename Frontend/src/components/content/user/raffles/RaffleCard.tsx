@@ -1,5 +1,5 @@
 import type { LandingRaffle } from "@/lib/api/public-content";
-import { formatDate, formatMoney, humanizeToken } from "./utils";
+import { formatDate, formatMoney, humanizeToken } from "../shared/utils";
 
 export function RaffleCard({ item }: { item: LandingRaffle }) {
   return (

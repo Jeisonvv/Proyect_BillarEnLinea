@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { getJson } from "@/lib/api/client";
-import { formatMoney, humanizeToken } from "@/components/content/utils";
+import { formatMoney, humanizeToken } from "@/components/content/user/shared";
 
 type WompiTournamentReturnData = {
   payment: {

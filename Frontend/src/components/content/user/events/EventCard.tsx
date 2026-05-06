@@ -1,5 +1,5 @@
 import type { LandingEvent } from "@/lib/api/public-content";
-import { formatDate, formatMoney, humanizeToken } from "./utils";
+import { formatDate, formatMoney, humanizeToken } from "../shared/utils";
 
 export function EventCard({ item }: { item: LandingEvent }) {
   return (

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { TournamentCreateLab } from "@/components/content/TournamentCreateLab";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Crear torneo de prueba",
-  description: "Laboratorio interno para subir una imagen a Cloudinary y crear un torneo usando el backend real.",
+  title: "Redirigiendo a crear torneo",
+  description: "Redirección a la nueva ruta administrativa de creación de torneos.",
   robots: {
     index: false,
     follow: false,
@@ -11,5 +11,5 @@ export const metadata: Metadata = {
 };
 
 export default function CreateTournamentPage() {
-  return <TournamentCreateLab />;
+  redirect("/admin/torneos/crear");
 }

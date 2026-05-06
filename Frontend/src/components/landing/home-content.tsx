@@ -1,14 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { LandingSnapshot } from "@/lib/api/public-content";
-import { EmptyState } from "@/components/content/EmptyState";
-import { EventCard } from "@/components/content/EventCard";
-import { MetricCard } from "@/components/content/MetricCard";
-import { PostCard } from "@/components/content/PostCard";
-import { ProductCard } from "@/components/content/ProductCard";
-import { RaffleCard } from "@/components/content/RaffleCard";
-import { SectionHeading } from "@/components/content/SectionHeading";
-import { TournamentCard } from "@/components/content/TournamentCard";
+import { EventCard } from "@/components/content/user/events";
+import { PostCard } from "@/components/content/user/posts";
+import { ProductCard } from "@/components/content/user/products";
+import { RaffleCard } from "@/components/content/user/raffles";
+import { TournamentCard } from "@/components/content/user/tournaments";
+import { EmptyState, MetricCard, SectionHeading } from "@/components/content/user/shared";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 
 function getStructuredData(snapshot: LandingSnapshot) {

@@ -7,13 +7,21 @@ import { usePathname, useRouter } from "next/navigation";
 import { logoutWeb } from "@/lib/api/auth";
 import { siteConfig } from "@/lib/site";
 
-const navItems = [
+const userNavItems = [
   { label: "Inicio", href: "/home" },
   { label: "Torneos", href: "/home/torneos" },
   { label: "Eventos", href: "/home/eventos" },
   { label: "Rifas", href: "/home/rifas" },
   { label: "Tienda", href: "/home/tienda" },
   { label: "Perfil", href: "/home/perfil" },
+] as const;
+
+const adminNavItems = [
+  { label: "Dashboard", href: "/admin" },
+  { label: "Torneos", href: "/admin/torneos" },
+  { label: "Eventos", href: "/admin/eventos" },
+  { label: "Tienda", href: "/admin/tienda" },
+  { label: "Noticias", href: "/admin/noticias" },
 ] as const;
 
 const socialLinks = [
@@ -71,15 +79,33 @@ function isActiveLink(pathname: string, href: string) {
     return pathname === "/home";
   }
 
+  if (href === "/admin") {
+    return pathname === "/admin";
+  }
+
   return pathname.startsWith(href);
 }
 
-export function HomeSiteShell({ children }: { children: React.ReactNode }) {
+export function HomeSiteShell({
+  children,
+  canAccessAdmin = false,
+  mode = "user",
+}: {
+  children: React.ReactNode;
+  canAccessAdmin?: boolean;
+  mode?: "user" | "admin";
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const mobileMenuRef = useRef<HTMLDetailsElement>(null);
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const isAdminMode = mode === "admin";
+  const visibleNavItems = isAdminMode
+    ? adminNavItems
+    : canAccessAdmin
+      ? [...userNavItems, { label: "Dashboard", href: "/admin" }]
+      : userNavItems;
 
   const closeMobileMenu = () => {
     mobileMenuRef.current?.removeAttribute("open");
@@ -114,7 +140,7 @@ export function HomeSiteShell({ children }: { children: React.ReactNode }) {
 
       <header className="sticky top-0 z-50 border-b border-white/8 bg-[rgba(7,9,12,0.82)] backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-10">
-          <Link href="/home" className="flex items-center gap-3">
+          <Link href={isAdminMode ? "/admin" : "/home"} className="flex items-center gap-3">
             <Image
               src="/logo_en_linea.png"
               alt="Logo de Billar en Linea"
@@ -128,7 +154,7 @@ export function HomeSiteShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav className="hidden items-center gap-6 text-sm text-white/68 lg:flex" aria-label="Navegacion principal privada">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive = isActiveLink(pathname, item.href);
 
               return (
@@ -147,6 +173,14 @@ export function HomeSiteShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="hidden items-center gap-3 sm:flex">
+            {isAdminMode ? (
+              <Link
+                className="rounded-full border border-[rgba(246,196,79,0.24)] bg-[rgba(246,196,79,0.1)] px-4 py-2 text-sm font-medium text-[rgba(255,240,194,0.92)] transition hover:bg-[rgba(246,196,79,0.16)] hover:text-white"
+                href="/home"
+              >
+                Home user
+              </Link>
+            ) : null}
             <button
               className="rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
               type="button"
@@ -167,7 +201,7 @@ export function HomeSiteShell({ children }: { children: React.ReactNode }) {
             <div className="pointer-events-none absolute right-4 top-[4.6rem] w-[min(22rem,calc(100vw-2rem))] origin-top-right rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,13,18,0.98),rgba(13,16,22,0.96))] p-4 opacity-0 shadow-[0_30px_80px_rgba(0,0,0,0.42)] backdrop-blur-xl transition duration-300 ease-out translate-y-2 scale-95 group-open:pointer-events-auto group-open:opacity-100 group-open:translate-y-0 group-open:scale-100 sm:right-6">
               <div className="absolute inset-x-4 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(246,196,79,0.8),transparent)] opacity-0 transition duration-500 group-open:opacity-100" />
               <nav className="grid gap-2" aria-label="Navegacion privada movil">
-                {navItems.map((item, index) => {
+                {visibleNavItems.map((item, index) => {
                   const isActive = isActiveLink(pathname, item.href);
 
                   return (
@@ -184,6 +218,15 @@ export function HomeSiteShell({ children }: { children: React.ReactNode }) {
                 })}
 
                 <div className="mt-2 grid translate-y-2 gap-2 border-t border-white/8 pt-3 opacity-0 transition duration-300 ease-out group-open:translate-y-0 group-open:opacity-100" style={{ transitionDelay: "280ms" }}>
+                  {isAdminMode ? (
+                    <Link
+                      className="rounded-2xl border border-[rgba(246,196,79,0.24)] bg-[rgba(246,196,79,0.1)] px-4 py-3 text-center text-sm font-medium text-[rgba(255,240,194,0.92)] transition hover:bg-[rgba(246,196,79,0.16)] hover:text-white"
+                      href="/home"
+                      onClick={closeMobileMenu}
+                    >
+                      Home user
+                    </Link>
+                  ) : null}
                   <button
                     className="rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-medium text-white/82 transition hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-60"
                     type="button"

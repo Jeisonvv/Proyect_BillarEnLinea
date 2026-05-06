@@ -10,6 +10,9 @@ type TournamentRegistrationPanelProps = {
   isOpen: boolean;
   isFull: boolean;
   registrations: TournamentDetail["registrations"];
+  playersPerGroup: TournamentDetail["playersPerGroup"];
+  groupStageTables: TournamentDetail["groupStageTables"];
+  groupStageSlots: TournamentDetail["groupStageSlots"];
 };
 
 function getRegistrationMessage(status: string | null) {
@@ -33,8 +36,12 @@ export function TournamentRegistrationPanel({
   isOpen,
   isFull,
   registrations,
+  playersPerGroup,
+  groupStageTables,
+  groupStageSlots,
 }: TournamentRegistrationPanelProps) {
   const [registrationStatus, setRegistrationStatus] = useState<string | null>(null);
+  const [groupStageSlotId, setGroupStageSlotId] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -46,11 +53,12 @@ export function TournamentRegistrationPanel({
         }
 
         const currentUserId = typeof session?.user?.id === "string" ? session.user.id : null;
-        const nextStatus = currentUserId
-          ? registrations.find((registration) => registration.user?.id === currentUserId)?.status ?? null
+        const currentRegistration = currentUserId
+          ? registrations.find((registration) => registration.user?.id === currentUserId) ?? null
           : null;
 
-        setRegistrationStatus(nextStatus);
+        setRegistrationStatus(currentRegistration?.status ?? null);
+        setGroupStageSlotId(currentRegistration?.groupStageSlotId ?? null);
       })
       .catch(() => {
         if (!isActive) {
@@ -58,6 +66,7 @@ export function TournamentRegistrationPanel({
         }
 
         setRegistrationStatus(null);
+        setGroupStageSlotId(null);
       });
 
     return () => {
@@ -80,7 +89,12 @@ export function TournamentRegistrationPanel({
           tournamentId={tournamentId}
           isOpen={isOpen}
           isFull={isFull}
+          playersPerGroup={playersPerGroup}
+          groupStageTables={groupStageTables}
+          groupStageSlots={groupStageSlots}
+          registrations={registrations}
           initialRegistrationStatus={registrationStatus}
+          initialGroupStageSlotId={groupStageSlotId}
         />
       </div>
     </section>

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { TournamentDetailView } from "@/components/content/TournamentDetailView";
+import { TournamentDetailView } from "@/components/content/user/tournaments";
 import { getTournamentDetailBySlug } from "@/lib/api/public-content";
 import { siteConfig } from "@/lib/site";
 
@@ -39,6 +39,7 @@ function buildTournamentKeywords(tournament: NonNullable<Awaited<ReturnType<type
         tournament.city,
         tournament.country,
         tournament.venueName,
+        ...tournament.tags,
         tournament.allowedCategories.join(" "),
       ].filter((value): value is string => typeof value === "string" && value.trim().length > 0),
     ),

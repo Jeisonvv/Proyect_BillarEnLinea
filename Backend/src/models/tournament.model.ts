@@ -19,6 +19,14 @@ export interface IPrize {
   amount?: number;     // Monto en pesos si hay premio en efectivo (opcional)
 }
 
+export interface IGroupStageSlot {
+  _id?: mongoose.Types.ObjectId;
+  date: Date;
+  startTime: string;
+  endTime?: string;
+  label?: string;
+}
+
 /**
  * Torneo de billar.
  *
@@ -57,6 +65,7 @@ export interface ITournament {
   contactPhone?: string;
   seoTitle?: string;
   seoDescription?: string;
+  tags?: string[];
   isFeatured: boolean;
   publishedAt?: Date;
 
@@ -72,6 +81,19 @@ export interface ITournament {
    * Si no se establece, el servicio usará 3 por defecto.
    */
   playersPerGroup?: number;
+
+  /**
+   * Cuántas mesas simultáneas hay disponibles para la fase de grupos.
+   * La capacidad de cada franja se calcula como:
+   *   groupStageTables * playersPerGroup
+   */
+  groupStageTables?: number;
+
+  /**
+   * Franjas disponibles para jugar la fase de grupos.
+   * Cada jugador elige una de estas opciones al inscribirse.
+   */
+  groupStageSlots?: IGroupStageSlot[];
 
   /**
    * Si true, cada jugador tiene un handicap diferente (carambolas requeridas para ganar).
@@ -121,6 +143,28 @@ const prizeSchema = new Schema<IPrize>(
   { _id: false }, // Sin _id propio para cada premio
 );
 
+const groupStageSlotSchema = new Schema<IGroupStageSlot>(
+  {
+    date: {
+      type: Date,
+      required: true,
+    },
+    startTime: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    endTime: {
+      type: String,
+      trim: true,
+    },
+    label: {
+      type: String,
+      trim: true,
+    },
+  },
+);
+
 function normalizeOptionalDate(value: unknown) {
   if (value === "" || value === null || value === undefined) {
     return undefined;
@@ -137,6 +181,14 @@ function slugifyTournamentValue(value: string) {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "torneo";
+}
+
+function isValidTimeValue(value: string) {
+  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
+}
+
+function normalizeDayValue(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
 
 async function ensureUniqueTournamentSlug(tournament: ITournamentDocument) {
@@ -240,6 +292,10 @@ const tournamentSchema = new Schema<ITournamentDocument>(
     contactPhone: String,
     seoTitle: String,
     seoDescription: String,
+    tags: {
+      type: [String],
+      default: [],
+    },
     isFeatured: {
       type: Boolean,
       default: false,
@@ -253,6 +309,14 @@ const tournamentSchema = new Schema<ITournamentDocument>(
       min: 3,  // Mínimo 3 jugadores por grupo
       max: 5,  // Máximo 5 jugadores por grupo
       // Por defecto no se establece; el servicio asume 4 si no está definido
+    },
+    groupStageTables: {
+      type: Number,
+      min: 1,
+    },
+    groupStageSlots: {
+      type: [groupStageSlotSchema],
+      default: [],
     },
     withHandicap: {
       type: Boolean,
@@ -331,6 +395,41 @@ tournamentSchema.pre("validate", async function () {
     tournament.discount20Deadline >= tournament.discount10Deadline
   ) {
     throw new Error("La fecha del descuento del 20% debe ser anterior a la del 10%.");
+  }
+
+  if ((tournament.groupStageSlots?.length ?? 0) > 0 && !tournament.groupStageTables) {
+    throw new Error("Debes definir cuántas mesas hay disponibles para los horarios de grupos.");
+  }
+
+  const normalizedStartDate = normalizeDayValue(tournament.startDate);
+  const normalizedEndDate = normalizeDayValue(tournament.endDate ?? tournament.startDate);
+  const slotKeys = new Set<string>();
+
+  for (const slot of tournament.groupStageSlots ?? []) {
+    if (!isValidTimeValue(slot.startTime)) {
+      throw new Error("Cada horario de grupos debe definir una hora de inicio con formato HH:MM.");
+    }
+
+    if (slot.endTime && !isValidTimeValue(slot.endTime)) {
+      throw new Error("La hora final del horario de grupos debe usar el formato HH:MM.");
+    }
+
+    if (slot.endTime && slot.startTime >= slot.endTime) {
+      throw new Error("La hora inicial de un horario de grupos debe ser anterior a la hora final.");
+    }
+
+    const normalizedSlotDate = normalizeDayValue(slot.date);
+
+    if (normalizedSlotDate < normalizedStartDate || normalizedSlotDate > normalizedEndDate) {
+      throw new Error("Los días de grupos deben estar dentro del rango de fechas del torneo.");
+    }
+
+    const slotKey = `${normalizedSlotDate.toISOString()}-${slot.startTime}-${slot.endTime ?? ""}`;
+    if (slotKeys.has(slotKey)) {
+      throw new Error("No puedes repetir el mismo día y horario en la agenda de grupos.");
+    }
+
+    slotKeys.add(slotKey);
   }
 });
 

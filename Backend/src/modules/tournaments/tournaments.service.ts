@@ -84,6 +84,7 @@ export class TournamentsNestService {
       ...((data.playerCategory ?? data.category) !== undefined && { playerCategory: data.playerCategory ?? data.category }),
       ...(data.channel !== undefined && { channel: data.channel }),
       ...(data.notes !== undefined && { notes: data.notes }),
+      ...(data.groupStageSlotId !== undefined && { groupStageSlotId: data.groupStageSlotId }),
     });
   }
 
@@ -92,6 +93,7 @@ export class TournamentsNestService {
       ...((data.playerCategory ?? data.category) !== undefined && { playerCategory: data.playerCategory ?? data.category }),
       ...(data.channel !== undefined && { channel: data.channel }),
       ...(data.notes !== undefined && { notes: data.notes }),
+      ...(data.groupStageSlotId !== undefined && { groupStageSlotId: data.groupStageSlotId }),
     });
   }
 

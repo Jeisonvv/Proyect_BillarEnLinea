@@ -74,9 +74,17 @@ export type CreateTournamentInput = {
   contactPhone?: string;
   seoTitle?: string;
   seoDescription?: string;
+  tags?: string[];
   isFeatured?: boolean;
   publishedAt?: string;
   playersPerGroup?: number;
+  groupStageTables?: number;
+  groupStageSlots?: Array<{
+    date: string;
+    startTime: string;
+    endTime?: string;
+    label?: string;
+  }>;
   withHandicap?: boolean;
 };
 

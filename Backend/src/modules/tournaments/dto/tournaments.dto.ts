@@ -17,6 +17,23 @@ export class TournamentPrizeDto {
   amount?: number;
 }
 
+export class TournamentGroupStageSlotDto {
+  @IsDateString()
+  date!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  startTime!: string;
+
+  @IsOptional()
+  @IsString()
+  endTime!: string;
+
+  @IsOptional()
+  @IsString()
+  label?: string;
+}
+
 export class CreateTournamentDto {
   @IsOptional()
   @IsString()
@@ -135,6 +152,11 @@ export class CreateTournamentDto {
   seoDescription?: string;
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
+
+  @IsOptional()
   @IsBoolean()
   isFeatured?: boolean;
 
@@ -146,6 +168,17 @@ export class CreateTournamentDto {
   @IsInt()
   @Min(3)
   playersPerGroup?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  groupStageTables?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TournamentGroupStageSlotDto)
+  groupStageSlots?: TournamentGroupStageSlotDto[];
 
   @IsOptional()
   @IsBoolean()
@@ -202,6 +235,10 @@ export class RegisterTournamentPlayerDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  groupStageSlotId?: string;
 }
 
 export class SelfRegisterTournamentDto {
@@ -225,6 +262,10 @@ export class SelfRegisterTournamentDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  groupStageSlotId?: string;
 }
 
 export class CreateTournamentCheckoutDto {
@@ -248,6 +289,10 @@ export class CreateTournamentCheckoutDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  groupStageSlotId?: string;
 }
 
 export class UpdateTournamentHandicapDto {

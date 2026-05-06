@@ -16,7 +16,7 @@ function getAuthToken(request: NextRequest) {
 
 export function middleware(request: NextRequest) {
   const authToken = getAuthToken(request);
-  const protectedPaths = ["/home", "/dashboard"];
+  const protectedPaths = ["/home", "/admin", "/dashboard"];
   const { pathname } = request.nextUrl;
 
   // Si la ruta es protegida y no hay token, redirige a login
@@ -31,5 +31,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/home/:path*", "/dashboard/:path*"]
+  matcher: ["/home/:path*", "/admin/:path*", "/dashboard/:path*"]
 };

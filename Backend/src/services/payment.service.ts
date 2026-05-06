@@ -71,6 +71,7 @@ interface CreateTournamentWompiCheckoutParams {
   playerCategory?: string;
   handicap?: number;
   notes?: string;
+  groupStageSlotId?: string;
 }
 
 interface CreateOrderWompiCheckoutParams {
@@ -937,6 +938,7 @@ export async function createWompiCheckoutForTournament(
         ...(params.handicap !== undefined && { handicap: params.handicap }),
         ...(params.channel !== undefined && { channel: params.channel }),
         ...(params.notes !== undefined && { notes: params.notes }),
+        ...(params.groupStageSlotId !== undefined && { groupStageSlotId: params.groupStageSlotId }),
       },
     );
 

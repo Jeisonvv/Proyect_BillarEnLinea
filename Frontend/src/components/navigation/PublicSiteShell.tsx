@@ -6,14 +6,14 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { siteConfig } from "@/lib/site";
 
-const hiddenPrefixes = ["/home", "/dashboard"];
+const hiddenPrefixes = ["/home", "/admin", "/dashboard"];
 
 const navItems = [
   { label: "Inicio", href: "/" },
-  { label: "Torneos", href: "/login?next=%2Fhome%2Ftorneos&intent=torneos" },
-  { label: "Eventos", href: "/login?next=%2Fhome&intent=eventos" },
-  { label: "Rifas", href: "/login?next=%2Fhome&intent=rifas" },
-  { label: "Tienda", href: "/login?next=%2Fhome&intent=tienda" },
+  { label: "Torneos", href: "/home/torneos" },
+  { label: "Eventos", href: "/home/eventos" },
+  { label: "Rifas", href: "/home/rifas" },
+  { label: "Tienda", href: "/home/tienda" },
 ] as const;
 
 const socialLinks = [

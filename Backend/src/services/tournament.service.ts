@@ -42,7 +42,13 @@ interface RegisterTournamentParams {
   playerCategory?: string;
   channel?: string;
   notes?: string;
+  groupStageSlotId?: string;
 }
+
+const ACTIVE_GROUP_STAGE_SLOT_STATUSES = [
+  RegistrationStatus.PENDING,
+  RegistrationStatus.CONFIRMED,
+];
 
 function toTournamentObjectId(id: string, fieldName = 'Tournament ID') {
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -155,6 +161,77 @@ function resolveTournamentPlayerCategory(
   }
 
   return resolvedCategory as PlayerCategory;
+}
+
+function resolveTournamentPlayersPerGroup(tournament: { playersPerGroup?: number | null }) {
+  return tournament.playersPerGroup ?? 3;
+}
+
+function resolveSelectedGroupStageSlot(
+  tournament: {
+    groupStageSlots?: Array<{
+      _id?: mongoose.Types.ObjectId;
+    }>;
+    groupStageTables?: number | null;
+    playersPerGroup?: number | null;
+  },
+  inputSlotId?: string,
+) {
+  const availableSlots = tournament.groupStageSlots ?? [];
+
+  if (availableSlots.length === 0) {
+    if (inputSlotId !== undefined) {
+      throw new Error("Este torneo no tiene horarios de grupos configurados.");
+    }
+
+    return null;
+  }
+
+  if (!inputSlotId) {
+    throw new Error("Debes elegir un día y horario para la fase de grupos.");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(inputSlotId)) {
+    throw new Error("El horario de grupos seleccionado es inválido.");
+  }
+
+  const selectedSlot = availableSlots.find((slot) => slot._id?.toString() === inputSlotId);
+  if (!selectedSlot?._id) {
+    throw new Error("El horario de grupos seleccionado no existe en este torneo.");
+  }
+
+  const slotCapacity = Number(tournament.groupStageTables ?? 0) * resolveTournamentPlayersPerGroup(tournament);
+  if (slotCapacity <= 0) {
+    throw new Error("La configuración de mesas y grupos del torneo no permite calcular cupos por horario.");
+  }
+
+  return {
+    slotId: selectedSlot._id,
+    slotCapacity,
+  };
+}
+
+async function ensureGroupStageSlotAvailability(
+  tournamentId: string,
+  groupStageSlotId: mongoose.Types.ObjectId,
+  slotCapacity: number,
+  registrationIdToIgnore?: mongoose.Types.ObjectId,
+) {
+  const filter: Record<string, unknown> = {
+    tournament: tournamentId,
+    groupStageSlotId,
+    status: { $in: ACTIVE_GROUP_STAGE_SLOT_STATUSES },
+  };
+
+  if (registrationIdToIgnore) {
+    filter._id = { $ne: registrationIdToIgnore };
+  }
+
+  const activeRegistrations = await TournamentRegistration.countDocuments(filter);
+
+  if (activeRegistrations >= slotCapacity) {
+    throw new Error("El día y horario seleccionado ya no tiene cupos disponibles.");
+  }
 }
 
 export async function ensureTournamentRegistrantIdentityDocument(
@@ -303,6 +380,17 @@ async function createTournamentRegistration(
     throw new Error("El jugador ya está inscrito en este torneo.");
   }
 
+  const selectedGroupStageSlot = resolveSelectedGroupStageSlot(tournament, data.groupStageSlotId);
+
+  if (selectedGroupStageSlot) {
+    await ensureGroupStageSlotAvailability(
+      tournamentId,
+      selectedGroupStageSlot.slotId,
+      selectedGroupStageSlot.slotCapacity,
+      canReusePendingAdministrativeRegistration ? existing?._id : undefined,
+    );
+  }
+
   const status = requiresAdminApproval
     ? RegistrationStatus.PENDING
     : tournament.entryFee === 0
@@ -314,6 +402,7 @@ async function createTournamentRegistration(
     status,
     playerCategory,
     channel: resolveTournamentChannel(data.channel),
+    ...(selectedGroupStageSlot && { groupStageSlotId: selectedGroupStageSlot.slotId }),
     ...(finalHandicap !== undefined && { handicap: finalHandicap }),
     ...(data.notes !== undefined && { notes: data.notes }),
     ...(status === RegistrationStatus.CONFIRMED && { paidAt: new Date() }),
@@ -327,6 +416,7 @@ async function createTournamentRegistration(
         $unset: {
           paymentMethod: "",
           paymentReference: "",
+          ...(selectedGroupStageSlot ? {} : { groupStageSlotId: "" }),
           ...(finalHandicap === undefined ? { handicap: "" } : {}),
           ...(status !== RegistrationStatus.CONFIRMED ? { paidAt: "" } : {}),
         },

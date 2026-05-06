@@ -1,5 +1,5 @@
 import type { LandingPost } from "@/lib/api/public-content";
-import { formatDate } from "./utils";
+import { formatDate } from "../shared/utils";
 
 export function PostCard({ item }: { item: LandingPost }) {
   return (

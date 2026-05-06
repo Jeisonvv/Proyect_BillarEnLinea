@@ -134,6 +134,7 @@ export class TournamentsNestController {
         const checkout = await this.tournamentsService.createTournamentWompiCheckout(id, req.user, {
           ...(body.channel !== undefined && { channel: body.channel }),
           ...(body.notes !== undefined && { notes: body.notes }),
+          ...(body.groupStageSlotId !== undefined && { groupStageSlotId: body.groupStageSlotId }),
         });
 
         return {
