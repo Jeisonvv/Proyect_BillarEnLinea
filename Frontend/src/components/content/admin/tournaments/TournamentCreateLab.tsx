@@ -692,7 +692,7 @@ export function TournamentCreateLab() {
               </div>
 
               <div className={`${currentStep === 1 ? "grid" : "hidden"} gap-5`}>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <label className="grid min-w-0 gap-2">
                   <span className="text-sm font-medium text-stone-200">Inicio</span>
                   <input className={`${getControlClass(fieldErrors, "startDate")} [color-scheme:dark] text-sm`} type="datetime-local" name="startDate" required />
@@ -715,6 +715,22 @@ export function TournamentCreateLab() {
                   <span className="text-sm font-medium text-stone-200">Inscripción</span>
                   <input className={getControlClass(fieldErrors, "entryFee")} type="number" name="entryFee" min={1} defaultValue={50000} required />
                   {renderFieldError("entryFee")}
+                </label>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <label className="grid min-w-0 gap-2">
+                  <span className="text-sm font-medium text-stone-200">Límite descuento 20%</span>
+                  <input className={`${getControlClass(fieldErrors, "discount20Deadline")} [color-scheme:dark] text-sm`} type="datetime-local" name="discount20Deadline" />
+                  <span className="text-xs leading-6 text-white/48">Opcional. Si lo defines, esta fecha marca el cierre del primer descuento.</span>
+                  {renderFieldError("discount20Deadline")}
+                </label>
+
+                <label className="grid min-w-0 gap-2">
+                  <span className="text-sm font-medium text-stone-200">Límite descuento 10%</span>
+                  <input className={`${getControlClass(fieldErrors, "discount10Deadline")} [color-scheme:dark] text-sm`} type="datetime-local" name="discount10Deadline" />
+                  <span className="text-xs leading-6 text-white/48">Opcional. Úsalo para una segunda ventana de precio antes del cierre general.</span>
+                  {renderFieldError("discount10Deadline")}
                 </label>
               </div>
 
@@ -824,6 +840,32 @@ export function TournamentCreateLab() {
                   </div>
                 </div>
               </div>
+
+              <details className="rounded-[1.5rem] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
+                <summary className="cursor-pointer list-none text-sm font-semibold text-white">SEO avanzado opcional</summary>
+                <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                  <div className="grid gap-4">
+                  <label className="grid gap-2">
+                    <span className="text-sm font-medium text-stone-200">SEO title</span>
+                    <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="seoTitle" placeholder="Primera Copa Billar en Linea | Torneo oficial" />
+                  </label>
+
+                  <label className="grid gap-2">
+                    <span className="text-sm font-medium text-stone-200">SEO description</span>
+                    <textarea className="min-h-24 rounded-[1.5rem] border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="seoDescription" placeholder="Resumen corto para Google y redes sociales." />
+                  </label>
+
+                  <label className="grid gap-2">
+                    <span className="text-sm font-medium text-stone-200">Etiquetas SEO</span>
+                    <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="tags" placeholder="billar, carambola, torneo medellin, 3 bandas" />
+                    <span className="text-xs leading-6 text-white/48">Sepáralas por comas para enviarlas como palabras clave del torneo.</span>
+                  </label>
+                  </div>
+                  <div className="rounded-[1.3rem] border border-white/8 bg-black/18 p-4 text-sm leading-7 text-white/62">
+                    Si no llenas SEO, el torneo igual se crea. Este bloque queda aparte para no frenar el flujo operativo principal.
+                  </div>
+                </div>
+              </details>
               </div>
 
               <div className={`${currentStep === 3 ? "grid" : "hidden"} gap-5`}>
@@ -858,32 +900,6 @@ export function TournamentCreateLab() {
                 <span>Permitir handicap por jugador</span>
               </label>
               </div>
-
-              <details className="rounded-[1.5rem] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
-                <summary className="cursor-pointer list-none text-sm font-semibold text-white">SEO avanzado opcional</summary>
-                <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                  <div className="grid gap-4">
-                  <label className="grid gap-2">
-                    <span className="text-sm font-medium text-stone-200">SEO title</span>
-                    <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="seoTitle" placeholder="Primera Copa Billar en Linea | Torneo oficial" />
-                  </label>
-
-                  <label className="grid gap-2">
-                    <span className="text-sm font-medium text-stone-200">SEO description</span>
-                    <textarea className="min-h-24 rounded-[1.5rem] border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="seoDescription" placeholder="Resumen corto para Google y redes sociales." />
-                  </label>
-
-                  <label className="grid gap-2">
-                    <span className="text-sm font-medium text-stone-200">Etiquetas SEO</span>
-                    <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="tags" placeholder="billar, carambola, torneo medellin, 3 bandas" />
-                    <span className="text-xs leading-6 text-white/48">Sepáralas por comas para enviarlas como palabras clave del torneo.</span>
-                  </label>
-                  </div>
-                  <div className="rounded-[1.3rem] border border-white/8 bg-black/18 p-4 text-sm leading-7 text-white/62">
-                    Si no llenas SEO, el torneo igual se crea. Este bloque queda aparte para no frenar el flujo operativo principal.
-                  </div>
-                </div>
-              </details>
 
               <div className={`${currentStep === 4 ? "grid" : "hidden"} gap-5`}>
                 <section className="rounded-[1.6rem] border border-[rgba(246,196,79,0.16)] bg-[linear-gradient(180deg,rgba(246,196,79,0.06),rgba(255,255,255,0.025))] p-5">

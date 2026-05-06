@@ -112,6 +112,16 @@ export async function patchJson<TResponse, TBody>(
   });
 }
 
+export async function deleteJson<TResponse>(
+  path: string,
+  init?: RequestInit,
+): Promise<TResponse> {
+  return requestJson<TResponse>(path, {
+    ...init,
+    method: "DELETE",
+  });
+}
+
 export async function postFormData<TResponse>(
   path: string,
   body: FormData,

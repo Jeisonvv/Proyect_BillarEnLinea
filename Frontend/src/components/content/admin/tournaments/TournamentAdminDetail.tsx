@@ -20,6 +20,7 @@ import {
   type TournamentStatus,
 } from "@/lib/api/admin-tournaments";
 import type { TournamentDetail } from "@/lib/api/public-content";
+import { TournamentDeleteButton } from "./TournamentDeleteButton";
 
 type FeedbackState = {
   kind: "idle" | "success" | "error";
@@ -377,9 +378,12 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
               <p className="text-sm text-white/56">URL admin: /admin/torneos/{tournament.slug}</p>
-              <button className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-3 text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-70" disabled={isPending} type="submit">
-                {isPending && !activeRegistrationId ? "Guardando..." : "Guardar torneo"}
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <TournamentDeleteButton redirectTo="/admin/torneos" tournamentId={tournament.id} tournamentName={tournament.name} />
+                <button className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-3 text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-70" disabled={isPending} type="submit">
+                  {isPending && !activeRegistrationId ? "Guardando..." : "Guardar torneo"}
+                </button>
+              </div>
             </div>
 
             {editorFeedback.kind !== "idle" ? (

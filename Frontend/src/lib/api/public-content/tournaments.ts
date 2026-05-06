@@ -97,6 +97,8 @@ function normalizeTournamentDetail(record: JsonRecord): TournamentDetail | null 
     startDate: pickString(record, ["startDate"]),
     endDate: pickString(record, ["endDate"]),
     registrationDeadline: pickString(record, ["registrationDeadline"]),
+    discount20Deadline: pickString(record, ["discount20Deadline"]),
+    discount10Deadline: pickString(record, ["discount10Deadline"]),
     entryFee: pickNumber(record, ["entryFee"]),
     maxParticipants: pickNumber(record, ["maxParticipants"]),
     currentParticipants: pickNumber(record, ["currentParticipants"]),

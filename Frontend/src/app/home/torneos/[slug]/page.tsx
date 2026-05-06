@@ -30,16 +30,22 @@ function buildTournamentDescription(tournament: NonNullable<Awaited<ReturnType<t
 }
 
 function buildTournamentKeywords(tournament: NonNullable<Awaited<ReturnType<typeof getTournamentDetailBySlug>>>) {
+  const seoTitleKeywords = (tournament.seoTitle ?? "")
+    .split(/[|,]/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+
   return Array.from(
     new Set(
       [
+        ...tournament.tags,
+        ...seoTitleKeywords,
         ...siteConfig.keywords,
         tournament.name,
         tournament.format,
         tournament.city,
         tournament.country,
         tournament.venueName,
-        ...tournament.tags,
         tournament.allowedCategories.join(" "),
       ].filter((value): value is string => typeof value === "string" && value.trim().length > 0),
     ),
@@ -61,13 +67,14 @@ export async function generateMetadata({ params }: TournamentPageProps): Promise
     };
   }
 
-  const description = buildTournamentDescription(tournament);
+  const title = tournament.seoTitle?.trim() || tournament.name;
+  const description = tournament.seoDescription?.trim() || buildTournamentDescription(tournament);
   const keywords = buildTournamentKeywords(tournament);
   const pageUrl = `/home/torneos/${tournament.slug}`;
   const imageUrl = tournament.image ?? siteConfig.socialImage;
 
   return {
-    title: tournament.name,
+    title,
     description,
     keywords,
     alternates: {
@@ -78,7 +85,7 @@ export async function generateMetadata({ params }: TournamentPageProps): Promise
       locale: siteConfig.locale,
       url: pageUrl,
       siteName: siteConfig.name,
-      title: `${tournament.name} | ${siteConfig.name}`,
+      title: `${title} | ${siteConfig.name}`,
       description,
       images: [
         {
@@ -91,7 +98,7 @@ export async function generateMetadata({ params }: TournamentPageProps): Promise
     },
     twitter: {
       card: "summary_large_image",
-      title: `${tournament.name} | ${siteConfig.name}`,
+      title: `${title} | ${siteConfig.name}`,
       description,
       images: [imageUrl],
     },

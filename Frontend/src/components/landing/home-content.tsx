@@ -239,8 +239,8 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
             description="La portada de Billar en Linea está diseñada para que pases de torneos a eventos, rifas o tienda sin fricción, con información relevante en cada paso."
           />
 
-          <div id="torneos-contenido" className="grid gap-5 xl:grid-cols-[1.15fr_1fr_0.95fr]">
-            <div className="rounded-[2rem] border border-line bg-[linear-gradient(160deg,rgba(22,24,28,0.96),rgba(13,110,174,0.14))] p-5 shadow-[0_28px_90px_rgba(13,110,174,0.14)]">
+          <div id="torneos-contenido" className="grid gap-5 xl:grid-cols-2">
+            <div className="rounded-[2rem] border border-line bg-[linear-gradient(160deg,rgba(22,24,28,0.96),rgba(13,110,174,0.14))] p-5 shadow-[0_28px_90px_rgba(13,110,174,0.14)] xl:col-span-2">
               <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
                 <div>
                   <p className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-white/50">Torneos activos</p>

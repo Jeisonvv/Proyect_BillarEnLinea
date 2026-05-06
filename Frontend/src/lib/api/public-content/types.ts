@@ -31,6 +31,8 @@ export type TournamentDetail = {
   startDate: string | null;
   endDate: string | null;
   registrationDeadline: string | null;
+  discount20Deadline: string | null;
+  discount10Deadline: string | null;
   entryFee: number | null;
   maxParticipants: number | null;
   currentParticipants: number | null;

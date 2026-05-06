@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AdminSectionScaffold, formatAdminDate, formatAdminMoney, humanizeAdminToken } from "@/components/content/admin/shared/AdminSectionScaffold";
+import { TournamentDeleteButton } from "@/components/content/admin/tournaments/TournamentDeleteButton";
 import { getLandingSnapshot } from "@/lib/api/public-content";
 
 export default async function AdminTournamentsPage() {
@@ -77,6 +78,7 @@ export default async function AdminTournamentsPage() {
                       <Link className="text-sm font-semibold text-[#f6c44f] transition hover:text-white" href={`/admin/torneos/${tournament.slug}`}>Administrar</Link>
                       <Link className="text-sm font-semibold text-[#f6c44f] transition hover:text-white" href="/home/torneos">Ir al listado</Link>
                       <Link className="text-sm font-semibold text-white/72 transition hover:text-white" href={`/home/torneos/${tournament.slug}`}>Abrir detalle</Link>
+                      <TournamentDeleteButton tournamentId={tournament.id} tournamentName={tournament.name} variant="text" />
                     </div>
                   </div>
                 </div>

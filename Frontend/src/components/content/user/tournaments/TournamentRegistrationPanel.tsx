@@ -9,11 +9,65 @@ type TournamentRegistrationPanelProps = {
   tournamentId: string;
   isOpen: boolean;
   isFull: boolean;
+  entryFee: TournamentDetail["entryFee"];
+  discount20Deadline: TournamentDetail["discount20Deadline"];
+  discount10Deadline: TournamentDetail["discount10Deadline"];
   registrations: TournamentDetail["registrations"];
   playersPerGroup: TournamentDetail["playersPerGroup"];
   groupStageTables: TournamentDetail["groupStageTables"];
   groupStageSlots: TournamentDetail["groupStageSlots"];
 };
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatUrgencyDeadline(value: string) {
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("es-CO", {
+    timeZone: "America/Bogota",
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(parsed);
+}
+
+function resolveActiveDiscount(
+  discount20Deadline: string | null,
+  discount10Deadline: string | null,
+) {
+  const now = Date.now();
+
+  if (discount20Deadline) {
+    const parsed = new Date(discount20Deadline);
+    if (!Number.isNaN(parsed.getTime()) && now <= parsed.getTime()) {
+      return {
+        percentage: 20,
+        deadline: discount20Deadline,
+      };
+    }
+  }
+
+  if (discount10Deadline) {
+    const parsed = new Date(discount10Deadline);
+    if (!Number.isNaN(parsed.getTime()) && now <= parsed.getTime()) {
+      return {
+        percentage: 10,
+        deadline: discount10Deadline,
+      };
+    }
+  }
+
+  return null;
+}
 
 function getRegistrationMessage(status: string | null, pendingReason: SelfTournamentRegistrationState["pendingReason"]) {
   if (status === "CONFIRMED") {
@@ -43,15 +97,21 @@ export function TournamentRegistrationPanel({
   tournamentId,
   isOpen,
   isFull,
+  entryFee,
+  discount20Deadline,
+  discount10Deadline,
   registrations,
   playersPerGroup,
   groupStageTables,
   groupStageSlots,
 }: TournamentRegistrationPanelProps) {
   const [selfRegistrationState, setSelfRegistrationState] = useState<SelfTournamentRegistrationState | null>(null);
+  const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
     let isActive = true;
+
+    setHasHydrated(true);
 
     void fetchSelfTournamentRegistrationState(tournamentId)
       .then((nextState) => {
@@ -75,10 +135,22 @@ export function TournamentRegistrationPanel({
   }, [tournamentId]);
 
   const registrationStatus = selfRegistrationState?.registration?.status ?? null;
+  const activeDiscount = hasHydrated
+    ? resolveActiveDiscount(discount20Deadline, discount10Deadline)
+    : null;
+  const discountedAmount = activeDiscount && typeof entryFee === "number"
+    ? Math.round(entryFee * ((100 - activeDiscount.percentage) / 100))
+    : null;
 
   const hasRegistration = registrationStatus === "CONFIRMED"
     || registrationStatus === "PENDING"
     || registrationStatus === "WAITLIST";
+
+  const discountMessage = activeDiscount
+    ? registrationStatus === "PENDING"
+      ? `Termina de hacer tu pago con el ${activeDiscount.percentage}% de descuento y paga ${discountedAmount !== null ? formatMoney(discountedAmount) : "la tarifa preferencial"}. Esta tarifa vence el ${formatUrgencyDeadline(activeDiscount.deadline)}.`
+      : `Termina de hacer tu pago con el ${activeDiscount.percentage}% de descuento que aplica en este momento y paga ${discountedAmount !== null ? formatMoney(discountedAmount) : "la tarifa preferencial"}. Disponible hasta el ${formatUrgencyDeadline(activeDiscount.deadline)}.`
+    : null;
 
   return (
     <section className="rounded-[1.8rem] border border-[rgba(246,196,79,0.16)] bg-[linear-gradient(180deg,rgba(246,196,79,0.08),rgba(255,255,255,0.03))] p-5">
@@ -86,6 +158,11 @@ export function TournamentRegistrationPanel({
       <p className={`mt-4 text-sm leading-7 ${hasRegistration ? "text-emerald-100/88" : "text-white/78"}`}>
         {getRegistrationMessage(registrationStatus, selfRegistrationState?.pendingReason ?? null)}
       </p>
+      {discountMessage ? (
+        <div className="mt-4 rounded-[1.25rem] border border-[rgba(246,196,79,0.24)] bg-[rgba(246,196,79,0.09)] px-4 py-3 text-sm leading-7 text-[rgba(255,244,214,0.92)]">
+          {discountMessage}
+        </div>
+      ) : null}
       <div className="mt-4">
         <TournamentRegistrationButton
           tournamentId={tournamentId}

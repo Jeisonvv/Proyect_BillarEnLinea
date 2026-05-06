@@ -59,7 +59,7 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
     : null;
 
   return (
-    <main className="mx-auto grid w-full max-w-[1500px] gap-6 px-4 py-6 sm:px-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(22rem,0.92fr)] xl:px-10 2xl:px-14">
+    <main className="mx-auto grid w-full gap-6 px-4 py-6 sm:px-6 xl:relative xl:left-1/2 xl:w-[95vw] xl:max-w-[95vw] xl:-translate-x-1/2 xl:px-0 2xl:w-[95vw] 2xl:max-w-[95vw]">
       <section className="overflow-hidden rounded-[2.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,13,18,0.98),rgba(13,17,24,0.96))] shadow-[0_28px_100px_rgba(0,0,0,0.36)]">
         <div className="relative h-[20rem] overflow-hidden border-b border-white/10 bg-black/30 sm:h-[24rem] lg:h-[30rem]">
           {tournament.image ? (
@@ -69,7 +69,7 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
               fill
               priority
               sizes="(min-width: 1536px) 55vw, (min-width: 1280px) 58vw, 100vw"
-              className="object-cover object-center"
+              className="object-contain object-center"
             />
           ) : (
             <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(246,196,79,0.18),rgba(13,110,174,0.18),rgba(255,255,255,0.03))]" />
@@ -117,7 +117,7 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
             </article>
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,0.8fr)]">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
             <div className="space-y-6">
               <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5">
                 <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Resumen</p>
@@ -165,20 +165,27 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
                 tournamentId={tournament.id}
                 isOpen={isOpen}
                 isFull={isFull}
+                entryFee={tournament.entryFee}
+                discount20Deadline={tournament.discount20Deadline}
+                discount10Deadline={tournament.discount10Deadline}
                 registrations={tournament.registrations}
                 playersPerGroup={tournament.playersPerGroup}
                 groupStageTables={tournament.groupStageTables}
                 groupStageSlots={tournament.groupStageSlots}
               />
+            </aside>
+          </div>
 
+          {(tournament.groupStageSlots.length > 0 || locationLabel || tournament.address || tournament.allowedCategories.length > 0 || tournament.contactPhone) ? (
+            <section className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
               {tournament.groupStageSlots.length > 0 ? (
-                <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5">
+                <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5 2xl:col-span-2">
                   <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Agenda de grupos</p>
                   <p className="mt-4 text-sm leading-7 text-white/74">
                     {tournament.groupStageTables !== null ? `${tournament.groupStageTables} mesas disponibles` : "Mesas por confirmar"}
                     {slotCapacity !== null ? ` · ${slotCapacity} jugadores maximos por franja` : ""}
                   </p>
-                  <div className="mt-4 grid gap-3">
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
                     {tournament.groupStageSlots.map((slot) => (
                       <article key={slot.id} className="rounded-[1.25rem] border border-white/8 bg-black/18 p-4">
                         <p className="text-sm font-semibold text-white">{slot.label ?? "Horario de grupos"}</p>
@@ -190,11 +197,13 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
                 </section>
               ) : null}
 
-              <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5">
-                <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Sede</p>
-                <p className="mt-4 text-sm leading-7 text-white/78">{locationLabel || "Ubicación por anunciar"}</p>
-                {tournament.address ? <p className="mt-2 text-sm leading-7 text-white/62">{tournament.address}</p> : null}
-              </section>
+              {(locationLabel || tournament.address) ? (
+                <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5">
+                  <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Sede</p>
+                  <p className="mt-4 text-sm leading-7 text-white/78">{locationLabel || "Ubicación por anunciar"}</p>
+                  {tournament.address ? <p className="mt-2 text-sm leading-7 text-white/62">{tournament.address}</p> : null}
+                </section>
+              ) : null}
 
               {tournament.allowedCategories.length > 0 ? (
                 <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5">
@@ -215,8 +224,8 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
                   <p className="mt-4 text-sm leading-7 text-white/78">{tournament.contactPhone}</p>
                 </section>
               ) : null}
-            </aside>
-          </div>
+            </section>
+          ) : null}
 
           <section className="overflow-hidden rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

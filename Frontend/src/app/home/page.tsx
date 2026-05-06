@@ -38,7 +38,7 @@ export default async function PageHome() {
         </section>
       ) : null}
 
-      <section className="grid gap-4">
+      <section className="grid gap-4 xl:relative xl:left-1/2 xl:w-[90vw] xl:max-w-[90vw] xl:-translate-x-1/2">
         {torneos.items.map((torneo) => (
           <TournamentCard key={torneo.id} item={torneo} />
         ))}

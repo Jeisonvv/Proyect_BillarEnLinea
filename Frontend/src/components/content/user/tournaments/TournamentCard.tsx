@@ -14,7 +14,7 @@ export function TournamentCard({ item }: { item: LandingTournament }) {
   return (
     <Link
       aria-label={`Ver detalle del torneo ${item.name}`}
-      className="group block rounded-[2rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(246,196,79,0.7)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0d12]"
+      className="group block rounded-[2rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(246,196,79,0.7)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0d12] xl:mx-auto xl:w-[90vw]"
       href={detailHref}
     >
       <article className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,18,24,0.96),rgba(9,11,16,0.98))] shadow-[0_18px_60px_rgba(0,0,0,0.34)] transition duration-300 hover:-translate-y-2 hover:border-[rgba(246,196,79,0.3)] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]">

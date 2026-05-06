@@ -1,4 +1,4 @@
-import { patchJson, postFormData, postJson } from "@/lib/api/client";
+import { deleteJson, patchJson, postFormData, postJson } from "@/lib/api/client";
 
 export const TOURNAMENT_FORMATS = [
   "SINGLE_ELIMINATION",
@@ -214,6 +214,19 @@ export type UpdateTournamentHandicapResponse = {
   };
 };
 
+export type DeleteTournamentAdminResponse = {
+  ok: boolean;
+  message?: string;
+  data: {
+    tournamentId?: string;
+    tournamentName?: string;
+    deletedMatches?: number;
+    deletedGroups?: number;
+    deletedRegistrations?: number;
+    deletedPayments?: number;
+  };
+};
+
 export async function uploadTournamentImage(file: File, name?: string) {
   const formData = new FormData();
   formData.append("file", file);
@@ -238,6 +251,12 @@ export async function createTournamentAdmin(input: CreateTournamentInput) {
 
 export async function updateTournamentAdmin(tournamentId: string, input: UpdateAdminTournamentInput) {
   return patchJson<UpdateAdminTournamentResponse, UpdateAdminTournamentInput>(`/api/tournaments/${tournamentId}`, input, {
+    credentials: "include",
+  });
+}
+
+export async function deleteTournamentAdmin(tournamentId: string) {
+  return deleteJson<DeleteTournamentAdminResponse>(`/api/tournaments/${tournamentId}`, {
     credentials: "include",
   });
 }
