@@ -61,7 +61,7 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
   return (
     <main className="mx-auto grid w-full gap-6 px-4 py-6 sm:px-6 xl:relative xl:left-1/2 xl:w-[95vw] xl:max-w-[95vw] xl:-translate-x-1/2 xl:px-0 2xl:w-[95vw] 2xl:max-w-[95vw]">
       <section className="overflow-hidden rounded-[2.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,13,18,0.98),rgba(13,17,24,0.96))] shadow-[0_28px_100px_rgba(0,0,0,0.36)]">
-        <div className="relative h-[20rem] overflow-hidden border-b border-white/10 bg-black/30 sm:h-[24rem] lg:h-[30rem]">
+        <div className="relative h-80 overflow-hidden border-b border-white/10 bg-black/30 sm:h-96 lg:h-120">
           {tournament.image ? (
             <Image
               src={tournament.image}
@@ -246,11 +246,11 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
             </div>
 
             {tournament.registrations.length > 0 ? (
-              <div className="relative mt-6 overflow-hidden rounded-[1.5rem] border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(11,18,33,0.94),rgba(7,11,18,0.96))] shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[4.25rem] bg-[linear-gradient(180deg,rgba(39,52,85,0.96),rgba(31,42,70,0.96))]" />
+              <div className="relative mt-6 overflow-hidden rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(11,18,33,0.94),rgba(7,11,18,0.96))] shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-17 bg-[linear-gradient(180deg,rgba(39,52,85,0.96),rgba(31,42,70,0.96))]" />
                 <div className="relative overflow-x-auto">
-                  <div className="min-w-[780px] w-full border-b border-white/8">
-                    <div className="grid h-[4.25rem] grid-cols-[4rem_minmax(16rem,2.4fr)_minmax(8rem,1fr)_minmax(8rem,1fr)_minmax(9.5rem,auto)] items-stretch gap-4 px-5 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-[rgba(255,227,163,0.96)]">
+                  <div className="min-w-195 w-full border-b border-white/8">
+                    <div className="grid h-17 grid-cols-[4rem_minmax(16rem,2.4fr)_minmax(8rem,1fr)_minmax(8rem,1fr)_minmax(9.5rem,auto)] items-stretch gap-4 px-5 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-[rgba(255,227,163,0.96)]">
                       <div className="flex items-center">#</div>
                       <div className="flex items-center">Jugador</div>
                       <div className="flex items-center">Categoría</div>
@@ -259,7 +259,7 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
                     </div>
                   </div>
 
-                  <div className="min-w-[780px] w-full divide-y divide-white/8 bg-[linear-gradient(180deg,rgba(12,18,30,0.9),rgba(8,12,20,0.96))] text-white">
+                  <div className="min-w-195 w-full divide-y divide-white/8 bg-[linear-gradient(180deg,rgba(12,18,30,0.9),rgba(8,12,20,0.96))] text-white">
                 {tournament.registrations.map((registration, index) => {
                   const displayName = registration.user?.name ?? "Jugador registrado";
                   const category = registration.playerCategory ?? registration.user?.playerCategory ?? null;

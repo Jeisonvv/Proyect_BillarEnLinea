@@ -133,7 +133,7 @@ export function HomeSiteShell({
     <>
       <a
         href="#contenido-principal"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[80] focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#10110f]"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-80 focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#10110f]"
       >
         Saltar al contenido
       </a>
@@ -194,11 +194,11 @@ export function HomeSiteShell({
           <details ref={mobileMenuRef} className="group relative lg:hidden">
             <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-[rgba(255,255,255,0.16)] bg-[radial-gradient(circle_at_30%_28%,rgba(255,255,255,0.34),rgba(255,255,255,0.06)_18%,transparent_20%),radial-gradient(circle_at_35%_30%,#fff3a8_0%,#f6c44f_40%,#c88b14_72%,#6f4300_100%)] text-[#241400] shadow-[inset_-8px_-10px_18px_rgba(106,63,0,0.34),inset_10px_10px_16px_rgba(255,248,196,0.22),0_10px_24px_rgba(78,44,0,0.28)] transition duration-300 ease-out hover:scale-[1.03] hover:shadow-[inset_-8px_-10px_18px_rgba(106,63,0,0.3),inset_10px_10px_16px_rgba(255,248,196,0.24),0_14px_28px_rgba(78,44,0,0.32)]">
               <span className="relative block h-5 w-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
-                <span className="absolute left-1/2 top-1/2 h-[2px] w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current transition duration-300 ease-out group-open:rotate-180" />
-                <span className="absolute left-1/2 top-1/2 h-4 w-[2px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-current transition-all duration-300 ease-out group-open:h-0 group-open:opacity-0" />
+                <span className="absolute left-1/2 top-1/2 h-0.5 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current transition duration-300 ease-out group-open:rotate-180" />
+                <span className="absolute left-1/2 top-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current transition-all duration-300 ease-out group-open:h-0 group-open:opacity-0" />
               </span>
             </summary>
-            <div className="pointer-events-none absolute right-4 top-[4.6rem] w-[min(22rem,calc(100vw-2rem))] origin-top-right rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,13,18,0.98),rgba(13,16,22,0.96))] p-4 opacity-0 shadow-[0_30px_80px_rgba(0,0,0,0.42)] backdrop-blur-xl transition duration-300 ease-out translate-y-2 scale-95 group-open:pointer-events-auto group-open:opacity-100 group-open:translate-y-0 group-open:scale-100 sm:right-6">
+            <div className="pointer-events-none absolute right-4 top-[4.6rem] w-[min(22rem,calc(100vw-2rem))] origin-top-right rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,13,18,0.98),rgba(13,16,22,0.96))] p-4 opacity-0 shadow-[0_30px_80px_rgba(0,0,0,0.42)] backdrop-blur-xl transition duration-300 ease-out translate-y-2 scale-95 group-open:pointer-events-auto group-open:opacity-100 group-open:translate-y-0 group-open:scale-100 sm:right-6">
               <div className="absolute inset-x-4 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(246,196,79,0.8),transparent)] opacity-0 transition duration-500 group-open:opacity-100" />
               <nav className="grid gap-2" aria-label="Navegacion privada movil">
                 {visibleNavItems.map((item, index) => {
@@ -281,7 +281,7 @@ export function HomeSiteShell({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Siguenos en ${socialLink.label}`}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/72 transition hover:border-white/18 hover:bg-white/[0.09] hover:text-white focus:outline-none focus:ring-2 focus:ring-accent/70 focus:ring-offset-2 focus:ring-offset-[#0b0d10]"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/4 text-white/72 transition hover:border-white/18 hover:bg-white/9 hover:text-white focus:outline-none focus:ring-2 focus:ring-accent/70 focus:ring-offset-2 focus:ring-offset-[#0b0d10]"
                 >
                   {socialLink.icon}
                 </a>
