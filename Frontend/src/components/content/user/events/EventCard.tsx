@@ -1,9 +1,15 @@
+import Link from "next/link";
 import type { LandingEvent } from "@/lib/api/public-content";
 import { formatDate, formatMoney, humanizeToken } from "../shared/utils";
 
 export function EventCard({ item }: { item: LandingEvent }) {
   return (
-    <article className="rounded-[1.45rem] border border-line bg-[linear-gradient(180deg,rgba(10,18,28,0.96),rgba(8,14,22,0.9))] p-5 shadow-[0_22px_50px_rgba(5,8,14,0.3)] transition duration-300 hover:-translate-y-1">
+    <Link
+      aria-label={`Ver detalle del evento ${item.name}`}
+      className="block rounded-[1.45rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(246,196,79,0.7)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0d12]"
+      href={`/home/eventos/${item.slug}`}
+    >
+      <article className="rounded-[1.45rem] border border-line bg-[linear-gradient(180deg,rgba(10,18,28,0.96),rgba(8,14,22,0.9))] p-5 shadow-[0_22px_50px_rgba(5,8,14,0.3)] transition duration-300 hover:-translate-y-1">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-accent-soft">{humanizeToken(item.tier)}</span>
         <span className="rounded-full border border-line px-3 py-1 text-xs text-white/70">{humanizeToken(item.status)}</span>
@@ -17,6 +23,7 @@ export function EventCard({ item }: { item: LandingEvent }) {
         <span>{formatMoney(item.entryFee)}</span>
         {item.endDate ? <span>hasta {formatDate(item.endDate)}</span> : null}
       </div>
-    </article>
+      </article>
+    </Link>
   );
 }

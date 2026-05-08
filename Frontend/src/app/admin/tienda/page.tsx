@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AdminSectionScaffold, formatAdminMoney } from "@/components/content/admin/shared/AdminSectionScaffold";
+import { AdminSectionScaffold, formatAdminMoney } from "@/components/content/admin/shared";
 import { getLandingSnapshot } from "@/lib/api/public-content";
 
 export default async function AdminStorePage() {

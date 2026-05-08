@@ -192,7 +192,7 @@ function getValidationMessage(element: HTMLInputElement | HTMLTextAreaElement | 
 
 function getControlClass(fieldErrors: FieldErrors, name: string, kind: "input" | "select" | "textarea" = "input") {
   const base = kind === "textarea"
-    ? "min-h-24 rounded-[1.5rem] border px-4 py-3 text-white outline-none transition"
+    ? "min-h-24 rounded-3xl border px-4 py-3 text-white outline-none transition"
     : "min-w-0 w-full rounded-2xl border px-4 py-3 text-white outline-none transition";
 
   return `${base} ${fieldErrors[name]
@@ -552,7 +552,7 @@ export function TournamentCreateLab() {
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(246,196,79,0.16)] bg-[linear-gradient(145deg,rgba(8,11,16,0.98),rgba(20,24,31,0.94),rgba(10,12,18,0.98))] shadow-[0_32px_100px_rgba(0,0,0,0.35)]">
+      <div className="relative overflow-hidden rounded-4xl border border-[rgba(246,196,79,0.16)] bg-[linear-gradient(145deg,rgba(8,11,16,0.98),rgba(20,24,31,0.94),rgba(10,12,18,0.98))] shadow-[0_32px_100px_rgba(0,0,0,0.35)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(246,196,79,0.18),transparent_24%),radial-gradient(circle_at_85%_12%,rgba(13,110,174,0.18),transparent_22%)]" />
         <div className="relative grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <aside className="border-b border-white/8 px-5 py-6 lg:border-b-0 lg:border-r lg:px-8 lg:py-8">
@@ -562,7 +562,7 @@ export function TournamentCreateLab() {
               Dividimos el alta en pasos para que la carga operativa sea mas clara. El submit sigue siendo unico y usa el endpoint administrativo real.
             </p>
 
-            <div className="mt-8 rounded-[1.5rem] border border-[rgba(246,196,79,0.18)] bg-[linear-gradient(180deg,rgba(246,196,79,0.08),rgba(255,255,255,0.02))] p-4">
+            <div className="mt-8 rounded-3xl border border-[rgba(246,196,79,0.18)] bg-[linear-gradient(180deg,rgba(246,196,79,0.08),rgba(255,255,255,0.02))] p-4">
               <p className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-[rgba(255,235,188,0.82)]">Recorrido</p>
               <div className="mt-4 grid gap-3">
                 {FORM_STEPS.map((step, index) => {
@@ -576,7 +576,7 @@ export function TournamentCreateLab() {
                         ? "border-[rgba(246,196,79,0.28)] bg-[rgba(246,196,79,0.1)]"
                         : isCompleted
                           ? "border-emerald-400/18 bg-emerald-950/18 hover:border-emerald-300/26 hover:bg-emerald-950/24"
-                          : "border-white/8 bg-black/16 hover:border-white/16 hover:bg-white/[0.04]"
+                          : "border-white/8 bg-black/16 hover:border-white/16 hover:bg-white/4"
                       }`}
                       type="button"
                       onClick={() => handleStepNavigation(index)}
@@ -603,7 +603,7 @@ export function TournamentCreateLab() {
             </div>
 
             <div className="mt-8 grid gap-4">
-              <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
                 <p className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-white/45">Secuencia</p>
                 <ol className="mt-4 grid gap-3 text-sm leading-6 text-white/72">
                   <li>1. Completa cada paso sin perder el contexto del torneo.</li>
@@ -612,7 +612,7 @@ export function TournamentCreateLab() {
                 </ol>
               </div>
 
-              <div className="rounded-[1.5rem] border border-white/10 bg-black/18 p-4">
+              <div className="rounded-3xl border border-white/10 bg-black/18 p-4">
                 <p className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-white/45">Requisitos</p>
                 <p className="mt-3 text-sm leading-7 text-white/68">
                   Necesitas sesión ADMIN o STAFF y tener configurado Cloudinary en el backend para que el upload funcione.
@@ -682,12 +682,12 @@ export function TournamentCreateLab() {
 
               <label className="grid gap-2">
                 <span className="text-sm font-medium text-stone-200">Descripción completa</span>
-                <textarea className="min-h-28 rounded-[1.5rem] border border-white/10 bg-white/8 px-4 py-3 text-white outline-none placeholder:text-stone-500 focus:border-accent" name="description" placeholder="Cuenta de qué trata el torneo, cómo se juega y qué hace atractiva la jornada." />
+                <textarea className="min-h-28 rounded-3xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none placeholder:text-stone-500 focus:border-accent" name="description" placeholder="Cuenta de qué trata el torneo, cómo se juega y qué hace atractiva la jornada." />
               </label>
 
               <label className="grid gap-2">
                 <span className="text-sm font-medium text-stone-200">Detalle del formato</span>
-                <textarea className="min-h-24 rounded-[1.5rem] border border-white/10 bg-white/8 px-4 py-3 text-white outline-none placeholder:text-stone-500 focus:border-accent" name="formatDetails" placeholder="Grupos de 3, clasifican 2 por grupo y luego cuadro de eliminación directa." />
+                <textarea className="min-h-24 rounded-3xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none placeholder:text-stone-500 focus:border-accent" name="formatDetails" placeholder="Grupos de 3, clasifican 2 por grupo y luego cuadro de eliminación directa." />
               </label>
               </div>
 
@@ -695,13 +695,13 @@ export function TournamentCreateLab() {
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <label className="grid min-w-0 gap-2">
                   <span className="text-sm font-medium text-stone-200">Inicio</span>
-                  <input className={`${getControlClass(fieldErrors, "startDate")} [color-scheme:dark] text-sm`} type="datetime-local" name="startDate" required />
+                  <input className={`${getControlClass(fieldErrors, "startDate")} scheme:dark text-sm`} type="datetime-local" name="startDate" required />
                   {renderFieldError("startDate")}
                 </label>
 
                 <label className="grid min-w-0 gap-2">
                   <span className="text-sm font-medium text-stone-200">Cierre inscripción</span>
-                  <input className={`${getControlClass(fieldErrors, "registrationDeadline")} [color-scheme:dark] text-sm`} type="datetime-local" name="registrationDeadline" required />
+                  <input className={`${getControlClass(fieldErrors, "registrationDeadline")} scheme:dark text-sm`} type="datetime-local" name="registrationDeadline" required />
                   {renderFieldError("registrationDeadline")}
                 </label>
 
@@ -721,14 +721,14 @@ export function TournamentCreateLab() {
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <label className="grid min-w-0 gap-2">
                   <span className="text-sm font-medium text-stone-200">Límite descuento 20%</span>
-                  <input className={`${getControlClass(fieldErrors, "discount20Deadline")} [color-scheme:dark] text-sm`} type="datetime-local" name="discount20Deadline" />
+                  <input className={`${getControlClass(fieldErrors, "discount20Deadline")} scheme:dark text-sm`} type="datetime-local" name="discount20Deadline" />
                   <span className="text-xs leading-6 text-white/48">Opcional. Si lo defines, esta fecha marca el cierre del primer descuento.</span>
                   {renderFieldError("discount20Deadline")}
                 </label>
 
                 <label className="grid min-w-0 gap-2">
                   <span className="text-sm font-medium text-stone-200">Límite descuento 10%</span>
-                  <input className={`${getControlClass(fieldErrors, "discount10Deadline")} [color-scheme:dark] text-sm`} type="datetime-local" name="discount10Deadline" />
+                  <input className={`${getControlClass(fieldErrors, "discount10Deadline")} scheme:dark text-sm`} type="datetime-local" name="discount10Deadline" />
                   <span className="text-xs leading-6 text-white/48">Opcional. Úsalo para una segunda ventana de precio antes del cierre general.</span>
                   {renderFieldError("discount10Deadline")}
                 </label>
@@ -808,23 +808,23 @@ export function TournamentCreateLab() {
               <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-white/82">
-                    <input className="h-4 w-4 accent-[var(--accent)]" type="checkbox" name="isFeatured" />
+                    <input className="h-4 w-4 accent-accent" type="checkbox" name="isFeatured" />
                     <span>Marcar como destacado en la portada</span>
                   </label>
 
                   <label className="grid gap-2">
                     <span className="text-sm font-medium text-stone-200">Publicación</span>
-                    <input className={`${getControlClass(fieldErrors, "publishedAt")} [color-scheme:dark] text-sm`} type="datetime-local" name="publishedAt" />
+                    <input className={`${getControlClass(fieldErrors, "publishedAt")} scheme:dark text-sm`} type="datetime-local" name="publishedAt" />
                     {renderFieldError("publishedAt")}
                   </label>
                 </div>
 
-                <div className="grid gap-3 rounded-[1.5rem] border border-dashed border-[rgba(246,196,79,0.24)] bg-[linear-gradient(180deg,rgba(246,196,79,0.08),rgba(13,110,174,0.08))] p-4">
+                <div className="grid gap-3 rounded-3xl border border-dashed border-[rgba(246,196,79,0.24)] bg-[linear-gradient(180deg,rgba(246,196,79,0.08),rgba(13,110,174,0.08))] p-4">
                   <span className="text-sm font-medium text-stone-100">Imagen del torneo</span>
                   <label className="flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-[1.25rem] border border-white/10 bg-black/24 px-4 py-5 text-center text-sm text-white/72 transition hover:border-accent/40 hover:bg-black/30">
                     <input className="hidden" type="file" name="image" accept="image/*" onChange={handleFileChange} />
                     <span className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-accent-soft">Upload</span>
-                    <span className="mt-3 max-w-[14rem] leading-6">Selecciona JPG, PNG, WEBP, GIF o AVIF. El archivo se sube primero a Cloudinary.</span>
+                    <span className="mt-3 max-w-56 leading-6">Selecciona JPG, PNG, WEBP, GIF o AVIF. El archivo se sube primero a Cloudinary.</span>
                     {selectedFileName ? <span className="mt-4 rounded-full border border-white/12 px-3 py-1 text-xs text-white/82">{selectedFileName}</span> : null}
                   </label>
 
@@ -832,7 +832,7 @@ export function TournamentCreateLab() {
                     {previewUrl ? (
                       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${previewUrl})` }} />
                     ) : null}
-                    <div className={`relative flex min-h-36 items-end p-4 ${previewUrl ? "bg-gradient-to-t from-black/82 via-black/28 to-transparent" : ""}`}>
+                    <div className={`relative flex min-h-36 items-end p-4 ${previewUrl ? "bg-to-t from-black/82 via-black/28 to-transparent" : ""}`}>
                       <p className="text-sm leading-6 text-white/72">
                         {previewUrl ? "Vista previa local antes de subir la imagen." : "Aquí verás una vista previa rápida del archivo seleccionado."}
                       </p>
@@ -841,7 +841,7 @@ export function TournamentCreateLab() {
                 </div>
               </div>
 
-              <details className="rounded-[1.5rem] border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
+              <details className="rounded-3xl border border-white/10 bg-[rgba(255,255,255,0.03)] p-4">
                 <summary className="cursor-pointer list-none text-sm font-semibold text-white">SEO avanzado opcional</summary>
                 <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
                   <div className="grid gap-4">
@@ -852,7 +852,7 @@ export function TournamentCreateLab() {
 
                   <label className="grid gap-2">
                     <span className="text-sm font-medium text-stone-200">SEO description</span>
-                    <textarea className="min-h-24 rounded-[1.5rem] border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="seoDescription" placeholder="Resumen corto para Google y redes sociales." />
+                    <textarea className="min-h-24 rounded-3xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="seoDescription" placeholder="Resumen corto para Google y redes sociales." />
                   </label>
 
                   <label className="grid gap-2">
@@ -869,34 +869,34 @@ export function TournamentCreateLab() {
               </div>
 
               <div className={`${currentStep === 3 ? "grid" : "hidden"} gap-5`}>
-              <fieldset className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+              <fieldset className="rounded-3xl border border-white/10 bg-white/5 p-4">
                 <legend className="px-2 text-sm font-semibold text-stone-100">Categorías permitidas</legend>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   {PLAYER_CATEGORIES.map((category) => (
-                    <label key={category} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/18 px-4 py-3 text-sm text-white/82">
-                      <input className="h-4 w-4 accent-[var(--accent)]" type="checkbox" name="allowedCategories" value={category} />
+                    <label key={category} className="flex items-center gap-3 rounded-3xl border border-white/8 bg-black/18 px-4 py-3 text-sm text-white/82">
+                      <input className="h-4 w-4 accent-accent" type="checkbox" name="allowedCategories" value={category} />
                       <span>{category}</span>
                     </label>
                   ))}
                 </div>
               </fieldset>
 
-              <fieldset className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+              <fieldset className="rounded-3xl border border-white/10 bg-white/5 p-4">
                 <legend className="px-2 text-sm font-semibold text-stone-100">Premios base</legend>
                 <div className="mt-3 grid gap-4 md:grid-cols-2">
                   <div className="grid gap-3">
-                    <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="firstPrizeDescription" placeholder="Primer puesto: Taco Predator + $500.000" />
-                    <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" type="number" min={0} name="firstPrizeAmount" placeholder="500000" />
+                    <input className="rounded-3xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="firstPrizeDescription" placeholder="Primer puesto: Taco Predator + $500.000" />
+                    <input className="rounded-3xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" type="number" min={0} name="firstPrizeAmount" placeholder="500000" />
                   </div>
                   <div className="grid gap-3">
-                    <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="secondPrizeDescription" placeholder="Segundo puesto: Juego de bolas Diamond" />
-                    <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" type="number" min={0} name="secondPrizeAmount" placeholder="0" />
+                    <input className="rounded-3xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="secondPrizeDescription" placeholder="Segundo puesto: Juego de bolas Diamond" />
+                    <input className="rounded-3xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" type="number" min={0} name="secondPrizeAmount" placeholder="0" />
                   </div>
                 </div>
               </fieldset>
 
-              <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-white/82">
-                <input className="h-4 w-4 accent-[var(--accent)]" type="checkbox" name="withHandicap" />
+              <label className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-white/82">
+                <input className="h-4 w-4 accent-accent" type="checkbox" name="withHandicap" />
                 <span>Permitir handicap por jugador</span>
               </label>
               </div>

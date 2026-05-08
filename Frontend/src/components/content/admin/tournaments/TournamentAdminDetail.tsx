@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState, useTransition } from "react";
 import {
+  AdminDeleteItemButton,
   AdminSectionScaffold,
   formatAdminDate,
   humanizeAdminToken,
-} from "@/components/content/admin/shared/AdminSectionScaffold";
+} from "@/components/content/admin/shared";
 import {
   PAYMENT_METHODS,
   TOURNAMENT_REGISTRATION_STATUSES,
@@ -20,7 +21,6 @@ import {
   type TournamentStatus,
 } from "@/lib/api/admin-tournaments";
 import type { TournamentDetail } from "@/lib/api/public-content";
-import { TournamentDeleteButton } from "./TournamentDeleteButton";
 
 type FeedbackState = {
   kind: "idle" | "success" | "error";
@@ -379,7 +379,24 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
               <p className="text-sm text-white/56">URL admin: /admin/torneos/{tournament.slug}</p>
               <div className="flex flex-wrap items-center gap-3">
-                <TournamentDeleteButton redirectTo="/admin/torneos" tournamentId={tournament.id} tournamentName={tournament.name} />
+                <AdminDeleteItemButton
+                  deletePath={`/api/tournaments/${tournament.id}`}
+                  itemLabel="torneo"
+                  itemName={tournament.name}
+                  redirectTo="/admin/torneos"
+                  consequences={[
+                    "Se eliminarán los datos operativos y competitivos vinculados a este torneo.",
+                    "Los jugadores inscritos dejarán de aparecer en el panel y en el detalle público.",
+                    "Los pagos asociados a inscripciones del torneo también serán removidos.",
+                  ]}
+                  description={
+                    <>
+                      Vas a eliminar <span className="font-semibold text-white">{tournament.name}</span>. Esta acción borrará también sus grupos,
+                      inscripciones, partidos y transacciones asociadas. No se puede deshacer.
+                    </>
+                  }
+                  successMessage="Torneo eliminado correctamente."
+                />
                 <button className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-3 text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-70" disabled={isPending} type="submit">
                   {isPending && !activeRegistrationId ? "Guardando..." : "Guardar torneo"}
                 </button>

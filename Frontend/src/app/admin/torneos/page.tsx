@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { AdminSectionScaffold, formatAdminDate, formatAdminMoney, humanizeAdminToken } from "@/components/content/admin/shared/AdminSectionScaffold";
-import { TournamentDeleteButton } from "@/components/content/admin/tournaments/TournamentDeleteButton";
+import { AdminDeleteItemButton, AdminManageLink, AdminSectionScaffold, formatAdminDate, formatAdminMoney, humanizeAdminToken } from "@/components/content/admin/shared";
 import { getLandingSnapshot } from "@/lib/api/public-content";
 
 export default async function AdminTournamentsPage() {
@@ -36,7 +35,7 @@ export default async function AdminTournamentsPage() {
         {tournaments.length > 0 ? tournaments.map((tournament) => (
           <article key={tournament.id} className="overflow-hidden rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
             <div className="grid gap-5 lg:grid-cols-[11rem_minmax(0,1fr)] lg:items-start">
-              <div className="relative overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(135deg,rgba(246,196,79,0.16),rgba(13,110,174,0.16),rgba(255,255,255,0.04))] aspect-[4/5] min-h-[12rem]">
+              <div className="relative overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(135deg,rgba(246,196,79,0.16),rgba(13,110,174,0.16),rgba(255,255,255,0.04))] aspect-4/5 min-h-48">
                 {tournament.image ? (
                   <Image
                     src={tournament.image}
@@ -75,10 +74,25 @@ export default async function AdminTournamentsPage() {
                   <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
                     <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Acción</p>
                     <div className="mt-2 flex flex-wrap gap-3">
-                      <Link className="text-sm font-semibold text-[#f6c44f] transition hover:text-white" href={`/admin/torneos/${tournament.slug}`}>Administrar</Link>
-                      <Link className="text-sm font-semibold text-[#f6c44f] transition hover:text-white" href="/home/torneos">Ir al listado</Link>
-                      <Link className="text-sm font-semibold text-white/72 transition hover:text-white" href={`/home/torneos/${tournament.slug}`}>Abrir detalle</Link>
-                      <TournamentDeleteButton tournamentId={tournament.id} tournamentName={tournament.name} variant="text" />
+                      <AdminManageLink href={`/admin/torneos/${tournament.slug}`} />
+                      <AdminDeleteItemButton
+                        deletePath={`/api/tournaments/${tournament.id}`}
+                        itemLabel="torneo"
+                        itemName={tournament.name}
+                        consequences={[
+                          "Se eliminarán los datos operativos y competitivos vinculados a este torneo.",
+                          "Los jugadores inscritos dejarán de aparecer en el panel y en el detalle público.",
+                          "Los pagos asociados a inscripciones del torneo también serán removidos.",
+                        ]}
+                        description={
+                          <>
+                            Vas a eliminar <span className="font-semibold text-white">{tournament.name}</span>. Esta acción borrará también sus grupos,
+                            inscripciones, partidos y transacciones asociadas. No se puede deshacer.
+                          </>
+                        }
+                        successMessage="Torneo eliminado correctamente."
+                        variant="text"
+                      />
                     </div>
                   </div>
                 </div>

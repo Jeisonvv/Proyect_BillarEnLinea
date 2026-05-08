@@ -3,7 +3,7 @@ import { formatDate } from "../shared/utils";
 
 export function PostCard({ item }: { item: LandingPost }) {
   return (
-    <article className="rounded-[1.5rem] border border-line bg-[linear-gradient(180deg,rgba(9,14,22,0.94),rgba(11,18,28,0.9))] p-6 shadow-[0_22px_60px_rgba(5,7,11,0.32)] transition duration-300 hover:-translate-y-1">
+    <article className="rounded-3xl border border-line bg-[linear-gradient(180deg,rgba(9,14,22,0.94),rgba(11,18,28,0.9))] p-6 shadow-[0_22px_60px_rgba(5,7,11,0.32)] transition duration-300 hover:-translate-y-1">
       <div className="flex flex-wrap items-center gap-3">
         <span className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-accent-soft">Noticias</span>
         <span className="text-sm text-white/55">{formatDate(item.publishedAt)}</span>

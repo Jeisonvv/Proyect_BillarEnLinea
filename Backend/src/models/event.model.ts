@@ -15,6 +15,7 @@ export interface IEventPrize {
 
 export interface IEvent {
   name: string;
+  slug: string;
   description?: string;
   type: EventType;
   tier: EventTier;
@@ -37,6 +38,8 @@ export interface IEvent {
   ticketPrice?: number;
   ticketUrl?: string;
   resultsUrl?: string;
+  seoTitle?: string;
+  seoDescription?: string;
   featured: boolean;
   prizes: IEventPrize[];
   createdBy: mongoose.Types.ObjectId;
@@ -69,12 +72,44 @@ const eventPrizeSchema = new Schema<IEventPrize>(
   { _id: false },
 );
 
+function slugifyEventValue(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "evento";
+}
+
+async function ensureUniqueEventSlug(event: IEventDocument) {
+  const EventModel = event.constructor as mongoose.Model<IEventDocument>;
+  const baseSlug = slugifyEventValue(event.name);
+
+  let candidate = baseSlug;
+  let suffix = 2;
+
+  while (await EventModel.exists({ slug: candidate, _id: { $ne: event._id } })) {
+    candidate = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+
+  event.slug = candidate;
+}
+
 const eventSchema = new Schema<IEventDocument>(
   {
     name: {
       type: String,
       required: true,
       trim: true,
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
     },
     description: {
       type: String,
@@ -170,6 +205,14 @@ const eventSchema = new Schema<IEventDocument>(
       type: String,
       trim: true,
     },
+    seoTitle: {
+      type: String,
+      trim: true,
+    },
+    seoDescription: {
+      type: String,
+      trim: true,
+    },
     featured: {
       type: Boolean,
       default: false,
@@ -191,9 +234,15 @@ const eventSchema = new Schema<IEventDocument>(
   },
 );
 
+eventSchema.index({ slug: 1 }, { unique: true });
 eventSchema.index({ status: 1, startDate: 1 });
 eventSchema.index({ tier: 1, type: 1, startDate: 1 });
 eventSchema.index({ featured: 1, startDate: 1 });
+
+eventSchema.pre("validate", async function () {
+  const event = this as IEventDocument;
+  await ensureUniqueEventSlug(event);
+});
 
 eventSchema.virtual("isUpcoming").get(function (this: IEventDocument) {
   return this.startDate > new Date() && this.status === EventStatus.SCHEDULED;

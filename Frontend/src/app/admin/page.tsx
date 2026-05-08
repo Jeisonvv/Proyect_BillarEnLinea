@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { humanizeAdminToken } from "@/components/content/admin/shared";
 import { getLandingSnapshot } from "@/lib/api/public-content";
 import { getServerSession } from "@/lib/auth/server-session";
 
@@ -17,18 +18,6 @@ function formatLongDate(value: string | null) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(parsed);
-}
-
-function humanizeToken(value: string | null) {
-  if (!value) {
-    return "Sin dato";
-  }
-
-  return value
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
 }
 
 export const metadata: Metadata = {
@@ -66,24 +55,28 @@ export default async function AdminPage() {
   const summaryCards = [
     {
       label: "Torneos",
+      href: "/admin/torneos",
       value: snapshot.totals.tournaments,
       accent: "text-[rgba(246,196,79,0.96)]",
       helper: snapshot.tournaments.error ?? `${snapshot.tournaments.items.filter((item) => item.status === "OPEN").length} con inscripciones abiertas`,
     },
     {
       label: "Eventos",
+      href: "/admin/eventos",
       value: snapshot.totals.events,
       accent: "text-[rgba(132,224,196,0.96)]",
       helper: snapshot.events.error ?? `${snapshot.events.items.filter((item) => item.status === "SCHEDULED").length} programados`,
     },
     {
       label: "Rifas",
+      href: "/admin/rifas",
       value: snapshot.totals.raffles,
       accent: "text-[rgba(255,168,119,0.96)]",
       helper: snapshot.raffles.error ?? `${snapshot.raffles.items.filter((item) => item.saleStatus === "ACTIVE").length} activas`,
     },
     {
       label: "Productos",
+      href: "/admin/tienda",
       value: snapshot.totals.products,
       accent: "text-[rgba(129,181,255,0.96)]",
       helper: snapshot.products.error ?? `${snapshot.products.items.filter((item) => (item.stock ?? 0) <= 5).length} con stock bajo`,
@@ -117,39 +110,37 @@ export default async function AdminPage() {
 
   return (
     <main className="grid gap-6">
-      <section className="relative overflow-hidden rounded-[2rem] border border-[rgba(246,196,79,0.16)] bg-[linear-gradient(135deg,rgba(11,13,18,0.98),rgba(16,21,30,0.96)_46%,rgba(10,36,57,0.92)_100%)] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.34)] sm:p-6 lg:p-8">
+      <section className="relative overflow-hidden rounded-5xl border border-[rgba(246,196,79,0.16)] bg-[linear-gradient(135deg,rgba(11,13,18,0.98),rgba(16,21,30,0.96)_46%,rgba(10,36,57,0.92)_100%)] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.34)] sm:p-6 lg:p-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(246,196,79,0.22),transparent_28%),radial-gradient(circle_at_100%_10%,rgba(49,121,182,0.18),transparent_30%),linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.04)_48%,transparent_58%)]" />
-        <div className="relative grid gap-8 xl:grid-cols-[1.1fr_0.9fr] xl:items-end">
-          <div className="space-y-4">
+        <div className="relative grid gap-8">
+          <div className="mx-auto max-w-5xl space-y-4 text-center">
             <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[#f6c44f]">Centro de control</p>
             <div className="space-y-3">
-              <h1 className="max-w-4xl text-3xl font-semibold leading-tight text-white sm:text-4xl xl:text-[3.2rem]">
+              <h1 className="text-3xl font-semibold leading-tight text-white sm:text-[2.8rem] xl:text-2xl xl:leading-none">
                 {name}, aqui tienes una vista rapida del pulso operativo de Billar en Linea.
               </h1>
-              <p className="max-w-3xl text-sm leading-7 text-white/70 sm:text-base">
+              <p className="mx-auto max-w-3xl text-sm leading-7 text-white/70 sm:text-base">
                 Usa este panel para detectar contenido pendiente, entrar a las herramientas internas y revisar si torneos, eventos, rifas y tienda mantienen ritmo de publicacion.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3 pt-2">
+            <div className="flex flex-wrap justify-center gap-3 pt-2">
               <span className="rounded-full border border-[rgba(246,196,79,0.28)] bg-[rgba(246,196,79,0.12)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[rgba(255,244,214,0.94)]">
-                Rol {humanizeToken(role)}
+                Rol {humanizeAdminToken(role)}
               </span>
-              <Link
-                className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-3 text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong"
-                href="/admin/torneos/crear"
-              >
-                Lanzar nuevo torneo
-              </Link>
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 lg:grid-cols-4 sm:grid-cols-2">
             {summaryCards.map((card) => (
-              <article key={card.label} className="rounded-[1.6rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.04))] p-4 backdrop-blur-sm">
+              <Link
+                key={card.label}
+                href={card.href}
+                className="group rounded-[1.6rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.04))] p-4 backdrop-blur-sm transition hover:-translate-y-1 hover:border-[rgba(246,196,79,0.24)] hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))]"
+              >
                 <p className="text-[0.68rem] uppercase tracking-[0.24em] text-white/48">{card.label}</p>
-                <p className={`mt-3 text-3xl font-semibold ${card.accent}`}>{card.value}</p>
+                <p className={`mt-3 text-3xl font-semibold transition ${card.accent} group-hover:text-white`}>{card.value}</p>
                 <p className="mt-2 text-sm leading-6 text-white/62">{card.helper}</p>
-              </article>
+              </Link>
             ))}
           </div>
         </div>
@@ -201,10 +192,10 @@ export default async function AdminPage() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/78">
-                        {humanizeToken(tournament.format)}
+                        {humanizeAdminToken(tournament.format)}
                       </span>
                       <span className="rounded-full border border-[rgba(246,196,79,0.2)] bg-[rgba(246,196,79,0.12)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[rgba(255,233,174,0.96)]">
-                        {humanizeToken(tournament.status)}
+                        {humanizeAdminToken(tournament.status)}
                       </span>
                     </div>
                   </div>
@@ -255,7 +246,7 @@ export default async function AdminPage() {
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold text-white">{product.name}</p>
-                      <p className="mt-1 text-sm text-white/56">{humanizeToken(product.category)}</p>
+                      <p className="mt-1 text-sm text-white/56">{humanizeAdminToken(product.category)}</p>
                     </div>
                     <span className="rounded-full border border-[rgba(255,168,119,0.18)] bg-[rgba(255,168,119,0.12)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[rgba(255,212,190,0.94)]">
                       Stock {product.stock ?? 0}

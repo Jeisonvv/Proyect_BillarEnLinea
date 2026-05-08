@@ -113,7 +113,7 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
       />
 
       <section className="mx-auto flex w-full max-w-7xl flex-col px-4 pb-14 pt-8 sm:px-6 sm:pb-16 sm:pt-10 lg:px-12 lg:pb-24">
-        <header className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(145deg,#090b10_0%,#0f141c_48%,#17130e_100%)] text-white shadow-[0_40px_120px_rgba(3,6,10,0.42)] sm:rounded-[2.8rem]">
+        <header className="relative overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(145deg,#090b10_0%,#0f141c_48%,#17130e_100%)] text-white shadow-[0_40px_120px_rgba(3,6,10,0.42)] sm:rounded-[2.8rem]">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_18%,rgba(246,196,79,0.2),transparent_24%),radial-gradient(circle_at_80%_18%,rgba(13,110,174,0.18),transparent_22%),linear-gradient(135deg,rgba(255,255,255,0.03),transparent_55%)]" />
           <div className="relative px-5 py-6 sm:px-8 sm:py-10 lg:px-10 lg:py-12 xl:px-12 xl:py-14">
             <div className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-3 shadow-[0_30px_80px_rgba(0,0,0,0.24)] sm:p-4">
@@ -240,7 +240,7 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
           />
 
           <div id="torneos-contenido" className="grid gap-5 xl:grid-cols-2">
-            <div className="rounded-[2rem] border border-line bg-[linear-gradient(160deg,rgba(22,24,28,0.96),rgba(13,110,174,0.14))] p-5 shadow-[0_28px_90px_rgba(13,110,174,0.14)] xl:col-span-2">
+            <div className="rounded-4xl border border-line bg-[linear-gradient(160deg,rgba(22,24,28,0.96),rgba(13,110,174,0.14))] p-5 shadow-[0_28px_90px_rgba(13,110,174,0.14)] xl:col-span-2">
               <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
                 <div>
                   <p className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-white/50">Torneos activos</p>
@@ -261,7 +261,7 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
             </div>
 
             <div id="eventos-contenido" className="space-y-5">
-              <div className="rounded-[2rem] border border-line bg-[linear-gradient(180deg,rgba(7,12,20,0.98),rgba(10,16,24,0.92))] p-5 shadow-[0_28px_70px_rgba(5,8,14,0.28)]">
+              <div className="rounded-4xl border border-line bg-[linear-gradient(180deg,rgba(7,12,20,0.98),rgba(10,16,24,0.92))] p-5 shadow-[0_28px_70px_rgba(5,8,14,0.28)]">
                 <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
                   <div>
                     <p className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-accent-soft">Eventos</p>
@@ -283,7 +283,7 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
             </div>
 
             <div id="rifas-contenido" className="space-y-5">
-              <div className="rounded-[2rem] border border-white/10 bg-[linear-gradient(160deg,rgba(11,11,13,0.98),rgba(22,24,28,0.96))] p-5 shadow-[0_28px_75px_rgba(8,12,12,0.25)]">
+              <div className="rounded-4xl border border-white/10 bg-[linear-gradient(160deg,rgba(11,11,13,0.98),rgba(22,24,28,0.96))] p-5 shadow-[0_28px_75px_rgba(8,12,12,0.25)]">
                 <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
                   <div>
                     <p className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-stone-500">Sorteos</p>
@@ -344,7 +344,7 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
           </div>
         </section>
 
-        <section className="defer-render relative overflow-hidden rounded-[2rem] border border-line bg-[linear-gradient(135deg,#13211f_0%,#0d1715_38%,#d59558_100%)] px-4 py-8 text-white shadow-[0_34px_100px_rgba(12,17,16,0.24)] sm:rounded-[2.7rem] sm:px-6 sm:py-10 lg:px-10 lg:py-12">
+        <section className="defer-render relative overflow-hidden rounded-4xl border border-line bg-[linear-gradient(135deg,#13211f_0%,#0d1715_38%,#d59558_100%)] px-4 py-8 text-white shadow-[0_34px_100px_rgba(12,17,16,0.24)] sm:rounded-[2.7rem] sm:px-6 sm:py-10 lg:px-10 lg:py-12">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(255,255,255,0.14),transparent_24%),linear-gradient(120deg,rgba(255,255,255,0.04),transparent_34%)]" />
           <div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-8">
             <div className="max-w-3xl space-y-4">

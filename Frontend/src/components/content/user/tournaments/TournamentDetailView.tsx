@@ -77,7 +77,7 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
     : null;
 
   return (
-    <main className="mx-auto grid w-full gap-6 px-4 py-6 sm:px-6 xl:relative xl:left-1/2 xl:w-[95vw] xl:max-w-[95vw] xl:-translate-x-1/2 xl:px-0 2xl:w-[95vw] 2xl:max-w-[95vw]">
+    <main className="grid w-full gap-6 py-6">
       <section className="overflow-hidden rounded-[2.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,13,18,0.98),rgba(13,17,24,0.96))] shadow-[0_28px_100px_rgba(0,0,0,0.36)]">
         <div className="relative h-80 overflow-hidden border-b border-white/10 bg-black/30 sm:h-96 lg:h-120">
           {tournament.image ? (

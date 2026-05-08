@@ -112,9 +112,9 @@ export default async function WompiTournamentReturnPage({ searchParams }: WompiT
   const statusCopy = getStatusCopy(data?.payment.status);
 
   return (
-    <main className="mx-auto grid min-h-screen w-full max-w-[1280px] gap-6 px-4 py-8 sm:px-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:px-10">
+    <main className="mx-auto grid min-h-screen w-full max-w-6xl gap-6 px-4 py-8 sm:px-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:px-10">
       <section className="overflow-hidden rounded-[2.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(11,14,19,0.98),rgba(14,18,25,0.96))] shadow-[0_28px_100px_rgba(0,0,0,0.34)]">
-        <div className="relative h-[18rem] overflow-hidden border-b border-white/10 bg-black/28 sm:h-[22rem]">
+        <div className="relative h-72 overflow-hidden border-b border-white/10 bg-black/28 sm:h-88">
           {data?.tournament.imageUrl ? (
             <Image
               src={data.tournament.imageUrl}

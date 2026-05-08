@@ -83,6 +83,7 @@ export type TournamentDetail = {
 
 export type LandingEvent = {
   id: string;
+  slug: string;
   name: string;
   type: string | null;
   tier: string | null;
@@ -91,6 +92,42 @@ export type LandingEvent = {
   endDate: string | null;
   entryFee: number | null;
   featured: boolean;
+};
+
+export type EventDetail = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  type: string | null;
+  tier: string | null;
+  status: string | null;
+  organizer: string | null;
+  location: string | null;
+  city: string | null;
+  department: string | null;
+  country: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  entryFee: number | null;
+  registrationMode: string | null;
+  image: string | null;
+  streamUrl: string | null;
+  registrationUrl: string | null;
+  hasGrandstand: boolean;
+  grandstandDetails: string | null;
+  ticketingMode: string | null;
+  ticketPrice: number | null;
+  ticketUrl: string | null;
+  resultsUrl: string | null;
+  featured: boolean;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  prizes: Array<{
+    position: number;
+    description: string;
+    amount: number | null;
+  }>;
 };
 
 export type LandingRaffle = {

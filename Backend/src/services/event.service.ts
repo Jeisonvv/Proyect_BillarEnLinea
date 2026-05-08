@@ -139,6 +139,18 @@ export async function getEventByIdService(id: string) {
   return event;
 }
 
+export async function getEventBySlugService(slug: string) {
+  const event = await Event.findOne({ slug })
+    .populate("createdBy", "name role")
+    .lean();
+
+  if (!event) {
+    throw new Error("Evento no encontrado.");
+  }
+
+  return event;
+}
+
 export async function updateEventService(id: string, data: Record<string, unknown>) {
   const existing = await Event.findById(id);
   if (!existing) {
@@ -160,8 +172,10 @@ export async function updateEventService(id: string, data: Record<string, unknow
   validateEventDates(mergedData);
   validateEventBusinessRules(mergedData);
 
-  return Event.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true })
-    .populate("createdBy", "name role");
+  existing.set(data);
+  await existing.save();
+
+  return existing.populate("createdBy", "name role");
 }
 
 export async function deleteEventService(id: string) {

@@ -20,9 +20,9 @@ export default async function HomeTorneosPage() {
       </section>
 
       {tournaments.items.length > 0 ? (
-        <section className="grid gap-4 xl:relative xl:left-1/2 xl:w-[90vw] xl:max-w-[90vw] xl:-translate-x-1/2">
-          {tournaments.items.map((tournament) => (
-            <TournamentCard key={tournament.id} item={tournament} />
+        <section className="grid gap-4">
+          {tournaments.items.map((tournament, index) => (
+            <TournamentCard key={tournament.id} item={tournament} prioritizeImage={index === 0} />
           ))}
         </section>
       ) : (

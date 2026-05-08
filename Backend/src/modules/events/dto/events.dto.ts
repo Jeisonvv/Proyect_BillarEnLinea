@@ -35,6 +35,14 @@ export class CreateEventDto {
   @IsBoolean()
   featured?: boolean;
 
+  @IsOptional()
+  @IsString()
+  seoTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  seoDescription?: string;
+
   [key: string]: unknown;
 }
 
@@ -71,6 +79,14 @@ export class UpdateEventDto {
   @IsOptional()
   @IsBoolean()
   featured?: boolean;
+
+  @IsOptional()
+  @IsString()
+  seoTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  seoDescription?: string;
 
   [key: string]: unknown;
 }

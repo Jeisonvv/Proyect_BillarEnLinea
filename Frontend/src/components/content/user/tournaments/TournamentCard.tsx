@@ -20,7 +20,7 @@ function getStatusBadgeClass(status: LandingTournament["status"]) {
   }
 }
 
-export function TournamentCard({ item }: { item: LandingTournament }) {
+export function TournamentCard({ item, prioritizeImage = false }: { item: LandingTournament; prioritizeImage?: boolean }) {
   const statusLabel = humanizeToken(item.status);
   const statusBadgeClass = getStatusBadgeClass(item.status);
   // const formatLabel = humanizeToken(item.format);
@@ -32,7 +32,7 @@ export function TournamentCard({ item }: { item: LandingTournament }) {
   return (
     <Link
       aria-label={`Ver detalle del torneo ${item.name}`}
-      className="group block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(246,196,79,0.7)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0d12] xl:mx-auto xl:w-[90vw]"
+      className="group block w-full rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(246,196,79,0.7)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0d12]"
       href={detailHref}
     >
       <article className="relative overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(15,18,24,0.96),rgba(9,11,16,0.98))] shadow-[0_18px_60px_rgba(0,0,0,0.34)] transition duration-300 hover:-translate-y-2 hover:border-[rgba(246,196,79,0.3)] hover:shadow-[0_28px_90px_rgba(0,0,0,0.45)]">
@@ -45,6 +45,7 @@ export function TournamentCard({ item }: { item: LandingTournament }) {
                 src={item.image}
                 alt={`Imagen del torneo ${item.name}`}
                 fill
+                priority={prioritizeImage}
                 sizes="(min-width: 1536px) 42vw, (min-width: 1280px) 44vw, (min-width: 768px) 50vw, 100vw"
                 className="object-cover object-center transition duration-700 group-hover:scale-105 md:object-[center_22%] xl:object-[center_18%]"
               />

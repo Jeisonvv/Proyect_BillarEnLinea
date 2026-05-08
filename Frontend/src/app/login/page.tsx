@@ -85,7 +85,7 @@ export default async function LoginPage({
             </div>
 
             {accessPrompt ? (
-              <article className="rounded-[1.5rem] border border-[rgba(246,196,79,0.22)] bg-[rgba(246,196,79,0.08)] px-4 py-4 text-sm leading-7 text-stone-100">
+              <article className="rounded-3xl border border-[rgba(246,196,79,0.22)] bg-[rgba(246,196,79,0.08)] px-4 py-4 text-sm leading-7 text-stone-100">
                 <p className="text-[0.7rem] uppercase tracking-[0.24em] text-[rgba(246,196,79,0.82)]">Acceso requerido</p>
                 <p className="mt-2">{accessPrompt}</p>
               </article>

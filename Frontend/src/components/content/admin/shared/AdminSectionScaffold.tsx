@@ -79,7 +79,7 @@ export function AdminSectionScaffold({
 }) {
   return (
     <main className="grid gap-6">
-      <section className="relative overflow-hidden rounded-[2rem] border border-[rgba(246,196,79,0.16)] bg-[linear-gradient(135deg,rgba(11,13,18,0.98),rgba(16,21,30,0.96)_46%,rgba(10,36,57,0.92)_100%)] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.34)] sm:p-6 lg:p-8">
+      <section className="relative overflow-hidden rounded-4xl border border-[rgba(246,196,79,0.16)] bg-[linear-gradient(135deg,rgba(11,13,18,0.98),rgba(16,21,30,0.96)_46%,rgba(10,36,57,0.92)_100%)] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.34)] sm:p-6 lg:p-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(246,196,79,0.22),transparent_28%),radial-gradient(circle_at_100%_10%,rgba(49,121,182,0.18),transparent_30%),linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.04)_48%,transparent_58%)]" />
         <div className="relative grid gap-8 xl:grid-cols-[1.05fr_0.95fr] xl:items-end">
           <div className="space-y-4">

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AdminSectionScaffold, formatAdminDate, formatAdminMoney, humanizeAdminToken } from "@/components/content/admin/shared/AdminSectionScaffold";
+import { AdminDeleteItemButton, AdminManageLink, AdminSectionScaffold, formatAdminDate, formatAdminMoney, humanizeAdminToken } from "@/components/content/admin/shared";
 import { getLandingSnapshot } from "@/lib/api/public-content";
 
 export default async function AdminEventsPage() {
@@ -43,7 +43,7 @@ export default async function AdminEventsPage() {
                 <span className="rounded-full border border-[rgba(132,224,196,0.22)] bg-[rgba(132,224,196,0.12)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[rgba(214,255,243,0.96)]">{humanizeAdminToken(event.status)}</span>
               </div>
             </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
                 <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Tier</p>
                 <p className="mt-2 text-base font-semibold text-white">{humanizeAdminToken(event.tier)}</p>
@@ -55,6 +55,29 @@ export default async function AdminEventsPage() {
               <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
                 <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Cierre</p>
                 <p className="mt-2 text-base font-semibold text-white">{formatAdminDate(event.endDate)}</p>
+              </div>
+              <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
+                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Acción</p>
+                <div className="mt-2 flex flex-wrap gap-3">
+                  <AdminManageLink href={`/admin/eventos/${event.slug}`} />
+                  <AdminDeleteItemButton
+                    deletePath={`/api/events/${event.id}`}
+                    itemLabel="evento"
+                    itemName={event.name}
+                    consequences={[
+                      "El evento dejará de aparecer en el panel administrativo y en la vista pública.",
+                      "La URL pública del evento dejará de resolver su detalle.",
+                      "Esta acción es definitiva y no se puede deshacer.",
+                    ]}
+                    description={
+                      <>
+                        Vas a eliminar <span className="font-semibold text-white">{event.name}</span>. Revisa que no haya difusión activa ni enlaces compartidos antes de continuar.
+                      </>
+                    }
+                    successMessage="Evento eliminado correctamente."
+                    variant="text"
+                  />
+                </div>
               </div>
             </div>
           </article>

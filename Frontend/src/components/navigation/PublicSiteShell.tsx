@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { siteConfig } from "@/lib/site";
 
-const hiddenPrefixes = ["/home", "/admin", "/dashboard"];
+const hiddenPrefixes = ["/home", "/admin"];
 
 const navItems = [
   { label: "Inicio", href: "/" },
@@ -191,7 +191,7 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Siguenos en ${socialLink.label}`}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/72 transition hover:border-white/18 hover:bg-white/[0.09] hover:text-white focus:outline-none focus:ring-2 focus:ring-accent/70 focus:ring-offset-2 focus:ring-offset-[#0b0d10]"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/4 text-white/72 transition hover:border-white/18 hover:bg-white/9 hover:text-white focus:outline-none focus:ring-2 focus:ring-accent/70 focus:ring-offset-2 focus:ring-offset-[#0b0d10]"
                 >
                   {socialLink.icon}
                 </a>

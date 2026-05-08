@@ -41,6 +41,17 @@ export class EventsNestController {
     }
   }
 
+  @Get('slug/:slug')
+  async getEventBySlug(@Param('slug') slug: string) {
+    try {
+      const event = await this.eventsService.getEventBySlug(slug);
+      return { ok: true, data: event };
+    } catch (error: any) {
+      const status = error.message === 'Evento no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
   @Get(':id')
   async getEventById(@Param('id') id: string) {
     try {

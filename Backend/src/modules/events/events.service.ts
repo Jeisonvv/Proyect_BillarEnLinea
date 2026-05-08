@@ -3,6 +3,7 @@ import {
   createEventService,
   deleteEventService,
   getEventByIdService,
+  getEventBySlugService,
   listEventsService,
   updateEventService,
 } from '../../services/event.service.js';
@@ -27,6 +28,10 @@ export class EventsNestService {
 
   getEventById(id: string) {
     return getEventByIdService(id);
+  }
+
+  getEventBySlug(slug: string) {
+    return getEventBySlugService(slug);
   }
 
   updateEvent(id: string, data: UpdateEventDto) {
