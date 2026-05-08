@@ -930,7 +930,7 @@ export async function createWompiCheckoutForTournament(
     tournament: tournamentObjectId,
     user: userObjectId,
   })
-    .select("_id status playerCategory handicap")
+    .select("_id status playerCategory handicap groupStageSlotId")
     .lean();
 
   if (registration?.status === RegistrationStatus.CANCELLED) {
@@ -951,7 +951,7 @@ export async function createWompiCheckoutForTournament(
     );
 
     registration = await TournamentRegistration.findById(createdRegistration._id)
-      .select("_id status playerCategory handicap")
+      .select("_id status playerCategory handicap groupStageSlotId")
       .lean();
   }
 
@@ -965,6 +965,16 @@ export async function createWompiCheckoutForTournament(
 
   if (registration.status === RegistrationStatus.CANCELLED) {
     throw new Error("La inscripción fue cancelada y no admite pago.");
+  }
+
+  if (registration.groupStageSlotId) {
+    const lockedGroupStageSlotId = registration.groupStageSlotId.toString();
+
+    if (!params.groupStageSlotId) {
+      params.groupStageSlotId = lockedGroupStageSlotId;
+    } else if (params.groupStageSlotId !== lockedGroupStageSlotId) {
+      throw new Error("El horario de grupos ya fue reservado para esta inscripción y no se puede cambiar desde este paso.");
+    }
   }
 
   const amountInCents = pricing.amountInCents;

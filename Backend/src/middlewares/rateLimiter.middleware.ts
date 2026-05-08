@@ -31,7 +31,7 @@ function isBotRequest(req: Request) {
 
 const limiterInstance = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100,                  // máximo 100 peticiones por IP en esa ventana
+  max: 500,                  // máximo 100 peticiones por IP en esa ventana
   standardHeaders: true,     // incluye los headers RateLimit-* en la respuesta
   legacyHeaders: false,      // deshabilita los headers X-RateLimit-* (obsoletos)
   message: {
@@ -55,7 +55,7 @@ export const generalLimiter = (req: Request, res: Response, next: NextFunction) 
 
 const authLimiterInstance = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 10,                   // solo 10 intentos de login por IP
+  max: 50,                   // solo 10 intentos de login por IP
   standardHeaders: true,
   legacyHeaders: false,
   message: {

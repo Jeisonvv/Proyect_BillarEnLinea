@@ -19,7 +19,7 @@ export default async function PageHome() {
   return (
     <main className="grid gap-6">
       {hasAdminAccess ? (
-        <section className="flex flex-col gap-4 rounded-[1.5rem] border border-[rgba(246,196,79,0.18)] bg-[linear-gradient(135deg,rgba(246,196,79,0.12),rgba(255,255,255,0.03)_38%,rgba(46,113,173,0.08)_100%)] p-5 shadow-[0_24px_60px_rgba(3,8,17,0.22)] sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <section className="flex flex-col gap-4 rounded-3xl border border-[rgba(246,196,79,0.18)] bg-[linear-gradient(135deg,rgba(246,196,79,0.12),rgba(255,255,255,0.03)_38%,rgba(46,113,173,0.08)_100%)] p-5 shadow-[0_24px_60px_rgba(3,8,17,0.22)] sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div className="space-y-2">
             <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[#f6c44f]">Gestion interna</p>
             <h1 className="text-2xl font-semibold text-white sm:text-[2rem]">Panel administrativo</h1>

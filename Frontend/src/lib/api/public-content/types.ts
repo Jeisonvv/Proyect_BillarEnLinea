@@ -14,6 +14,7 @@ export type LandingTournament = {
   startDate: string | null;
   entryFee: number | null;
   maxParticipants: number | null;
+  currentParticipants: number | null;
 };
 
 export type TournamentDetail = {

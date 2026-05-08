@@ -4,6 +4,23 @@ import type { TournamentDetail } from "@/lib/api/public-content";
 import { TournamentRegistrationPanel } from "./TournamentRegistrationPanel";
 import { formatMoney, humanizeToken } from "../shared/utils";
 
+function getStatusBadgeClass(status: TournamentDetail["status"]) {
+  switch (status) {
+    case "OPEN":
+      return "border-emerald-300/22 bg-emerald-400/12 text-emerald-100";
+    case "CLOSED":
+      return "border-amber-300/24 bg-amber-400/12 text-amber-100";
+    case "IN_PROGRESS":
+      return "border-sky-300/24 bg-sky-400/12 text-sky-100";
+    case "FINISHED":
+      return "border-slate-300/22 bg-slate-300/10 text-slate-100";
+    case "CANCELLED":
+      return "border-rose-300/24 bg-rose-400/12 text-rose-100";
+    default:
+      return "border-white/14 bg-black/28 text-white/88";
+  }
+}
+
 function formatLongDate(value: string | null) {
   if (!value) {
     return "Por anunciar";
@@ -40,6 +57,7 @@ function getRegistrantInitial(name: string | null) {
 }
 
 export function TournamentDetailView({ tournament }: { tournament: TournamentDetail }) {
+  const statusBadgeClass = getStatusBadgeClass(tournament.status);
   const locationLabel = [tournament.venueName, tournament.city, tournament.country].filter(Boolean).join(" · ");
   const confirmedLabel = tournament.currentParticipants !== null && tournament.maxParticipants !== null
     ? `${tournament.currentParticipants}/${tournament.maxParticipants} confirmados`
@@ -78,7 +96,7 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,9,12,0.18),rgba(7,9,12,0.34),rgba(7,9,12,0.94))]" />
 
           <div className="absolute left-5 right-5 top-5 flex flex-wrap items-center gap-3">
-            <span className="rounded-full border border-emerald-300/22 bg-emerald-400/12 px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.26em] text-emerald-100 backdrop-blur-sm">
+            <span className={`rounded-full border px-3 py-1 font-mono text-[0.7rem] uppercase tracking-[0.26em] backdrop-blur-sm ${statusBadgeClass}`}>
               {humanizeToken(tournament.status)}
             </span>
             <span className="rounded-full border border-white/14 bg-black/28 px-3 py-1 text-[0.72rem] font-semibold text-white/88 backdrop-blur-sm">

@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { TournamentDetail } from "@/lib/api/public-content";
 import { TournamentRegistrationButton } from "./TournamentRegistrationButton";
 import { fetchSelfTournamentRegistrationState, type SelfTournamentRegistrationState } from "./registration-state";
+
+function subscribeToHydration() {
+  return () => {};
+}
 
 type TournamentRegistrationPanelProps = {
   tournamentId: string;
@@ -106,12 +110,10 @@ export function TournamentRegistrationPanel({
   groupStageSlots,
 }: TournamentRegistrationPanelProps) {
   const [selfRegistrationState, setSelfRegistrationState] = useState<SelfTournamentRegistrationState | null>(null);
-  const [hasHydrated, setHasHydrated] = useState(false);
+  const hasHydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false);
 
   useEffect(() => {
     let isActive = true;
-
-    setHasHydrated(true);
 
     void fetchSelfTournamentRegistrationState(tournamentId)
       .then((nextState) => {
@@ -146,10 +148,8 @@ export function TournamentRegistrationPanel({
     || registrationStatus === "PENDING"
     || registrationStatus === "WAITLIST";
 
-  const discountMessage = activeDiscount
-    ? registrationStatus === "PENDING"
-      ? `Termina de hacer tu pago con el ${activeDiscount.percentage}% de descuento y paga ${discountedAmount !== null ? formatMoney(discountedAmount) : "la tarifa preferencial"}. Esta tarifa vence el ${formatUrgencyDeadline(activeDiscount.deadline)}.`
-      : `Termina de hacer tu pago con el ${activeDiscount.percentage}% de descuento que aplica en este momento y paga ${discountedAmount !== null ? formatMoney(discountedAmount) : "la tarifa preferencial"}. Disponible hasta el ${formatUrgencyDeadline(activeDiscount.deadline)}.`
+  const discountMessage = activeDiscount && registrationStatus === "PENDING"
+    ? `Termina de hacer tu pago con el ${activeDiscount.percentage}% de descuento y paga ${discountedAmount !== null ? formatMoney(discountedAmount) : "la tarifa preferencial"}. Esta tarifa vence el ${formatUrgencyDeadline(activeDiscount.deadline)}.`
     : null;
 
   return (

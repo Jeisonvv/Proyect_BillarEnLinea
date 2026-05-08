@@ -87,6 +87,21 @@ function humanizeRegistrationStatus(status: string | null) {
   }
 }
 
+function getRegistrationStatusClass(status: string | null) {
+  switch (status) {
+    case "CONFIRMED":
+      return "border-emerald-300/18 bg-emerald-400/10 text-emerald-100";
+    case "PENDING":
+      return "border-[rgba(246,196,79,0.16)] bg-[rgba(246,196,79,0.08)] text-[rgba(255,245,214,0.92)]";
+    case "WAITLIST":
+      return "border-sky-300/18 bg-sky-400/10 text-sky-100";
+    case "CANCELLED":
+      return "border-rose-300/18 bg-rose-400/10 text-rose-100";
+    default:
+      return "border-white/10 bg-white/5 text-white/82";
+  }
+}
+
 function buildWompiCheckoutUrl(config: WompiCheckoutConfig) {
   if (!config.checkoutUrl || !config.publicKey || !config.currency || !config.amountInCents || !config.reference) {
     return null;
@@ -146,6 +161,7 @@ export function TournamentRegistrationButton({
 }: TournamentRegistrationButtonProps) {
   const router = useRouter();
   const [feedback, setFeedback] = useState<string>("");
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [selfRegistrationState, setSelfRegistrationState] = useState<SelfTournamentRegistrationState | null>(initialSelfRegistrationState);
   const [selectedGroupStageSlotId, setSelectedGroupStageSlotId] = useState<string>(getGroupStageSlotId(initialSelfRegistrationState));
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
@@ -231,6 +247,8 @@ export function TournamentRegistrationButton({
   const effectiveRegistrationStatus = selfRegistrationState?.registration?.status ?? null;
   const pendingReason = selfRegistrationState?.pendingReason ?? null;
   const canPay = selfRegistrationState?.canPay ?? false;
+  const registrationStatusClass = getRegistrationStatusClass(effectiveRegistrationStatus);
+  const hasLockedGroupStageSlot = Boolean(selfRegistrationState?.registration?.groupStageSlotId);
   const canResumePendingPayment = effectiveRegistrationStatus === "PENDING"
     && pendingReason === "PAYMENT_UNDER_REVIEW";
   const hasBlockingRegistration = effectiveRegistrationStatus === "CONFIRMED"
@@ -349,7 +367,7 @@ export function TournamentRegistrationButton({
         await syncRegistrationState({ showLoadingState: true });
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
-          router.push("/login");
+          setShowAuthPrompt(true);
           return;
         }
 
@@ -370,7 +388,7 @@ export function TournamentRegistrationButton({
 
   return (
     <div className="grid gap-3">
-      {requiresGroupStageSlot ? (
+      {requiresGroupStageSlot && !hasLockedGroupStageSlot ? (
         <label className="grid gap-2">
           <span className="text-sm font-medium text-white/82">Elige día y horario de grupos</span>
           <select
@@ -380,7 +398,7 @@ export function TournamentRegistrationButton({
               setFeedback("");
               setSelectedGroupStageSlotId(event.target.value);
             }}
-            disabled={hasBlockingRegistration || isPending || isCheckingStatus}
+            disabled={hasBlockingRegistration || hasLockedGroupStageSlot || isPending || isCheckingStatus}
           >
             <option value="">Selecciona un horario</option>
             {slotsWithAvailability.map((slot) => (
@@ -396,10 +414,17 @@ export function TournamentRegistrationButton({
           ) : null}
           {selectedSlot ? (
             <span className="text-xs leading-6 text-[rgba(246,196,79,0.82)]">
-              Horario elegido: {buildSlotLabel(selectedSlot)}
+              Horario elegido: 
+              {buildSlotLabel(selectedSlot)}
             </span>
           ) : null}
         </label>
+      ) : null}
+
+      {requiresGroupStageSlot && hasLockedGroupStageSlot && selectedSlot ? (
+        <div className="rounded-[1.2rem] border border-[rgba(246,196,79,0.16)] bg-[rgba(246,196,79,0.08)] px-4 py-3 text-sm leading-7 text-[rgba(255,245,214,0.92)]">
+          Tu horario ya quedó reservado: {buildSlotLabel(selectedSlot)}
+        </div>
       ) : null}
 
       <button
@@ -417,8 +442,51 @@ export function TournamentRegistrationButton({
         </p>
       ) : null}
 
+      {showAuthPrompt ? (
+        <div className="fixed inset-0 z-90 flex items-center justify-center bg-black/72 px-4">
+          <div className="w-full max-w-md rounded-[1.8rem] border border-white/10 bg-[linear-gradient(180deg,rgba(14,18,26,0.98),rgba(10,13,19,0.98))] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.42)]">
+            <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Acceso requerido</p>
+            <h3 className="mt-3 text-2xl font-semibold text-white">Necesitas una cuenta para inscribirte</h3>
+            <p className="mt-3 text-sm leading-7 text-white/74">
+              Para registrarte al torneo debes iniciar sesión o crear una cuenta. Así el sistema puede guardar tu inscripción, tu horario y el estado de tu pago.
+            </p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                className="rounded-full border border-white/12 px-4 py-3 text-sm font-medium text-white/82 transition hover:bg-white/8"
+                type="button"
+                onClick={() => {
+                  setShowAuthPrompt(false);
+                  router.push("/login");
+                }}
+              >
+                Iniciar sesión
+              </button>
+              <button
+                className="rounded-full bg-accent px-4 py-3 text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong"
+                type="button"
+                onClick={() => {
+                  setShowAuthPrompt(false);
+                  router.push("/register");
+                }}
+              >
+                Crear cuenta
+              </button>
+            </div>
+
+            <button
+              className="mt-3 w-full rounded-full border border-white/10 px-4 py-3 text-sm font-medium text-white/62 transition hover:bg-white/6 hover:text-white"
+              type="button"
+              onClick={() => setShowAuthPrompt(false)}
+            >
+              Seguir viendo el torneo
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {effectiveRegistrationStatus ? (
-        <p className="rounded-[1.2rem] border border-[rgba(246,196,79,0.16)] bg-[rgba(246,196,79,0.08)] px-4 py-3 text-sm leading-7 text-[rgba(255,245,214,0.92)]">
+        <p className={`rounded-[1.2rem] border px-4 py-3 text-sm leading-7 ${registrationStatusClass}`}>
           Estado actual: {humanizeRegistrationStatus(effectiveRegistrationStatus) ?? effectiveRegistrationStatus}
         </p>
       ) : null}

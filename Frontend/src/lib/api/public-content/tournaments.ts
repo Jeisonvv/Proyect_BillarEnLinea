@@ -32,6 +32,7 @@ function normalizeTournament(record: JsonRecord): LandingTournament | null {
     startDate: pickString(record, ["startDate"]),
     entryFee: pickNumber(record, ["entryFee"]),
     maxParticipants: pickNumber(record, ["maxParticipants"]),
+    currentParticipants: pickNumber(record, ["currentParticipants"]),
   };
 }
 
