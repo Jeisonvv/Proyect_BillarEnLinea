@@ -79,15 +79,30 @@ export function pickRecordArray(record: JsonRecord, keys: string[]) {
   return [];
 }
 
+function optimizeCloudinaryAssetUrl(value: string) {
+  if (!value.includes("res.cloudinary.com") || !value.includes("/upload/")) {
+    return value;
+  }
+
+  const uploadToken = "/upload/";
+  const transformation = "f_auto,q_auto:good,c_limit,w_1400,dpr_auto";
+
+  if (value.includes(`${uploadToken}${transformation}/`)) {
+    return value;
+  }
+
+  return value.replace(uploadToken, `${uploadToken}${transformation}/`);
+}
+
 export function resolveApiAssetUrl(value: string | null) {
   if (!value) {
     return null;
   }
 
   try {
-    return new URL(value, API_BASE_URL).toString();
+    return optimizeCloudinaryAssetUrl(new URL(value, API_BASE_URL).toString());
   } catch {
-    return value;
+    return optimizeCloudinaryAssetUrl(value);
   }
 }
 

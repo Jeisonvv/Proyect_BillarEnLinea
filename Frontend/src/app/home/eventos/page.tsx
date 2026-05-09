@@ -1,9 +1,36 @@
 import type { Metadata } from "next";
 import { EventCard } from "@/components/content/user/events";
 import { getLandingEvents } from "@/lib/api/public-content";
+import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Eventos",
+  description: "Explora los eventos de billar visibles, revisa fechas, acceso y contexto de cada encuentro desde Billar en Linea.",
+  alternates: {
+    canonical: "/home/eventos",
+  },
+  openGraph: {
+    type: "website",
+    locale: siteConfig.locale,
+    url: "/home/eventos",
+    siteName: siteConfig.name,
+    title: `Eventos | ${siteConfig.name}`,
+    description: "Explora los eventos de billar visibles, revisa fechas, acceso y contexto de cada encuentro desde Billar en Linea.",
+    images: [
+      {
+        url: siteConfig.socialImage,
+        width: 2000,
+        height: 800,
+        alt: `Eventos disponibles en ${siteConfig.name}`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Eventos | ${siteConfig.name}`,
+    description: "Explora los eventos de billar visibles, revisa fechas, acceso y contexto de cada encuentro desde Billar en Linea.",
+    images: [siteConfig.socialImage],
+  },
 };
 
 export default async function HomeEventosPage() {
@@ -20,7 +47,7 @@ export default async function HomeEventosPage() {
       </section>
 
       {events.items.length > 0 ? (
-        <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <section className="grid gap-4">
           {events.items.map((event) => (
             <EventCard key={event.id} item={event} />
           ))}

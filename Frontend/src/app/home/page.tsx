@@ -4,7 +4,8 @@ import { EventCard } from "@/components/content/user/events";
 import { PostCard } from "@/components/content/user/posts";
 import { ProductCard } from "@/components/content/user/products";
 import { RaffleCard } from "@/components/content/user/raffles";
-import { TournamentCard } from "@/components/content/user/tournaments";
+import { ShowcaseCard } from "@/components/content/user/shared";
+import { getTournamentShowcaseProps } from "@/components/content/user/tournaments";
 import { getServerSession } from "@/lib/auth/server-session";
 
 function HomeSection({
@@ -63,7 +64,7 @@ export default async function PageHome() {
       >
         <div className="grid gap-4">
           {torneos.items.length > 0 ? torneos.items.map((torneo, index) => (
-            <TournamentCard key={torneo.id} item={torneo} prioritizeImage={index === 0} />
+            <ShowcaseCard key={torneo.id} {...getTournamentShowcaseProps(torneo, index === 0)} />
           )) : (
             <div className="rounded-3xl border border-dashed border-white/10 bg-black/12 px-5 py-6 text-sm leading-7 text-white/62">
               No hay torneos disponibles por ahora.
@@ -73,18 +74,18 @@ export default async function PageHome() {
       </HomeSection>
 
       <HomeSection
-        eyebrow="Eventos"
-        title="Encuentros, activaciones y agenda curada"
-        description="Deja visible para el cliente la programacion de eventos con una lectura rapida del tipo, estado y costo de acceso."
-        href="/home/eventos"
-        cta="Ver todos los eventos"
+        eyebrow="Rifas"
+        title="Premios y dinamicas activas"
+        description="Muestra las rifas destacadas para que el cliente vea rapido el premio, el valor del numero y la fecha del sorteo."
+        href="/home/rifas"
+        cta="Ver todas las rifas"
       >
-        <div className="grid gap-4 lg:grid-cols-3">
-          {eventos.items.length > 0 ? eventos.items.map((evento) => (
-            <EventCard key={evento.id} item={evento} />
+        <div className="grid gap-4">
+          {rifas.items.length > 0 ? rifas.items.map((rifa) => (
+            <RaffleCard key={rifa.id} item={rifa} />
           )) : (
-            <div className="rounded-3xl border border-dashed border-white/10 bg-black/12 px-5 py-6 text-sm leading-7 text-white/62 lg:col-span-3">
-              Aun no hay eventos publicados para mostrar en esta seccion.
+            <div className="rounded-3xl border border-dashed border-white/10 bg-black/12 px-5 py-6 text-sm leading-7 text-white/62">
+              No hay rifas activas en este momento.
             </div>
           )}
         </div>
@@ -97,54 +98,54 @@ export default async function PageHome() {
         href="/home/tienda"
         cta="Ver toda la tienda"
       >
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4">
           {productos.items.length > 0 ? productos.items.map((producto) => (
             <ProductCard key={producto.id} item={producto} />
           )) : (
-            <div className="rounded-3xl border border-dashed border-white/10 bg-black/12 px-5 py-6 text-sm leading-7 text-white/62 lg:col-span-3">
+            <div className="rounded-3xl border border-dashed border-white/10 bg-black/12 px-5 py-6 text-sm leading-7 text-white/62">
               Aun no hay productos visibles en la tienda.
             </div>
           )}
         </div>
       </HomeSection>
 
-      <div className="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
-        <HomeSection
-          eyebrow="Rifas"
-          title="Premios y dinamicas activas"
-          description="Muestra las rifas destacadas para que el cliente vea rapido el premio, el valor del numero y la fecha del sorteo."
-          href="/home/rifas"
-          cta="Ver todas las rifas"
-        >
-          <div className="grid gap-4">
-            {rifas.items.length > 0 ? rifas.items.map((rifa) => (
-              <RaffleCard key={rifa.id} item={rifa} />
-            )) : (
-              <div className="rounded-3xl border border-dashed border-white/10 bg-black/12 px-5 py-6 text-sm leading-7 text-white/62">
-                No hay rifas activas en este momento.
-              </div>
-            )}
-          </div>
-        </HomeSection>
+      <HomeSection
+        eyebrow="Eventos"
+        title="Encuentros, activaciones y agenda curada"
+        description="Deja visible para el cliente la programacion de eventos con una lectura rapida del tipo, estado y costo de acceso."
+        href="/home/eventos"
+        cta="Ver todos los eventos"
+      >
+        <div className="grid gap-4">
+          {eventos.items.length > 0 ? eventos.items.map((evento) => (
+            <EventCard key={evento.id} item={evento} />
+          )) : (
+            <div className="rounded-3xl border border-dashed border-white/10 bg-black/12 px-5 py-6 text-sm leading-7 text-white/62">
+              Aun no hay eventos publicados para mostrar en esta seccion.
+            </div>
+          )}
+        </div>
+      </HomeSection>
 
-        <HomeSection
-          eyebrow="Noticias"
-          title="Novedades para seguir el pulso del billar"
-          description="Publicaciones recientes para que el cliente encuentre contexto, anuncios y cobertura sin salir del ecosistema de la plataforma."
-          href="/home/noticias"
-          cta="Ver todas las noticias"
-        >
-          <div className="grid gap-4">
-            {noticias.items.length > 0 ? noticias.items.map((post) => (
-              <PostCard key={post.id} item={post} />
-            )) : (
-              <div className="rounded-3xl border border-dashed border-white/10 bg-black/12 px-5 py-6 text-sm leading-7 text-white/62">
-                No hay noticias publicadas por ahora.
-              </div>
-            )}
-          </div>
-        </HomeSection>
-      </div>
+      
+
+      <HomeSection
+        eyebrow="Noticias"
+        title="Novedades para seguir el pulso del billar"
+        description="Publicaciones recientes para que el cliente encuentre contexto, anuncios y cobertura sin salir del ecosistema de la plataforma."
+        href="/home/noticias"
+        cta="Ver todas las noticias"
+      >
+        <div className="grid gap-4">
+          {noticias.items.length > 0 ? noticias.items.map((post) => (
+            <PostCard key={post.id} item={post} />
+          )) : (
+            <div className="rounded-3xl border border-dashed border-white/10 bg-black/12 px-5 py-6 text-sm leading-7 text-white/62">
+              No hay noticias publicadas por ahora.
+            </div>
+          )}
+        </div>
+      </HomeSection>
     </main>
   );
 }

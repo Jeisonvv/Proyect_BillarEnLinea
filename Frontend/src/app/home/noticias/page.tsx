@@ -1,9 +1,36 @@
 import type { Metadata } from "next";
 import { PostCard } from "@/components/content/user/posts";
 import { getLandingPosts } from "@/lib/api/public-content";
+import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Noticias",
+  description: "Sigue las noticias y novedades del billar, con publicaciones recientes, anuncios y contexto editorial dentro de Billar en Linea.",
+  alternates: {
+    canonical: "/home/noticias",
+  },
+  openGraph: {
+    type: "website",
+    locale: siteConfig.locale,
+    url: "/home/noticias",
+    siteName: siteConfig.name,
+    title: `Noticias | ${siteConfig.name}`,
+    description: "Sigue las noticias y novedades del billar, con publicaciones recientes, anuncios y contexto editorial dentro de Billar en Linea.",
+    images: [
+      {
+        url: siteConfig.socialImage,
+        width: 2000,
+        height: 800,
+        alt: `Noticias de billar en ${siteConfig.name}`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Noticias | ${siteConfig.name}`,
+    description: "Sigue las noticias y novedades del billar, con publicaciones recientes, anuncios y contexto editorial dentro de Billar en Linea.",
+    images: [siteConfig.socialImage],
+  },
 };
 
 export default async function HomeNoticiasPage() {
@@ -20,7 +47,7 @@ export default async function HomeNoticiasPage() {
       </section>
 
       {posts.items.length > 0 ? (
-        <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <section className="grid gap-4">
           {posts.items.map((post) => (
             <PostCard key={post.id} item={post} />
           ))}

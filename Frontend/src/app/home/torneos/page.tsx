@@ -1,13 +1,47 @@
 import type { Metadata } from "next";
-import { TournamentCard } from "@/components/content/user/tournaments";
+import { ShowcaseCard } from "@/components/content/user/shared";
+import { getTournamentShowcaseProps, ProgressiveTournamentList } from "@/components/content/user/tournaments";
 import { getLandingTournaments } from "@/lib/api/public-content";
 
+const pageTitle = "Torneos de billar disponibles en Colombia";
+const pageDescription = "Explora torneos de billar disponibles, revisa fechas, cupos e inscripción, y entra al detalle de cada competencia desde la agenda de Billar en Linea.";
+const pageUrl = "/home/torneos";
+const pageImage = "/hero_portada.png";
+
 export const metadata: Metadata = {
-  title: "Torneos",
+  title: pageTitle,
+  description: pageDescription,
+  alternates: {
+    canonical: pageUrl,
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_CO",
+    url: pageUrl,
+    siteName: "Billar en Linea",
+    title: pageTitle,
+    description: pageDescription,
+    images: [
+      {
+        url: pageImage,
+        width: 2000,
+        height: 800,
+        alt: "Torneos de billar disponibles en Billar en Linea",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: pageTitle,
+    description: pageDescription,
+    images: [pageImage],
+  },
 };
 
 export default async function HomeTorneosPage() {
   const tournaments = await getLandingTournaments();
+  const firstTournaments = tournaments.items.slice(0, 2);
+  const remainingTournaments = tournaments.items.slice(2);
 
   return (
     <main className="grid gap-6">
@@ -21,9 +55,10 @@ export default async function HomeTorneosPage() {
 
       {tournaments.items.length > 0 ? (
         <section className="grid gap-4">
-          {tournaments.items.map((tournament, index) => (
-            <TournamentCard key={tournament.id} item={tournament} prioritizeImage={index === 0} />
+          {firstTournaments.map((tournament) => (
+            <ShowcaseCard key={tournament.id} {...getTournamentShowcaseProps(tournament, true)} />
           ))}
+          <ProgressiveTournamentList tournaments={remainingTournaments} />
         </section>
       ) : (
         <section className="rounded-3xl border border-dashed border-white/12 bg-white/3 p-6 text-sm leading-7 text-white/64">

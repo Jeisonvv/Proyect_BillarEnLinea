@@ -1,9 +1,36 @@
 import type { Metadata } from "next";
 import { ProductCard } from "@/components/content/user/products";
 import { getLandingProducts } from "@/lib/api/public-content";
+import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Tienda",
+  description: "Explora la tienda de billar, consulta productos visibles, precios y referencias destacadas desde Billar en Linea.",
+  alternates: {
+    canonical: "/home/tienda",
+  },
+  openGraph: {
+    type: "website",
+    locale: siteConfig.locale,
+    url: "/home/tienda",
+    siteName: siteConfig.name,
+    title: `Tienda | ${siteConfig.name}`,
+    description: "Explora la tienda de billar, consulta productos visibles, precios y referencias destacadas desde Billar en Linea.",
+    images: [
+      {
+        url: siteConfig.socialImage,
+        width: 2000,
+        height: 800,
+        alt: `Tienda de billar en ${siteConfig.name}`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Tienda | ${siteConfig.name}`,
+    description: "Explora la tienda de billar, consulta productos visibles, precios y referencias destacadas desde Billar en Linea.",
+    images: [siteConfig.socialImage],
+  },
 };
 
 export default async function HomeTiendaPage() {
@@ -20,7 +47,7 @@ export default async function HomeTiendaPage() {
       </section>
 
       {products.items.length > 0 ? (
-        <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <section className="grid gap-4">
           {products.items.map((product) => (
             <ProductCard key={product.id} item={product} />
           ))}

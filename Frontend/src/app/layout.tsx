@@ -7,7 +7,7 @@ import "./globals.css";
 const bodyFont = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
 });
 
 const displayFont = Bebas_Neue({

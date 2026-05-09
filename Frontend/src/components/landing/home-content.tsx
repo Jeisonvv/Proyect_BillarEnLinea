@@ -5,8 +5,8 @@ import { EventCard } from "@/components/content/user/events";
 import { PostCard } from "@/components/content/user/posts";
 import { ProductCard } from "@/components/content/user/products";
 import { RaffleCard } from "@/components/content/user/raffles";
-import { TournamentCard } from "@/components/content/user/tournaments";
-import { EmptyState, MetricCard, SectionHeading } from "@/components/content/user/shared";
+import { getTournamentShowcaseProps } from "@/components/content/user/tournaments";
+import { EmptyState, MetricCard, SectionHeading, ShowcaseCard } from "@/components/content/user/shared";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 
 function getStructuredData(snapshot: LandingSnapshot) {
@@ -250,7 +250,7 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
               </div>
               <div className="mt-5 grid gap-4">
                 {snapshot.tournaments.items.length > 0 ? (
-                  snapshot.tournaments.items.map((item) => <TournamentCard key={item.id} item={item} />)
+                  snapshot.tournaments.items.map((item) => <ShowcaseCard key={item.id} {...getTournamentShowcaseProps(item)} />)
                 ) : (
                   <EmptyState
                     title="Pronto veras nuevos torneos"

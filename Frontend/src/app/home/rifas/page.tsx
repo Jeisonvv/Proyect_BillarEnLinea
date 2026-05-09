@@ -1,9 +1,36 @@
 import type { Metadata } from "next";
 import { RaffleCard } from "@/components/content/user/raffles";
 import { getLandingRaffles } from "@/lib/api/public-content";
+import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Rifas",
+  description: "Consulta las rifas de billar activas, revisa premios, valor por número y fechas de sorteo dentro de Billar en Linea.",
+  alternates: {
+    canonical: "/home/rifas",
+  },
+  openGraph: {
+    type: "website",
+    locale: siteConfig.locale,
+    url: "/home/rifas",
+    siteName: siteConfig.name,
+    title: `Rifas | ${siteConfig.name}`,
+    description: "Consulta las rifas de billar activas, revisa premios, valor por número y fechas de sorteo dentro de Billar en Linea.",
+    images: [
+      {
+        url: siteConfig.socialImage,
+        width: 2000,
+        height: 800,
+        alt: `Rifas activas en ${siteConfig.name}`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Rifas | ${siteConfig.name}`,
+    description: "Consulta las rifas de billar activas, revisa premios, valor por número y fechas de sorteo dentro de Billar en Linea.",
+    images: [siteConfig.socialImage],
+  },
 };
 
 export default async function HomeRifasPage() {
@@ -20,7 +47,7 @@ export default async function HomeRifasPage() {
       </section>
 
       {raffles.items.length > 0 ? (
-        <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <section className="grid gap-4">
           {raffles.items.map((raffle) => (
             <RaffleCard key={raffle.id} item={raffle} />
           ))}
