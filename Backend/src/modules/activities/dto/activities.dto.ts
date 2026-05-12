@@ -6,9 +6,38 @@ export class CreateRaffleDto {
   @IsNotEmpty()
   name!: string;
 
+  @IsOptional()
+  @IsString()
+  slug?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  seoTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  seoDescription?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
+
   @IsString()
   @IsNotEmpty()
   prize!: string;
+
+  @IsOptional()
+  @IsString()
+  prizeImageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 
   @IsNumber()
   @Min(0)
@@ -22,6 +51,60 @@ export class CreateRaffleDto {
   drawDate!: string;
 
   [key: string]: unknown;
+}
+
+export class UpdateRaffleDto {
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  slug?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  seoTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  seoDescription?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  prize?: string;
+
+  @IsOptional()
+  @IsString()
+  prizeImageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  ticketPrice?: number;
+
+  @IsOptional()
+  @IsDateString()
+  drawDate?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 }
 
 export class ListRafflesQueryDto {

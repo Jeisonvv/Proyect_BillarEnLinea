@@ -1,3 +1,4 @@
+export * from "./AuthPromptModal";
 export * from "./EmptyState";
 export * from "./MetricCard";
 export * from "./SectionHeading";

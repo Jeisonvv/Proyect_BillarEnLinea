@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomeRifasPage() {
-  const raffles = await getLandingRaffles(3);
+  const raffles = await getLandingRaffles(50);
 
   return (
     <main className="grid gap-6">

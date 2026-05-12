@@ -25,6 +25,14 @@ export const PLAYER_CATEGORIES = [
   "ELITE",
 ] as const;
 
+export const REGISTRATION_PLAYER_CATEGORIES = [
+  "SIN_DEFINIR",
+  "TERCERA",
+  "SEGUNDA",
+  "PRIMERA",
+  "ELITE",
+] as const;
+
 export const TOURNAMENT_REGISTRATION_STATUSES = [
   "PENDING",
   "CONFIRMED",
@@ -43,6 +51,7 @@ export const PAYMENT_METHODS = [
 export type TournamentFormat = (typeof TOURNAMENT_FORMATS)[number];
 export type TournamentStatus = (typeof TOURNAMENT_STATUSES)[number];
 export type PlayerCategory = (typeof PLAYER_CATEGORIES)[number];
+export type RegistrationPlayerCategory = (typeof REGISTRATION_PLAYER_CATEGORIES)[number];
 export type TournamentRegistrationStatus = (typeof TOURNAMENT_REGISTRATION_STATUSES)[number];
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
@@ -77,6 +86,10 @@ export type UpdateAdminTournamentInput = {
 
 export type UpdateTournamentHandicapInput = {
   handicap: number;
+};
+
+export type UpdateTournamentRegistrationPlayerCategoryInput = {
+  playerCategory: RegistrationPlayerCategory;
 };
 
 export type UploadImageResponse = {
@@ -214,6 +227,23 @@ export type UpdateTournamentHandicapResponse = {
   };
 };
 
+export type UpdateTournamentRegistrationPlayerCategoryResponse = {
+  ok: boolean;
+  message?: string;
+  data: {
+    _id?: string;
+    status?: string;
+    playerCategory?: string;
+    user?: {
+      _id?: string;
+      name?: string | null;
+      phone?: string | null;
+      avatarUrl?: string | null;
+      playerCategory?: string | null;
+    };
+  };
+};
+
 export async function uploadTournamentImage(file: File, name?: string) {
   const formData = new FormData();
   formData.append("file", file);
@@ -263,6 +293,23 @@ export async function updateTournamentHandicapAdmin(
 ) {
   return patchJson<UpdateTournamentHandicapResponse, UpdateTournamentHandicapInput>(
     `/api/tournaments/${tournamentId}/registrations/${userId}/handicap`,
+    input,
+    {
+      credentials: "include",
+    },
+  );
+}
+
+export async function updateTournamentRegistrationPlayerCategoryAdmin(
+  tournamentId: string,
+  userId: string,
+  input: UpdateTournamentRegistrationPlayerCategoryInput,
+) {
+  return patchJson<
+    UpdateTournamentRegistrationPlayerCategoryResponse,
+    UpdateTournamentRegistrationPlayerCategoryInput
+  >(
+    `/api/tournaments/${tournamentId}/registrations/${userId}/player-category`,
     input,
     {
       credentials: "include",

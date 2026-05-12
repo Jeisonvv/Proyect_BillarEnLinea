@@ -3,6 +3,41 @@ import { RaffleStatus } from "./enums.js";
 import RaffleNumber, { isPowerOfTen } from "./raffle-number.model.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
+// HELPERS DE SLUG
+// ─────────────────────────────────────────────────────────────────────────────
+
+function slugifyRaffleValue(value: string) {
+  return (
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "rifa"
+  );
+}
+
+async function ensureUniqueRaffleSlug(raffle: IRaffleDocument) {
+  const RaffleModel = raffle.constructor as mongoose.Model<IRaffleDocument>;
+  // Si el usuario proporcionó un slug explícito, lo usamos como base; si no, lo derivamos del nombre.
+  const rawValue = raffle.slug && raffle.slug.trim() ? raffle.slug : raffle.name;
+  const baseSlug = slugifyRaffleValue(rawValue);
+
+  let candidate = baseSlug;
+  let suffix = 2;
+
+  while (await RaffleModel.exists({ slug: candidate, _id: { $ne: raffle._id } })) {
+    candidate = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+
+  raffle.slug = candidate;
+}
+
+export { slugifyRaffleValue };
+
+// ─────────────────────────────────────────────────────────────────────────────
 // INTERFACES
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -18,8 +53,16 @@ import RaffleNumber, { isPowerOfTen } from "./raffle-number.model.js";
  */
 export interface IRaffle {
   name: string;
+  slug: string;
   description?: string;
   status: RaffleStatus;
+
+  // SEO
+  seoTitle?: string;
+  seoDescription?: string;
+
+  // Etiquetas para filtrar/agrupar (ej: "navidad", "premium", "gratis")
+  tags: string[];
 
   prize: string;          // Descripción del premio (ej: "Taco Predator REVO + maletín")
   prizeImageUrl?: string; // Foto del premio
@@ -71,6 +114,19 @@ const raffleSchema = new Schema<IRaffleDocument>(
       type: String,
       required: true,
       trim: true,
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    seoTitle: String,
+    seoDescription: String,
+    tags: {
+      type: [String],
+      default: [],
     },
     description: String,
     status: {
@@ -135,6 +191,14 @@ const raffleSchema = new Schema<IRaffleDocument>(
 
 // Para listar rifas activas ordenadas por fecha de sorteo (las más próximas primero)
 raffleSchema.index({ status: 1, drawDate: 1 });
+
+// Para resolver páginas públicas por URL amigable sin lookup por ObjectId
+raffleSchema.index({ slug: 1 }, { unique: true });
+
+raffleSchema.pre("validate", async function () {
+  const raffle = this as IRaffleDocument;
+  await ensureUniqueRaffleSlug(raffle);
+});
 
 raffleSchema.pre("save", function () {
   if (!this.isNew && this.isModified("totalTickets")) {

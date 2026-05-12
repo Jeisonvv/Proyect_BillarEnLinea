@@ -149,11 +149,20 @@ export function formatError(error: unknown) {
 export async function fetchCollection<T>(
   path: string,
   mapper: (record: JsonRecord) => T | null,
+  init?: RequestInit,
 ): Promise<CollectionState<T>> {
   try {
+    // Por defecto cacheamos 5 min para landings poco volátiles. Si el caller
+    // pasa `cache: "no-store"` evitamos `next.revalidate` (Next.js rechaza la
+    // combinación) para forzar SSR fresco.
+    const baseInit: RequestInit =
+      init?.cache === "no-store"
+        ? { cache: "no-store" }
+        : ({ cache: "force-cache", next: { revalidate: 300 } } as RequestInit);
+
     const payload = await getJson<ApiListResponse>(path, {
-      cache: "force-cache",
-      next: { revalidate: 300 },
+      ...baseInit,
+      ...(init ?? {}),
     } as RequestInit);
 
     const items = getItems(payload)

@@ -7,16 +7,20 @@ import {
   AdminDeleteItemButton,
   AdminSectionScaffold,
   formatAdminDate,
+  getErrorMessage,
   humanizeAdminToken,
 } from "@/components/content/admin/shared";
 import {
   PAYMENT_METHODS,
+  REGISTRATION_PLAYER_CATEGORIES,
   TOURNAMENT_REGISTRATION_STATUSES,
   TOURNAMENT_STATUSES,
   updateTournamentAdmin,
   updateTournamentHandicapAdmin,
+  updateTournamentRegistrationPlayerCategoryAdmin,
   updateTournamentRegistrationStatusAdmin,
   type PaymentMethod,
+  type RegistrationPlayerCategory,
   type TournamentRegistrationStatus,
   type TournamentStatus,
 } from "@/lib/api/admin-tournaments";
@@ -78,16 +82,26 @@ function parseTags(value: FormDataEntryValue | null) {
   return value.split(",").map((tag) => tag.trim()).filter(Boolean);
 }
 
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "No fue posible completar la operación.";
-}
-
 function getRegistrationStatusLabel(status: string | null | undefined) {
   if (!status) {
     return "Sin estado";
   }
 
   return REGISTRATION_STATUS_LABELS[status] ?? status;
+}
+
+function getRegistrationStatusBadgeClass(status: string | null | undefined) {
+  switch (status) {
+    case "CONFIRMED":
+      return "border-emerald-300/24 bg-emerald-400/12 text-emerald-100";
+    case "WAITLIST":
+      return "border-sky-300/24 bg-sky-400/12 text-sky-100";
+    case "CANCELLED":
+      return "border-rose-300/24 bg-rose-400/12 text-rose-100";
+    case "PENDING":
+    default:
+      return "border-[rgba(246,196,79,0.18)] bg-[rgba(246,196,79,0.1)] text-[rgba(255,233,174,0.96)]";
+  }
 }
 
 function updateRegistrationInState(
@@ -187,6 +201,8 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
     const status = String(formData.get("status") ?? "").trim() as TournamentRegistrationStatus;
     const handicapRaw = String(formData.get("handicap") ?? "").trim();
     const handicap = handicapRaw ? Number(handicapRaw) : null;
+    const playerCategoryRaw = String(formData.get("playerCategory") ?? "").trim();
+    const playerCategory = playerCategoryRaw ? (playerCategoryRaw as RegistrationPlayerCategory) : null;
 
     if (!userId) {
       setRegistrationFeedback((current) => ({
@@ -216,6 +232,16 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
           nextRegistrations = updateRegistrationInState(nextRegistrations, registrationId, {
             handicap: handicapResponse.data.handicap ?? handicap,
             status: handicapResponse.data.status ?? statusResponse.data.status ?? status,
+          });
+        }
+
+        const currentRegistration = tournament.registrations.find((item) => item.id === registrationId) ?? null;
+        const currentCategory = currentRegistration?.playerCategory ?? currentRegistration?.user?.playerCategory ?? null;
+        if (playerCategory && playerCategory !== currentCategory) {
+          const categoryResponse = await updateTournamentRegistrationPlayerCategoryAdmin(tournament.id, userId, { playerCategory });
+          nextRegistrations = updateRegistrationInState(nextRegistrations, registrationId, {
+            playerCategory: categoryResponse.data.playerCategory ?? playerCategory,
+            status: categoryResponse.data.status ?? nextRegistrations.find((item) => item.id === registrationId)?.status ?? status,
           });
         }
 
@@ -484,7 +510,7 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
 
                     <div>
                       <p className="text-[0.68rem] uppercase tracking-[0.16em] text-white/42 sm:hidden">Estado</p>
-                      <span className="mt-1 inline-flex rounded-full border border-[rgba(246,196,79,0.18)] bg-[rgba(246,196,79,0.1)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[rgba(255,233,174,0.96)]">{getRegistrationStatusLabel(registration.status)}</span>
+                      <span className={`mt-1 inline-flex rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] ${getRegistrationStatusBadgeClass(registration.status)}`}>{getRegistrationStatusLabel(registration.status)}</span>
                     </div>
 
                     <div>
@@ -515,6 +541,19 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
                           <select className="rounded-2xl border border-white/10 bg-[#17191d] px-4 py-3 text-white outline-none transition focus:border-accent" defaultValue={registration.status ?? "PENDING"} name="status">
                             {TOURNAMENT_REGISTRATION_STATUSES.map((status) => (
                               <option key={status} value={status}>{getRegistrationStatusLabel(status)}</option>
+                            ))}
+                          </select>
+                        </label>
+
+                        <label className="grid gap-2 text-sm text-white/72">
+                          Categoría
+                          <select
+                            className="rounded-2xl border border-white/10 bg-[#17191d] px-4 py-3 text-white outline-none transition focus:border-accent"
+                            defaultValue={registration.playerCategory ?? registration.user?.playerCategory ?? "SIN_DEFINIR"}
+                            name="playerCategory"
+                          >
+                            {REGISTRATION_PLAYER_CATEGORIES.map((category) => (
+                              <option key={category} value={category}>{humanizeAdminToken(category)}</option>
                             ))}
                           </select>
                         </label>

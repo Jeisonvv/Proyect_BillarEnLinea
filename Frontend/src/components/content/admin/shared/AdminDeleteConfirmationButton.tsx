@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useState, useTransition } from "react";
+import { getErrorMessage } from "./utils";
 
 type FeedbackState = {
   kind: "idle" | "success" | "error";
@@ -20,10 +21,6 @@ type AdminDeleteConfirmationButtonProps = {
   cancelLabel?: string;
   variant?: "pill" | "text";
 };
-
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "No fue posible completar la operación.";
-}
 
 export function AdminDeleteConfirmationButton({
   title,

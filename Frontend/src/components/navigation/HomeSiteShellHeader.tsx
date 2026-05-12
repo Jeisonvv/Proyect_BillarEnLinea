@@ -19,6 +19,7 @@ const adminNavItems = [
   { label: "Dashboard", href: "/admin" },
   { label: "Torneos", href: "/admin/torneos" },
   { label: "Eventos", href: "/admin/eventos" },
+  { label: "Rifas", href: "/admin/rifas" },
   { label: "Tienda", href: "/admin/tienda" },
   { label: "Noticias", href: "/admin/noticias" },
 ] as const;

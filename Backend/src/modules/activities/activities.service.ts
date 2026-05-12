@@ -6,11 +6,14 @@ import {
   deleteRaffleService,
   drawRaffleService,
   getAvailableRaffleNumbersService,
+  getMyRaffleNumbersService,
+  releaseMyRaffleReservationsService,
   getRaffleByIdService,
   getRaffleNumberOwnersService,
   getRaffleNumbersService,
   listRafflesService,
   purchaseRaffleTicketsService,
+  updateRaffleService,
 } from '../../services/raffle.service.js';
 import type {
   CreateRaffleCheckoutDto,
@@ -19,6 +22,7 @@ import type {
   ListRaffleNumbersQueryDto,
   ListRafflesQueryDto,
   PurchaseRaffleTicketsDto,
+  UpdateRaffleDto,
 } from './dto/raffles.dto.js';
 
 interface ActorContext {
@@ -30,6 +34,10 @@ interface ActorContext {
 export class RafflesNestService {
   createRaffle(data: CreateRaffleDto, createdBy: string) {
     return createRaffleService(data, createdBy);
+  }
+
+  updateRaffle(id: string, data: UpdateRaffleDto) {
+    return updateRaffleService(id, data);
   }
 
   listRaffles(query: ListRafflesQueryDto) {
@@ -62,6 +70,14 @@ export class RafflesNestService {
 
   getAvailableRaffleNumbers(id: string) {
     return getAvailableRaffleNumbersService(id);
+  }
+
+  getMyRaffleNumbers(id: string, userId: string) {
+    return getMyRaffleNumbersService(id, userId);
+  }
+
+  releaseMyRaffleReservations(id: string, userId: string, numbers?: string[]) {
+    return releaseMyRaffleReservationsService(id, userId, numbers);
   }
 
   purchaseRaffleTickets(id: string, actor: ActorContext, data: PurchaseRaffleTicketsDto) {

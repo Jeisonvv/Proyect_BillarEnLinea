@@ -39,7 +39,7 @@ export interface WompiEventPayload {
 const WOMPI_CHECKOUT_URL = "https://checkout.wompi.co/p/";
 const WOMPI_WIDGET_URL = "https://checkout.wompi.co/widget.js";
 
-type WompiRedirectFlow = "raffles" | "tournaments" | "orders" | "generic";
+type WompiRedirectFlow = "raffles" | "activity" | "tournaments" | "orders" | "generic";
 
 function getWompiEnv(name: "WOMPI_PUBLIC_KEY" | "WOMPI_INTEGRITY_SECRET" | "WOMPI_EVENTS_SECRET") {
   return process.env[name]?.trim();
@@ -62,6 +62,7 @@ export function requireWompiConfig() {
 export function getWompiRedirectUrl(flow: WompiRedirectFlow = "generic") {
   const explicitByFlow = {
     raffles: process.env.WOMPI_RAFFLES_REDIRECT_URL?.trim(),
+    activity: process.env.WOMPI_ACTIVITY_REDIRECT_URL?.trim() ?? process.env.WOMPI_RAFFLES_REDIRECT_URL?.trim(),
     tournaments: process.env.WOMPI_TOURNAMENTS_REDIRECT_URL?.trim(),
     orders: process.env.WOMPI_ORDERS_REDIRECT_URL?.trim(),
     generic: process.env.WOMPI_REDIRECT_URL?.trim(),
@@ -79,6 +80,7 @@ export function getWompiRedirectUrl(flow: WompiRedirectFlow = "generic") {
 
   const defaultPathByFlow = {
     raffles: "/payments/wompi/raffles",
+    activity: "/payments/wompi/activity",
     tournaments: "/payments/wompi/tournaments",
     orders: "/payments/wompi/orders",
     generic: "/payments/wompi",

@@ -133,11 +133,34 @@ export type EventDetail = {
 export type LandingRaffle = {
   id: string;
   name: string;
+  slug: string | null;
   prize: string | null;
   status: string | null;
   drawDate: string | null;
   ticketPrice: number | null;
   saleStatus: string | null;
+  image: string | null;
+  prizeImage: string | null;
+  totalTickets: number | null;
+  soldTickets: number | null;
+  saleClosesAt: string | null;
+  isFree: boolean | null;
+};
+
+export type RaffleDetail = LandingRaffle & {
+  description: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  tags: string[];
+  hasWinner: boolean;
+  winnerTicket: string | null;
+  winnerName: string | null;
+  numberSummary: {
+    available: number;
+    reserved: number;
+    paid: number;
+    winner: number;
+  } | null;
 };
 
 export type LandingPost = {

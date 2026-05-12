@@ -26,6 +26,7 @@ import {
   generateAdjustmentRound,
   type GroupInput,
 } from "./bracket.service.js";
+import { deleteCloudinaryImageByUrl } from "../utils/cloudinary.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERFACES DE PARÁMETROS
@@ -228,7 +229,7 @@ export async function deleteTournamentService(id: string) {
   const tournamentId = toTournamentObjectId(id);
 
   const tournament = await Tournament.findById(tournamentId)
-    .select('_id name')
+    .select('_id name imageUrl')
     .lean();
 
   if (!tournament) {
@@ -254,6 +255,11 @@ export async function deleteTournamentService(id: string) {
 
   await Tournament.deleteOne({ _id: tournamentId });
 
+  let imageDeleted = false;
+  if (tournament.imageUrl) {
+    imageDeleted = await deleteCloudinaryImageByUrl(tournament.imageUrl);
+  }
+
   return {
     tournamentId: tournament._id,
     tournamentName: tournament.name,
@@ -261,6 +267,7 @@ export async function deleteTournamentService(id: string) {
     deletedGroups: deletedGroups.deletedCount ?? 0,
     deletedRegistrations: deletedRegistrations.deletedCount ?? 0,
     deletedPayments: deletedPayments.deletedCount ?? 0,
+    imageDeleted,
   };
 }
 
@@ -1150,6 +1157,39 @@ export async function updateHandicapService(
   }
 
   return registration;
+}
+
+/**
+ * Actualiza la categoría de jugador (`playerCategory`) de una inscripción concreta.
+ * No modifica la categoría global del usuario; solo el campo dentro de la inscripción al torneo.
+ */
+export async function updateTournamentRegistrationPlayerCategoryService(
+  tournamentId: string,
+  userId: string,
+  playerCategory: string,
+) {
+  if (!Object.values(PlayerCategory).includes(playerCategory as PlayerCategory)) {
+    throw new Error('Categoría de jugador inválida.');
+  }
+
+  const tournament = await Tournament.findById(tournamentId).select('_id').lean();
+  if (!tournament) throw new Error('Torneo no encontrado.');
+
+  // Actualiza también la categoría global del usuario para no tener que repetirlo
+  // en cada torneo. Si el usuario no existe se ignora silenciosamente.
+  await User.updateOne({ _id: userId }, { $set: { playerCategory } });
+
+  const registration = await TournamentRegistration.findOneAndUpdate(
+    { tournament: tournamentId, user: userId },
+    { $set: { playerCategory } },
+    { new: true },
+  ).populate('user', 'name phone avatarUrl playerCategory').lean();
+
+  if (!registration) {
+    throw new Error('Inscripción no encontrada para este jugador en el torneo.');
+  }
+
+  return mapTournamentRegistrationForResponse(registration);
 }
 
 export async function setTournamentRegistrationStatusService(

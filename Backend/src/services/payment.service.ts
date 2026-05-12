@@ -282,7 +282,7 @@ function getExistingRaffleResponseData(
   },
 ) {
   const phoneData = splitPhone(payment.customerPhone);
-  const redirectUrl = payment.redirectUrl ?? getWompiRedirectUrl("raffles");
+  const redirectUrl = payment.redirectUrl ?? getWompiRedirectUrl("activity");
   const saleClosesAt = getRaffleSaleClosesAt(raffle.drawDate);
   const saleStatus = withRaffleSaleClosesAt(raffle).saleStatus;
 
@@ -706,8 +706,8 @@ export async function createWompiCheckoutForRaffle(
 
   const expirationDate = getRaffleReservationExpiration(raffle.drawDate, DEFAULT_RESERVATION_MINUTES);
   const raffleMetadata = withRaffleSaleClosesAt(raffle);
-  const paymentReference = generatePaymentReference("RAFFLE", raffleId);
-  const redirectUrl = getWompiRedirectUrl("raffles");
+  const paymentReference = generatePaymentReference("ACTIVITY", raffleId);
+  const redirectUrl = getWompiRedirectUrl("activity");
   const phoneData = splitPhone(user.phone ?? null);
   const channel = getCheckoutChannel(params.channel);
 

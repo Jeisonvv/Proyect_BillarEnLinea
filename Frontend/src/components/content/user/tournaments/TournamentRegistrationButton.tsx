@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, postJson } from "@/lib/api/client";
 import type { TournamentDetail } from "@/lib/api/public-content";
+import { AuthPromptModal } from "@/components/content/user/shared";
 import { fetchSelfTournamentRegistrationState, type SelfTournamentRegistrationState } from "./registration-state";
 
 type TournamentRegistrationButtonProps = {
@@ -70,6 +71,23 @@ function buildSlotLabel(slot: TournamentRegistrationButtonProps["groupStageSlots
   const labelParts = [slot.label, formatSlotDate(slot.date), timeRange].filter(Boolean);
 
   return labelParts.join(" · ");
+}
+
+function buildSlotTimeLabel(slot: TournamentRegistrationButtonProps["groupStageSlots"][number]) {
+  const timeRange = [slot.startTime, slot.endTime].filter(Boolean).join(" - ");
+  return timeRange || "Hora por anunciar";
+}
+
+function getJornadaKey(slot: TournamentRegistrationButtonProps["groupStageSlots"][number]) {
+  return slot.label?.trim() || "__sin_jornada__";
+}
+
+function getJornadaLabel(slot: TournamentRegistrationButtonProps["groupStageSlots"][number]) {
+  return slot.label?.trim() || "Jornada principal";
+}
+
+function getDateKey(slot: TournamentRegistrationButtonProps["groupStageSlots"][number]) {
+  return slot.date ?? "__sin_fecha__";
 }
 
 function humanizeRegistrationStatus(status: string | null) {
@@ -189,7 +207,79 @@ export function TournamentRegistrationButton({
   });
   const requiresGroupStageSlot = slotsWithAvailability.length > 0;
   const areAllSlotsFull = requiresGroupStageSlot && slotsWithAvailability.every((slot) => slot.isFull);
-  const selectedSlot = slotsWithAvailability.find((slot) => slot.id === selectedGroupStageSlotId) ?? null;
+
+  // ── Cascada: día → jornada → hora ────────────────────────────────────────
+  const [selectedDateKey, setSelectedDateKey] = useState<string>("");
+  const [selectedJornadaKey, setSelectedJornadaKey] = useState<string>("");
+
+  // Días únicos (orden por fecha asc; las nulas al final).
+  const dateOptions = (() => {
+    const seen = new Map<string, { key: string; date: string | null }>();
+    for (const slot of slotsWithAvailability) {
+      const key = getDateKey(slot);
+      if (!seen.has(key)) seen.set(key, { key, date: slot.date });
+    }
+    return Array.from(seen.values()).sort((a, b) => {
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return a.date.localeCompare(b.date);
+    });
+  })();
+
+  // Slot ya elegido (puede venir del backend) para hidratar la cascada.
+  const lockedSlot = selectedGroupStageSlotId
+    ? slotsWithAvailability.find((slot) => slot.id === selectedGroupStageSlotId) ?? null
+    : null;
+
+  // Día efectivo: el del slot bloqueado, el seleccionado por el usuario, o el único disponible.
+  const effectiveDateKey = lockedSlot
+    ? getDateKey(lockedSlot)
+    : selectedDateKey || (dateOptions.length === 1 ? dateOptions[0].key : "");
+
+  // Jornadas para el día efectivo.
+  const jornadaOptions = (() => {
+    if (!effectiveDateKey) return [];
+    const seen = new Map<string, { key: string; label: string }>();
+    for (const slot of slotsWithAvailability) {
+      if (getDateKey(slot) !== effectiveDateKey) continue;
+      const key = getJornadaKey(slot);
+      if (!seen.has(key)) seen.set(key, { key, label: getJornadaLabel(slot) });
+    }
+    return Array.from(seen.values());
+  })();
+
+  const effectiveJornadaKey = lockedSlot
+    ? getJornadaKey(lockedSlot)
+    : selectedJornadaKey || (jornadaOptions.length === 1 ? jornadaOptions[0].key : "");
+
+  // Horas para el día + jornada efectivos.
+  const hourOptions = slotsWithAvailability.filter(
+    (slot) => effectiveDateKey && getDateKey(slot) === effectiveDateKey
+      && effectiveJornadaKey && getJornadaKey(slot) === effectiveJornadaKey,
+  );
+
+  // Slot efectivo: el seleccionado, o el único disponible cuando ya hay día+jornada.
+  const effectiveSlotId = selectedGroupStageSlotId
+    || (effectiveJornadaKey && hourOptions.length === 1 ? hourOptions[0].id : "");
+  const selectedSlot = slotsWithAvailability.find((slot) => slot.id === effectiveSlotId) ?? null;
+
+  function handleDateChange(nextKey: string) {
+    setFeedback("");
+    setSelectedDateKey(nextKey);
+    setSelectedJornadaKey("");
+    setSelectedGroupStageSlotId("");
+  }
+
+  function handleJornadaChange(nextKey: string) {
+    setFeedback("");
+    setSelectedJornadaKey(nextKey);
+    setSelectedGroupStageSlotId("");
+  }
+
+  function handleHourChange(nextSlotId: string) {
+    setFeedback("");
+    setSelectedGroupStageSlotId(nextSlotId);
+  }
 
   useEffect(() => {
     if (initialSelfRegistrationState !== null) {
@@ -260,7 +350,7 @@ export function TournamentRegistrationButton({
     || isPending
     || isCheckingStatus
     || hasBlockingRegistration
-    || (requiresGroupStageSlot && !selectedGroupStageSlotId);
+    || (requiresGroupStageSlot && !effectiveSlotId);
 
   useEffect(() => {
     if (pendingReason !== "PAYMENT_UNDER_REVIEW") {
@@ -343,7 +433,7 @@ export function TournamentRegistrationButton({
         const response = await postJson<RegistrationResponse, { groupStageSlotId?: string }>(
           endpoint,
           {
-            ...(selectedGroupStageSlotId ? { groupStageSlotId: selectedGroupStageSlotId } : {}),
+            ...(effectiveSlotId ? { groupStageSlotId: effectiveSlotId } : {}),
           },
           { credentials: "include" },
         );
@@ -389,24 +479,70 @@ export function TournamentRegistrationButton({
   return (
     <div className="grid gap-3">
       {requiresGroupStageSlot && !hasLockedGroupStageSlot ? (
-        <label className="grid gap-2">
+        <div className="grid gap-3">
           <span className="text-sm font-medium text-white/82">Elige día y horario de grupos</span>
-          <select
-            className="min-w-0 w-full rounded-2xl border border-white/10 bg-[#17191d] px-4 py-3 text-sm text-white outline-none transition focus:border-accent"
-            value={selectedGroupStageSlotId}
-            onChange={(event) => {
-              setFeedback("");
-              setSelectedGroupStageSlotId(event.target.value);
-            }}
-            disabled={hasBlockingRegistration || hasLockedGroupStageSlot || isPending || isCheckingStatus}
-          >
-            <option value="">Selecciona un horario</option>
-            {slotsWithAvailability.map((slot) => (
-              <option key={slot.id} value={slot.id} disabled={slot.isFull && slot.id !== initialSelfRegistrationState?.registration?.groupStageSlotId}>
-                {buildSlotLabel(slot)}{slot.remaining !== null ? ` · ${slot.remaining} cupos` : ""}
-              </option>
-            ))}
-          </select>
+
+          {dateOptions.length > 1 ? (
+            <label className="grid gap-1.5">
+              <span className="text-xs uppercase tracking-[0.18em] text-white/52">Día</span>
+              <select
+                className="min-w-0 w-full rounded-2xl border border-white/10 bg-[#17191d] px-4 py-3 text-sm text-white outline-none transition focus:border-accent"
+                value={effectiveDateKey}
+                onChange={(event) => handleDateChange(event.target.value)}
+                disabled={hasBlockingRegistration || hasLockedGroupStageSlot || isPending || isCheckingStatus}
+              >
+                <option value="">Selecciona un día</option>
+                {dateOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {formatSlotDate(option.date)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          {effectiveDateKey && jornadaOptions.length > 1 ? (
+            <label className="grid gap-1.5">
+              <span className="text-xs uppercase tracking-[0.18em] text-white/52">Jornada</span>
+              <select
+                className="min-w-0 w-full rounded-2xl border border-white/10 bg-[#17191d] px-4 py-3 text-sm text-white outline-none transition focus:border-accent"
+                value={effectiveJornadaKey}
+                onChange={(event) => handleJornadaChange(event.target.value)}
+                disabled={hasBlockingRegistration || hasLockedGroupStageSlot || isPending || isCheckingStatus}
+              >
+                <option value="">Selecciona una jornada</option>
+                {jornadaOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          {effectiveJornadaKey && hourOptions.length > 1 ? (
+            <label className="grid gap-1.5">
+              <span className="text-xs uppercase tracking-[0.18em] text-white/52">Hora</span>
+              <select
+                className="min-w-0 w-full rounded-2xl border border-white/10 bg-[#17191d] px-4 py-3 text-sm text-white outline-none transition focus:border-accent"
+                value={effectiveSlotId}
+                onChange={(event) => handleHourChange(event.target.value)}
+                disabled={hasBlockingRegistration || hasLockedGroupStageSlot || isPending || isCheckingStatus}
+              >
+                <option value="">Selecciona una hora</option>
+                {hourOptions.map((slot) => (
+                  <option
+                    key={slot.id}
+                    value={slot.id}
+                    disabled={slot.isFull && slot.id !== initialSelfRegistrationState?.registration?.groupStageSlotId}
+                  >
+                    {buildSlotTimeLabel(slot)}{slot.remaining !== null ? ` · ${slot.remaining} cupos` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
           {slotCapacity !== null ? (
             <span className="text-xs leading-6 text-white/52">
               Cada franja admite hasta {slotCapacity} jugadores ({groupStageTables} mesas x {playersPerGroup} jugadores por grupo).
@@ -414,11 +550,11 @@ export function TournamentRegistrationButton({
           ) : null}
           {selectedSlot ? (
             <span className="text-xs leading-6 text-[rgba(246,196,79,0.82)]">
-              Horario elegido: 
-              {buildSlotLabel(selectedSlot)}
+              Horario elegido: {buildSlotLabel(selectedSlot)}
+              {selectedSlot.remaining !== null ? ` · ${selectedSlot.remaining} cupos` : ""}
             </span>
           ) : null}
-        </label>
+        </div>
       ) : null}
 
       {requiresGroupStageSlot && hasLockedGroupStageSlot && selectedSlot ? (
@@ -443,46 +579,13 @@ export function TournamentRegistrationButton({
       ) : null}
 
       {showAuthPrompt ? (
-        <div className="fixed inset-0 z-90 flex items-center justify-center bg-black/72 px-4">
-          <div className="w-full max-w-md rounded-[1.8rem] border border-white/10 bg-[linear-gradient(180deg,rgba(14,18,26,0.98),rgba(10,13,19,0.98))] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.42)]">
-            <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Acceso requerido</p>
-            <h3 className="mt-3 text-2xl font-semibold text-white">Necesitas una cuenta para inscribirte</h3>
-            <p className="mt-3 text-sm leading-7 text-white/74">
-              Para registrarte al torneo debes iniciar sesión o crear una cuenta. Así el sistema puede guardar tu inscripción, tu horario y el estado de tu pago.
-            </p>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <button
-                className="rounded-full border border-white/12 px-4 py-3 text-sm font-medium text-white/82 transition hover:bg-white/8"
-                type="button"
-                onClick={() => {
-                  setShowAuthPrompt(false);
-                  router.push("/login");
-                }}
-              >
-                Iniciar sesión
-              </button>
-              <button
-                className="rounded-full bg-accent px-4 py-3 text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong"
-                type="button"
-                onClick={() => {
-                  setShowAuthPrompt(false);
-                  router.push("/register");
-                }}
-              >
-                Crear cuenta
-              </button>
-            </div>
-
-            <button
-              className="mt-3 w-full rounded-full border border-white/10 px-4 py-3 text-sm font-medium text-white/62 transition hover:bg-white/6 hover:text-white"
-              type="button"
-              onClick={() => setShowAuthPrompt(false)}
-            >
-              Seguir viendo el torneo
-            </button>
-          </div>
-        </div>
+        <AuthPromptModal
+          open={showAuthPrompt}
+          onClose={() => setShowAuthPrompt(false)}
+          title="Necesitas una cuenta para inscribirte"
+          description="Para registrarte al torneo debes iniciar sesión o crear una cuenta. Así el sistema puede guardar tu inscripción, tu horario y el estado de tu pago."
+          dismissLabel="Seguir viendo el torneo"
+        />
       ) : null}
 
       {effectiveRegistrationStatus ? (

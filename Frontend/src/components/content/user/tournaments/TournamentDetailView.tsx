@@ -325,7 +325,15 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
                       </div>
 
                       <div>
-                        <span className="inline-flex rounded-full bg-[rgba(255,255,255,0.06)] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/74">
+                        <span className={`inline-flex rounded-full border px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] ${
+                          registration.status === "CONFIRMED"
+                            ? "border-emerald-300/50 bg-emerald-400/12 text-emerald-100"
+                            : registration.status === "WAITLIST"
+                              ? "border-sky-300/50 bg-sky-400/12 text-sky-100"
+                              : registration.status === "CANCELLED"
+                                ? "border-rose-300/50 bg-rose-400/12 text-rose-100"
+                                : "border-[rgba(246,196,79,0.18)] bg-[rgba(246,196,79,0.1)] text-[rgba(255,233,174,0.96)]"
+                        }`}>
                           {humanizeToken(registration.status)}
                         </span>
                       </div>

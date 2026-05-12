@@ -6,6 +6,7 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -24,6 +25,7 @@ import type {
   ListRaffleNumbersQueryDto,
   ListRafflesQueryDto,
   PurchaseRaffleTicketsDto,
+  UpdateRaffleDto,
 } from './dto/raffles.dto.js';
 import { RafflesNestService } from './raffles.service.js';
 
@@ -128,6 +130,49 @@ export class RafflesNestController {
     }
   }
 
+  @Get(':id/my-numbers')
+  @UseGuards(AuthGuard)
+  async getMyRaffleNumbers(@Req() req: Request, @Param('id') id: string) {
+    if (!req.user) {
+      throw new HttpException({ ok: false, message: 'No autenticado.' }, HttpStatus.UNAUTHORIZED);
+    }
+
+    try {
+      const result = await this.rafflesService.getMyRaffleNumbers(id, req.user.id);
+      return { ok: true, data: result };
+    } catch (error: any) {
+      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
+  @Delete(':id/my-numbers')
+  @UseGuards(AuthGuard)
+  async releaseMyRaffleReservations(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() body: { numbers?: string[] } = {},
+  ) {
+    if (!req.user) {
+      throw new HttpException({ ok: false, message: 'No autenticado.' }, HttpStatus.UNAUTHORIZED);
+    }
+
+    try {
+      const numbers = Array.isArray(body?.numbers)
+        ? body.numbers.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+        : undefined;
+      const result = await this.rafflesService.releaseMyRaffleReservations(
+        id,
+        req.user.id,
+        numbers && numbers.length > 0 ? numbers : undefined,
+      );
+      return { ok: true, data: result };
+    } catch (error: any) {
+      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
   @Post(':id/tickets')
   @UseGuards(AuthGuard, RolesGuard)
   async purchaseRaffleTickets(
@@ -175,6 +220,19 @@ export class RafflesNestController {
     try {
       const result = await this.rafflesService.drawRaffle(id, body);
       return { ok: true, message: result.message, data: result.raffle, hasWinner: result.hasWinner };
+    } catch (error: any) {
+      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  async updateRaffle(@Param('id') id: string, @Body() body: UpdateRaffleDto) {
+    try {
+      const raffle = await this.rafflesService.updateRaffle(id, body);
+      return { ok: true, data: raffle };
     } catch (error: any) {
       const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);

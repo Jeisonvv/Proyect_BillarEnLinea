@@ -29,6 +29,7 @@ import {
   selfRegisterToTournamentService,
   updateHandicapService,
   updateTournamentAdminService,
+  updateTournamentRegistrationPlayerCategoryService,
 } from '../../services/tournament.service.js';
 import type {
   AddTournamentPlayerToGroupDto,
@@ -116,6 +117,10 @@ export class TournamentsNestService {
 
   updateHandicap(tournamentId: string, userId: string, handicap: number) {
     return updateHandicapService(tournamentId, userId, handicap);
+  }
+
+  updateRegistrationPlayerCategory(tournamentId: string, userId: string, playerCategory: string) {
+    return updateTournamentRegistrationPlayerCategoryService(tournamentId, userId, playerCategory);
   }
 
   setRegistrationStatus(tournamentId: string, userId: string, data: UpdateTournamentRegistrationStatusDto) {

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState, useTransition } from "react";
-import { AdminDeleteItemButton, AdminSectionScaffold, formatAdminDate, formatAdminMoney, humanizeAdminToken } from "@/components/content/admin/shared";
+import { AdminDeleteItemButton, AdminSectionScaffold, formatAdminDate, formatAdminMoney, getErrorMessage, humanizeAdminToken } from "@/components/content/admin/shared";
 import { EVENT_STATUSES, updateEventAdmin, type EventStatus } from "@/lib/api/admin-events";
 import type { EventDetail } from "@/lib/api/public-content";
 
@@ -59,10 +59,6 @@ function toDateInputValue(value: string | null) {
   }
 
   return parsed.toISOString().slice(0, 10);
-}
-
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "No fue posible completar la operación.";
 }
 
 export function EventAdminDetail({ initialEvent }: { initialEvent: EventDetail }) {

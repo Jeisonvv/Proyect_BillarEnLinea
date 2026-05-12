@@ -383,6 +383,12 @@ export class UpdateTournamentHandicapDto {
   handicap!: number;
 }
 
+export class UpdateTournamentRegistrationPlayerCategoryDto {
+  @IsString()
+  @IsNotEmpty()
+  playerCategory!: string;
+}
+
 export class UpdateTournamentRegistrationStatusDto {
   @IsEnum(RegistrationStatus)
   status!: string;

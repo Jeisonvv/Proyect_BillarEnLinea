@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { ApiError } from "@/lib/api/client";
+import { toIsoDate } from "@/components/content/admin/shared";
 import {
   PLAYER_CATEGORIES,
   TOURNAMENT_FORMATS,
@@ -88,15 +89,6 @@ const FORM_STEPS = [
     description: "Revision final antes de crear el torneo.",
   },
 ] as const;
-
-function toIsoDate(value: string) {
-  if (!value) {
-    return undefined;
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-}
 
 function toOptionalString(value: FormDataEntryValue | null) {
   if (typeof value !== "string") {

@@ -28,6 +28,7 @@ import type {
   SelfRegisterTournamentDto,
   UpdateAdminTournamentDto,
   UpdateTournamentHandicapDto,
+  UpdateTournamentRegistrationPlayerCategoryDto,
   UpdateTournamentRegistrationStatusDto,
 } from './dto/tournaments.dto.js';
 import { TournamentsNestService } from './tournaments.service.js';
@@ -284,6 +285,29 @@ export class TournamentsNestController {
       };
     } catch (error: any) {
       const status = error.message.includes('no encontrado')
+        ? HttpStatus.NOT_FOUND
+        : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
+  @Patch(':id/registrations/:userId/player-category')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  async updateRegistrationPlayerCategory(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Body() body: UpdateTournamentRegistrationPlayerCategoryDto,
+  ) {
+    try {
+      const registration = await this.tournamentsService.updateRegistrationPlayerCategory(id, userId, body.playerCategory);
+      return {
+        ok: true,
+        message: `Categoría actualizada a ${body.playerCategory}.`,
+        data: registration,
+      };
+    } catch (error: any) {
+      const status = error.message.includes('no encontrado') || error.message.includes('Inscripción no encontrada')
         ? HttpStatus.NOT_FOUND
         : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
