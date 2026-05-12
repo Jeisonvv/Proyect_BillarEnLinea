@@ -21,9 +21,9 @@ import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
 import Tournament from "../models/tournament.model.js";
 import TournamentRegistration from "../models/tournament-registration.model.js";
-import Raffle from "../models/raffle.model.js";
-import RaffleNumber from "../models/raffle-number.model.js";
-import RaffleTicket from "../models/raffle-ticket.model.js";
+import Activity from "../models/activity.model.js";
+import ActivityNumber from "../models/activity-number.model.js";
+import ActivityTicket from "../models/activity-ticket.model.js";
 import TransmissionRequest from "../models/transmission-request.model.js";
 import {
   Channel,
@@ -37,7 +37,7 @@ import {
   PaymentMethod,
   TournamentStatus,
   TournamentFormat,
-  RaffleStatus,
+  ActivityStatus,
   RegistrationStatus,
   TicketStatus,
 } from "../models/enums.js";
@@ -388,19 +388,19 @@ async function seedTournamentRegistrations(users: any[], tournaments: any[], cou
 /**
  * Crea rifas ficticias
  */
-async function seedRaffles(users: any[], count: number = 2) {
+async function seedActivities(users: any[], count: number = 2) {
   log(`\n→ Creando ${count} rifas...`, colors.cyan);
 
-  const raffles = [];
+  const activities = [];
 
   for (let i = 0; i < count; i++) {
     const admin = faker.helpers.arrayElement(users);
     const drawDate = faker.date.future();
 
-    const raffleData = {
+    const activityData = {
       name: `Rifa ${faker.commerce.product()}`,
       description: faker.lorem.paragraph(),
-      status: RaffleStatus.ACTIVE,
+      status: ActivityStatus.ACTIVE,
       prize: faker.commerce.productName(),
       prizeImageUrl: faker.image.url(),
       ticketPrice: faker.number.int({ min: 10000, max: 100000 }),
@@ -412,10 +412,10 @@ async function seedRaffles(users: any[], count: number = 2) {
     };
 
     try {
-      const raffle = await Raffle.create(raffleData);
-      raffles.push(raffle);
+      const activity = await Activity.create(activityData);
+      activities.push(activity);
       log(
-        `  ✓ Rifa creada: ${raffle.name} (${raffle._id})`,
+        `  ✓ Rifa creada: ${activity.name} (${activity._id})`,
         colors.yellow
       );
     } catch (error) {
@@ -424,21 +424,21 @@ async function seedRaffles(users: any[], count: number = 2) {
     }
   }
 
-  return raffles;
+  return activities;
 }
 
 /**
  * Crea boletos de rifa
  */
-async function seedRaffleTickets(users: any[], raffles: any[], count: number = 5) {
+async function seedActivityTickets(users: any[], activities: any[], count: number = 5) {
   log(`\n→ Creando ${count} boletos de rifa...`, colors.cyan);
 
   const tickets: any[] = [];
 
   for (let i = 0; i < count; i++) {
     const user = faker.helpers.arrayElement(users);
-    const raffle = faker.helpers.arrayElement(raffles);
-    const availableNumbers = await RaffleNumber.findAvailableByRaffle(raffle._id);
+    const activity = faker.helpers.arrayElement(activities);
+    const availableNumbers = await ActivityNumber.findAvailableByActivity(activity._id);
     if (availableNumbers.length === 0) {
       continue;
     }
@@ -448,12 +448,12 @@ async function seedRaffleTickets(users: any[], raffles: any[], count: number = 5
     const ticketStatus = faker.helpers.arrayElement([TicketStatus.RESERVED, TicketStatus.PAID]);
 
     const ticketData: Record<string, unknown> = {
-      raffle: raffle._id,
+      raffle: activity._id,
       user: user._id,
       numbers: ticketNumbers,
       quantity: ticketNumbers.length,
-      unitPrice: raffle.ticketPrice,
-      total: ticketNumbers.length * raffle.ticketPrice,
+      unitPrice: activity.ticketPrice,
+      total: ticketNumbers.length * activity.ticketPrice,
       status: ticketStatus,
       paymentMethod: faker.helpers.arrayElement(Object.values(PaymentMethod)),
       paymentReference: faker.number.int({min: 100000000000000, max: 999999999999999}).toString(),
@@ -466,7 +466,7 @@ async function seedRaffleTickets(users: any[], raffles: any[], count: number = 5
     }
 
     try {
-      const ticket = await RaffleTicket.create(ticketData);
+      const ticket = await ActivityTicket.create(ticketData);
       tickets.push(ticket);
       log(
         `  ✓ Boleto creado: ${quantity} boletos para ${user.name} (${ticket._id})`,
@@ -584,10 +584,10 @@ async function seedDatabase() {
     await seedTournamentRegistrations(users, tournaments.slice(1), 10);
     await delay(300);
 
-    const raffles = await seedRaffles(users, 3);
+    const activities = await seedActivities(users, 3);
     await delay(300);
 
-    await seedRaffleTickets(users, raffles, 8);
+    await seedActivityTickets(users, activities, 8);
     await delay(300);
 
     await seedTransmissions(tournaments, users, 2);
@@ -605,7 +605,7 @@ async function seedDatabase() {
   • Pedidos:       ${orders.length}
   • Torneos:       ${tournaments.length}
   • Inscripciones: ${mainRegistrations} en torneo principal + 10 aleatorias
-  • Rifas:         ${raffles.length}
+  • Rifas:         ${activities.length}
   • Boletos:       8
   • Solicitudes de transmisión: 2
 

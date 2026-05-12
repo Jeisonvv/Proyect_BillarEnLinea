@@ -8,7 +8,7 @@ import { OrdersModule } from './modules/orders/orders.module.js';
 import { PaymentsModule } from './modules/payments/payments.module.js';
 import { PostsModule } from './modules/posts/posts.module.js';
 import { ProductsModule } from './modules/products/products.module.js';
-import { RafflesModule } from './modules/raffles/raffles.module.js';
+import { ActivitiesModule } from './modules/activities/activities.module.js';
 import { TournamentsModule } from './modules/tournaments/tournaments.module.js';
 import { TransmissionsModule } from './modules/transmissions/transmissions.module.js';
 import { UploadsModule } from './modules/uploads/uploads.module.js';
@@ -22,7 +22,7 @@ import { UsersModule } from './modules/users/users.module.js';
 		OrdersModule,
 		TournamentsModule,
 		PaymentsModule,
-		RafflesModule,
+		ActivitiesModule,
 		MatchesModule,
 		EventsModule,
 		ProductsModule,

@@ -2,19 +2,19 @@ import { randomBytes } from "node:crypto";
 import mongoose from "mongoose";
 import PaymentTransaction from "../models/payment-transaction.model.js";
 import Order from "../models/order.model.js";
-import Raffle from "../models/raffle.model.js";
-import RaffleNumber, { normalizeRaffleNumberInput } from "../models/raffle-number.model.js";
-import RaffleTicket from "../models/raffle-ticket.model.js";
+import Activity from "../models/activity.model.js";
+import ActivityNumber, { normalizeActivityNumberInput } from "../models/activity-number.model.js";
+import ActivityTicket from "../models/activity-ticket.model.js";
 import Tournament from "../models/tournament.model.js";
 import TournamentRegistration from "../models/tournament-registration.model.js";
 import User from "../models/user.model.js";
 import {
-  assertRaffleSalesOpen,
-  getRaffleSaleClosesAt,
-  getRaffleReservationExpiration,
-  hasRaffleDrawDate,
-  withRaffleSaleClosesAt,
-} from "../utils/raffle-sale-window.js";
+  assertActivitySalesOpen,
+  getActivitySaleClosesAt,
+  getActivityReservationExpiration,
+  hasActivityDrawDate,
+  withActivitySaleClosesAt,
+} from "../utils/activity-sale-window.js";
 import {
   Channel,
   OrderStatus,
@@ -23,8 +23,8 @@ import {
   PaymentProvider,
   PaymentTransactionStatus,
   PlayerCategory,
-  RaffleNumberStatus,
-  RaffleStatus,
+  ActivityNumberStatus,
+  ActivityStatus,
   RegistrationStatus,
   TicketStatus,
   TournamentStatus,
@@ -89,7 +89,7 @@ interface TournamentCheckoutPricing {
   expiresAt: Date;
 }
 
-const DEFAULT_RESERVATION_MINUTES = Number(process.env.RAFFLE_RESERVATION_MINUTES ?? 15);
+const DEFAULT_RESERVATION_MINUTES = Number(process.env.ACTIVITY_RESERVATION_MINUTES ?? 15);
 const RETRYABLE_PAYMENT_STATUSES = new Set<PaymentTransactionStatus>([
   PaymentTransactionStatus.EXPIRED,
   PaymentTransactionStatus.DECLINED,
@@ -142,9 +142,9 @@ function generatePaymentReference(prefix: string, entityId: string) {
   return `${prefix}-${entityId.slice(-6)}-${Date.now()}-${randomBytes(4).toString("hex")}`.toUpperCase();
 }
 
-function buildRaffleIdempotencyKey(userId: string, raffleId: string, numbers: string[]) {
+function buildActivityIdempotencyKey(userId: string, activityId: string, numbers: string[]) {
   const normalizedNumbers = [...numbers].sort((left, right) => left.localeCompare(right));
-  return sha256Hex(`RAFFLE|${userId}|${raffleId}|${normalizedNumbers.join(",")}`);
+  return sha256Hex(`ACTIVITY|${userId}|${activityId}|${normalizedNumbers.join(",")}`);
 }
 
 function buildTournamentIdempotencyKey(userId: string, tournamentId: string) {
@@ -256,7 +256,7 @@ function buildWompiMethodSummary(providerMethod?: string) {
   };
 }
 
-function getExistingRaffleResponseData(
+function getExistingActivityResponseData(
   payment: {
     _id: mongoose.Types.ObjectId;
     reference: string;
@@ -274,7 +274,7 @@ function getExistingRaffleResponseData(
     numbers: string[];
     total: number;
   },
-  raffle: {
+  activity: {
     _id: mongoose.Types.ObjectId;
     name: string;
     ticketPrice: number;
@@ -282,9 +282,9 @@ function getExistingRaffleResponseData(
   },
 ) {
   const phoneData = splitPhone(payment.customerPhone);
-  const redirectUrl = payment.redirectUrl ?? getWompiRedirectUrl("activity");
-  const saleClosesAt = getRaffleSaleClosesAt(raffle.drawDate);
-  const saleStatus = withRaffleSaleClosesAt(raffle).saleStatus;
+  const redirectUrl = payment.redirectUrl ?? getWompiRedirectUrl("activities");
+  const saleClosesAt = getActivitySaleClosesAt(activity.drawDate);
+  const saleStatus = withActivitySaleClosesAt(activity).saleStatus;
 
   return {
     paymentId: payment._id,
@@ -304,10 +304,10 @@ function getExistingRaffleResponseData(
         ...(phoneData ?? {}),
       },
     }),
-    raffle: {
-      id: raffle._id,
-      name: raffle.name,
-      ticketPrice: raffle.ticketPrice,
+    activity: {
+      id: activity._id,
+      name: activity.name,
+      ticketPrice: activity.ticketPrice,
       numbers: ticket.numbers,
       total: ticket.total,
       ...(saleClosesAt ? { saleClosesAt } : {}),
@@ -454,18 +454,18 @@ function getExistingOrderResponseData(
   };
 }
 
-export async function cleanupExpiredRaffleReservations(raffleId?: string) {
+export async function cleanupExpiredActivityReservations(activityId?: string) {
   const now = new Date();
   const filter: Record<string, unknown> = {
     status: TicketStatus.RESERVED,
     reservedUntil: { $lte: now },
   };
 
-  if (raffleId) {
-    filter.raffle = toObjectId(raffleId, "Raffle ID");
+  if (activityId) {
+    filter.raffle = toObjectId(activityId, "Activity ID");
   }
 
-  const expiredTickets = await RaffleTicket.find(filter)
+  const expiredTickets = await ActivityTicket.find(filter)
     .select("_id")
     .lean();
 
@@ -476,13 +476,13 @@ export async function cleanupExpiredRaffleReservations(raffleId?: string) {
   const ticketIds = expiredTickets.map((ticket) => ticket._id);
 
   await Promise.all([
-    RaffleNumber.updateMany(
+    ActivityNumber.updateMany(
       {
         ticket: { $in: ticketIds },
-        status: RaffleNumberStatus.RESERVED,
+        status: ActivityNumberStatus.RESERVED,
       },
       {
-        $set: { status: RaffleNumberStatus.AVAILABLE },
+        $set: { status: ActivityNumberStatus.AVAILABLE },
         $unset: {
           user: "",
           ticket: "",
@@ -491,7 +491,7 @@ export async function cleanupExpiredRaffleReservations(raffleId?: string) {
         },
       },
     ),
-    RaffleTicket.updateMany(
+    ActivityTicket.updateMany(
       { _id: { $in: ticketIds } },
       {
         $set: {
@@ -503,7 +503,7 @@ export async function cleanupExpiredRaffleReservations(raffleId?: string) {
     ),
     PaymentTransaction.updateMany(
       {
-        payableType: PaymentPayableType.RAFFLE_TICKET,
+        payableType: PaymentPayableType.ACTIVITY_TICKET,
         payableId: { $in: ticketIds },
         status: PaymentTransactionStatus.PENDING,
       },
@@ -517,7 +517,7 @@ export async function cleanupExpiredRaffleReservations(raffleId?: string) {
 }
 
 async function markReservedTicketAsPaid(ticketId: mongoose.Types.ObjectId, transactionId?: string) {
-  const ticket = await RaffleTicket.findById(ticketId);
+  const ticket = await ActivityTicket.findById(ticketId);
   if (!ticket) {
     throw new Error("Ticket no encontrado.");
   }
@@ -533,23 +533,23 @@ async function markReservedTicketAsPaid(ticketId: mongoose.Types.ObjectId, trans
   const now = new Date();
 
   await Promise.all([
-    RaffleNumber.updateMany(
+    ActivityNumber.updateMany(
       {
         ticket: ticket._id,
-        status: RaffleNumberStatus.RESERVED,
+        status: ActivityNumberStatus.RESERVED,
       },
       {
         $set: {
-          status: RaffleNumberStatus.PAID,
+          status: ActivityNumberStatus.PAID,
           paidAt: now,
         },
       },
     ),
-    Raffle.updateOne(
+    Activity.updateOne(
       { _id: ticket.raffle },
       { $inc: { soldTickets: ticket.numbers.length } },
     ),
-    RaffleTicket.updateOne(
+    ActivityTicket.updateOne(
       { _id: ticket._id },
       {
         $set: {
@@ -563,24 +563,24 @@ async function markReservedTicketAsPaid(ticketId: mongoose.Types.ObjectId, trans
     ),
   ]);
 
-  return RaffleTicket.findById(ticket._id)
+  return ActivityTicket.findById(ticket._id)
     .populate("user", "name avatarUrl")
     .populate("raffle", "name prize ticketPrice status drawDate")
     .lean()
-    .then((raffleTicket) => {
-      if (!raffleTicket) return raffleTicket;
+    .then((activityTicket) => {
+      if (!activityTicket) return activityTicket;
 
       return {
-        ...raffleTicket,
-        raffle: hasRaffleDrawDate(raffleTicket.raffle)
-          ? withRaffleSaleClosesAt(raffleTicket.raffle)
-          : raffleTicket.raffle,
+        ...activityTicket,
+        activity: hasActivityDrawDate(activityTicket.raffle)
+          ? withActivitySaleClosesAt(activityTicket.raffle)
+          : activityTicket.raffle,
       };
     });
 }
 
 async function cancelReservedTicket(ticketId: mongoose.Types.ObjectId, paymentStatus: PaymentTransactionStatus, transactionId?: string) {
-  const ticket = await RaffleTicket.findById(ticketId);
+  const ticket = await ActivityTicket.findById(ticketId);
   if (!ticket) {
     throw new Error("Ticket no encontrado.");
   }
@@ -594,13 +594,13 @@ async function cancelReservedTicket(ticketId: mongoose.Types.ObjectId, paymentSt
   }
 
   await Promise.all([
-    RaffleNumber.updateMany(
+    ActivityNumber.updateMany(
       {
         ticket: ticket._id,
-        status: RaffleNumberStatus.RESERVED,
+        status: ActivityNumberStatus.RESERVED,
       },
       {
-        $set: { status: RaffleNumberStatus.AVAILABLE },
+        $set: { status: ActivityNumberStatus.AVAILABLE },
         $unset: {
           user: "",
           ticket: "",
@@ -609,7 +609,7 @@ async function cancelReservedTicket(ticketId: mongoose.Types.ObjectId, paymentSt
         },
       },
     ),
-    RaffleTicket.updateOne(
+    ActivityTicket.updateOne(
       { _id: ticket._id },
       {
         $set: {
@@ -622,45 +622,45 @@ async function cancelReservedTicket(ticketId: mongoose.Types.ObjectId, paymentSt
     ),
   ]);
 
-  return RaffleTicket.findById(ticket._id)
+  return ActivityTicket.findById(ticket._id)
     .populate("user", "name avatarUrl")
     .populate("raffle", "name prize ticketPrice status drawDate")
     .lean()
-    .then((raffleTicket) => {
-      if (!raffleTicket) return raffleTicket;
+    .then((activityTicket) => {
+      if (!activityTicket) return activityTicket;
 
       return {
-        ...raffleTicket,
-        raffle: hasRaffleDrawDate(raffleTicket.raffle)
-          ? withRaffleSaleClosesAt(raffleTicket.raffle)
-          : raffleTicket.raffle,
+        ...activityTicket,
+        activity: hasActivityDrawDate(activityTicket.raffle)
+          ? withActivitySaleClosesAt(activityTicket.raffle)
+          : activityTicket.raffle,
       };
     });
 }
 
-export async function createWompiCheckoutForRaffle(
-  raffleId: string,
+export async function createWompiCheckoutForActivity(
+  activityId: string,
   actor: ActorContext,
   params: CreateWompiCheckoutParams,
 ) {
-  await cleanupExpiredRaffleReservations(raffleId);
+  await cleanupExpiredActivityReservations(activityId);
 
-  const raffleObjectId = toObjectId(raffleId, "Raffle ID");
-  const raffle = await Raffle.findById(raffleObjectId)
+  const activityObjectId = toObjectId(activityId, "Activity ID");
+  const activity = await Activity.findById(activityObjectId)
     .select("_id name ticketPrice totalTickets status drawDate")
     .lean();
 
-  if (!raffle) {
+  if (!activity) {
     throw new Error("Rifa no encontrada.");
   }
 
-  if (raffle.status !== RaffleStatus.ACTIVE) {
+  if (activity.status !== ActivityStatus.ACTIVE) {
     throw new Error("La rifa no está activa para recibir pagos.");
   }
 
-  assertRaffleSalesOpen(raffle.drawDate);
+  assertActivitySalesOpen(activity.drawDate);
 
-  if (raffle.ticketPrice === 0) {
+  if (activity.ticketPrice === 0) {
     throw new Error("La rifa es gratuita y no requiere checkout.");
   }
 
@@ -691,23 +691,23 @@ export async function createWompiCheckoutForRaffle(
     throw new Error("El usuario necesita un email para pagar con Wompi.");
   }
 
-  const requestedNumbers = params.numbers.map((numberValue) => normalizeRaffleNumberInput(numberValue, raffle.totalTickets));
-  const amountInCents = raffle.ticketPrice * requestedNumbers.length * 100;
+  const requestedNumbers = params.numbers.map((numberValue) => normalizeActivityNumberInput(numberValue, activity.totalTickets));
+  const amountInCents = activity.ticketPrice * requestedNumbers.length * 100;
 
   if (amountInCents <= 0) {
     throw new Error("El monto del checkout debe ser mayor a 0.");
   }
 
-  const idempotencyKey = buildRaffleIdempotencyKey(targetUserId, raffleId, requestedNumbers);
+  const idempotencyKey = buildActivityIdempotencyKey(targetUserId, activityId, requestedNumbers);
   const existingPayment = await PaymentTransaction.findOne({
     provider: PaymentProvider.WOMPI,
     idempotencyKey,
   }).lean();
 
-  const expirationDate = getRaffleReservationExpiration(raffle.drawDate, DEFAULT_RESERVATION_MINUTES);
-  const raffleMetadata = withRaffleSaleClosesAt(raffle);
-  const paymentReference = generatePaymentReference("ACTIVITY", raffleId);
-  const redirectUrl = getWompiRedirectUrl("activity");
+  const expirationDate = getActivityReservationExpiration(activity.drawDate, DEFAULT_RESERVATION_MINUTES);
+  const activityMetadata = withActivitySaleClosesAt(activity);
+  const paymentReference = generatePaymentReference("ACTIVITY", activityId);
+  const redirectUrl = getWompiRedirectUrl("activities");
   const phoneData = splitPhone(user.phone ?? null);
   const channel = getCheckoutChannel(params.channel);
 
@@ -716,7 +716,7 @@ export async function createWompiCheckoutForRaffle(
       existingPayment.status === PaymentTransactionStatus.PENDING ||
       existingPayment.status === PaymentTransactionStatus.APPROVED
     ) {
-      const ticket = await RaffleTicket.findById(existingPayment.payableId)
+      const ticket = await ActivityTicket.findById(existingPayment.payableId)
         .select("_id numbers total")
         .lean();
 
@@ -724,15 +724,15 @@ export async function createWompiCheckoutForRaffle(
         throw new Error("La transacción existente no tiene un ticket válido asociado.");
       }
 
-      return getExistingRaffleResponseData(existingPayment, ticket, raffle);
+      return getExistingActivityResponseData(existingPayment, ticket, activity);
     }
 
     if (!RETRYABLE_PAYMENT_STATUSES.has(existingPayment.status)) {
       throw new Error(`Ya existe una transacción previa para esta compra con estado ${existingPayment.status}.`);
     }
 
-    const retryTicket = await RaffleTicket.create({
-      raffle: raffleObjectId,
+    const retryTicket = await ActivityTicket.create({
+      raffle: activityObjectId,
       user: userObjectId,
       numbers: requestedNumbers,
       status: TicketStatus.RESERVED,
@@ -762,7 +762,7 @@ export async function createWompiCheckoutForRaffle(
             customerName: user.name,
             customerPhone: user.phone,
             metadata: {
-              raffleId,
+              activityId,
               numbers: requestedNumbers,
               channel,
               retriedFromStatus: existingPayment.status,
@@ -792,20 +792,20 @@ export async function createWompiCheckoutForRaffle(
           ...(phoneData ?? {}),
         },
       }),
-      raffle: {
-        id: raffle._id,
-        name: raffle.name,
-        ticketPrice: raffle.ticketPrice,
+      activity: {
+        id: activity._id,
+        name: activity.name,
+        ticketPrice: activity.ticketPrice,
         numbers: retryTicket.numbers,
         total: retryTicket.total,
-        ...(raffleMetadata.saleClosesAt ? { saleClosesAt: raffleMetadata.saleClosesAt } : {}),
-        ...(raffleMetadata.saleStatus ? { saleStatus: raffleMetadata.saleStatus } : {}),
+        ...(activityMetadata.saleClosesAt ? { saleClosesAt: activityMetadata.saleClosesAt } : {}),
+        ...(activityMetadata.saleStatus ? { saleStatus: activityMetadata.saleStatus } : {}),
       },
     };
   }
 
-  const ticket = await RaffleTicket.create({
-    raffle: raffleObjectId,
+  const ticket = await ActivityTicket.create({
+    raffle: activityObjectId,
     user: userObjectId,
     numbers: requestedNumbers,
     status: TicketStatus.RESERVED,
@@ -820,7 +820,7 @@ export async function createWompiCheckoutForRaffle(
   const paymentData: Record<string, unknown> = {
     user: userObjectId,
     provider: PaymentProvider.WOMPI,
-    payableType: PaymentPayableType.RAFFLE_TICKET,
+    payableType: PaymentPayableType.ACTIVITY_TICKET,
     payableId: ticket._id,
     idempotencyKey,
     reference: paymentReference,
@@ -832,7 +832,7 @@ export async function createWompiCheckoutForRaffle(
     customerEmail,
     customerName: user.name,
     metadata: {
-      raffleId,
+      activityId,
       numbers: requestedNumbers,
       channel,
     },
@@ -861,14 +861,14 @@ export async function createWompiCheckoutForRaffle(
         ...(phoneData ?? {}),
       },
     }),
-    raffle: {
-      id: raffle._id,
-      name: raffle.name,
-      ticketPrice: raffle.ticketPrice,
+    activity: {
+      id: activity._id,
+      name: activity.name,
+      ticketPrice: activity.ticketPrice,
       numbers: ticket.numbers,
       total: ticket.total,
-      ...(raffleMetadata.saleClosesAt ? { saleClosesAt: raffleMetadata.saleClosesAt } : {}),
-      ...(raffleMetadata.saleStatus ? { saleStatus: raffleMetadata.saleStatus } : {}),
+      ...(activityMetadata.saleClosesAt ? { saleClosesAt: activityMetadata.saleClosesAt } : {}),
+      ...(activityMetadata.saleStatus ? { saleStatus: activityMetadata.saleStatus } : {}),
     },
   };
 }
@@ -1403,7 +1403,7 @@ export async function getTournamentWompiReturnByReference(reference: string) {
   };
 }
 
-async function handleRafflePaymentStatus(
+async function handleActivityPaymentStatus(
   payment: {
     _id: mongoose.Types.ObjectId;
     payableId: mongoose.Types.ObjectId;
@@ -1413,7 +1413,7 @@ async function handleRafflePaymentStatus(
   transactionId?: string,
 ) {
   if (status === PaymentTransactionStatus.APPROVED) {
-    const ticket = await RaffleTicket.findById(payment.payableId)
+    const ticket = await ActivityTicket.findById(payment.payableId)
       .select("_id status reservedUntil")
       .lean();
 
@@ -1462,7 +1462,7 @@ async function handleRafflePaymentStatus(
     return cancelReservedTicket(payment.payableId, status, transactionId);
   }
 
-  await RaffleTicket.updateOne(
+  await ActivityTicket.updateOne(
     { _id: payment.payableId },
     {
       $set: {
@@ -1832,8 +1832,8 @@ export async function handleWompiWebhook(payload: WompiEventPayload, headerCheck
   );
 
   switch (payment.payableType) {
-    case PaymentPayableType.RAFFLE_TICKET: {
-      const data = await handleRafflePaymentStatus(payment, status, transaction.id);
+    case PaymentPayableType.ACTIVITY_TICKET: {
+      const data = await handleActivityPaymentStatus(payment, status, transaction.id);
       return {
         ok: true,
         processed: data !== null,

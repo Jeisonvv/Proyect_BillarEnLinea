@@ -1,30 +1,30 @@
 import mongoose from "mongoose";
 import PaymentTransaction from "../models/payment-transaction.model.js";
-import Raffle from "../models/raffle.model.js";
-import RaffleNumber, { normalizeRaffleNumberInput } from "../models/raffle-number.model.js";
-import RaffleTicket from "../models/raffle-ticket.model.js";
+import Activity from "../models/activity.model.js";
+import ActivityNumber, { normalizeActivityNumberInput } from "../models/activity-number.model.js";
+import ActivityTicket from "../models/activity-ticket.model.js";
 import User from "../models/user.model.js";
 import {
   Channel,
   PaymentMethod,
   PaymentPayableType,
   PaymentTransactionStatus,
-  RaffleNumberStatus,
-  RaffleStatus,
+  ActivityNumberStatus,
+  ActivityStatus,
   TicketStatus,
   UserRole,
 } from "../models/enums.js";
-import { cleanupExpiredRaffleReservations } from "./payment.service.js";
-import { assertRaffleSalesOpen, hasRaffleDrawDate, withRaffleSaleClosesAt } from "../utils/raffle-sale-window.js";
+import { cleanupExpiredActivityReservations } from "./payment.service.js";
+import { assertActivitySalesOpen, hasActivityDrawDate, withActivitySaleClosesAt } from "../utils/activity-sale-window.js";
 import { deleteCloudinaryImageByUrl } from "../utils/cloudinary.js";
 
-export interface ListRafflesParams {
+export interface ListActivitiesParams {
   status?: string;
   page: number;
   limit: number;
 }
 
-interface PurchaseRaffleTicketsParams {
+interface PurchaseActivityTicketsParams {
   userId?: string;
   numbers?: Array<string | number>;
   channel?: string;
@@ -38,7 +38,7 @@ interface ActorContext {
   role: UserRole;
 }
 
-function isFreeRaffleIdentityDuplicateError(error: unknown) {
+function isFreeActivityIdentityDuplicateError(error: unknown) {
   const duplicateError = error as {
     code?: number;
     keyPattern?: Record<string, number>;
@@ -95,10 +95,10 @@ function normalizeWinningNumberInput(value: string | number, totalTickets: numbe
     : String(value);
 }
 
-async function getRandomAvailableRaffleNumber(raffleId: mongoose.Types.ObjectId) {
-  const availableCount = await RaffleNumber.countDocuments({
-    raffle: raffleId,
-    status: RaffleNumberStatus.AVAILABLE,
+async function getRandomAvailableActivityNumber(activityId: mongoose.Types.ObjectId) {
+  const availableCount = await ActivityNumber.countDocuments({
+    raffle: activityId,
+    status: ActivityNumberStatus.AVAILABLE,
   });
 
   if (availableCount === 0) {
@@ -106,9 +106,9 @@ async function getRandomAvailableRaffleNumber(raffleId: mongoose.Types.ObjectId)
   }
 
   const randomOffset = Math.floor(Math.random() * availableCount);
-  const randomNumber = await RaffleNumber.findOne({
-    raffle: raffleId,
-    status: RaffleNumberStatus.AVAILABLE,
+  const randomNumber = await ActivityNumber.findOne({
+    raffle: activityId,
+    status: ActivityNumberStatus.AVAILABLE,
   })
     .sort({ numericValue: 1 })
     .skip(randomOffset)
@@ -132,7 +132,7 @@ function getTicketPriceValue(input: unknown) {
   return ticketPrice;
 }
 
-function normalizeRafflePricingData(data: Record<string, unknown>) {
+function normalizeActivityPricingData(data: Record<string, unknown>) {
   const ticketPrice = getTicketPriceValue(data.ticketPrice);
   const explicitIsFree = typeof data.isFree === "boolean" ? data.isFree : undefined;
 
@@ -150,24 +150,24 @@ function normalizeRafflePricingData(data: Record<string, unknown>) {
   };
 }
 
-export async function createRaffleService(data: Record<string, unknown>, createdBy: string) {
+export async function createActivityService(data: Record<string, unknown>, createdBy: string) {
   const createdById = toObjectId(createdBy, "createdBy");
-  const normalizedData = normalizeRafflePricingData(data);
+  const normalizedData = normalizeActivityPricingData(data);
 
-  const raffle = await Raffle.create({
+  const activity = await Activity.create({
     ...normalizedData,
     createdBy: createdById,
     soldTickets: 0,
   });
 
-  const createdRaffle = await Raffle.findById(raffle._id)
+  const createdActivity = await Activity.findById(activity._id)
     .populate("createdBy", "name")
     .lean({ virtuals: true });
 
-  return createdRaffle ? withRaffleSaleClosesAt(createdRaffle) : raffle;
+  return createdActivity ? withActivitySaleClosesAt(createdActivity) : activity;
 }
 
-export interface UpdateRaffleParams {
+export interface UpdateActivityParams {
   name?: string;
   slug?: string;
   description?: string | null;
@@ -187,54 +187,54 @@ export interface UpdateRaffleParams {
  * (campos estructurales). El status `DRAWN` solo lo asigna el sorteo, no esta función.
  * El `ticketPrice` solo puede modificarse si la rifa todavía no tiene boletos vendidos.
  */
-export async function updateRaffleService(id: string, data: UpdateRaffleParams) {
-  const raffleId = toObjectId(id, "Raffle ID");
+export async function updateActivityService(id: string, data: UpdateActivityParams) {
+  const activityId = toObjectId(id, "Activity ID");
 
-  const raffle = await Raffle.findById(raffleId);
-  if (!raffle) {
+  const activity = await Activity.findById(activityId);
+  if (!activity) {
     throw new Error("Rifa no encontrada.");
   }
 
   if (data.status !== undefined) {
-    if (!Object.values(RaffleStatus).includes(data.status as RaffleStatus)) {
+    if (!Object.values(ActivityStatus).includes(data.status as ActivityStatus)) {
       throw new Error("Estado de rifa inválido.");
     }
-    if (data.status === RaffleStatus.DRAWN) {
+    if (data.status === ActivityStatus.DRAWN) {
       throw new Error("El estado DRAWN solo puede asignarse al ejecutar el sorteo.");
     }
-    if (raffle.status === RaffleStatus.DRAWN) {
+    if (activity.status === ActivityStatus.DRAWN) {
       throw new Error("No puedes modificar una rifa que ya fue sorteada.");
     }
-    raffle.status = data.status as RaffleStatus;
-  } else if (raffle.status === RaffleStatus.DRAWN) {
+    activity.status = data.status as ActivityStatus;
+  } else if (activity.status === ActivityStatus.DRAWN) {
     throw new Error("No puedes modificar una rifa que ya fue sorteada.");
   }
 
   if (data.name !== undefined) {
     const trimmed = String(data.name).trim();
     if (!trimmed) throw new Error("El nombre no puede estar vacío.");
-    raffle.name = trimmed;
+    activity.name = trimmed;
   }
 
   if (data.slug !== undefined) {
     const trimmed = String(data.slug).trim();
     // Permitir vaciar el slug para que el hook lo regenere desde el nombre.
-    raffle.slug = trimmed;
+    activity.slug = trimmed;
   }
 
   if (data.seoTitle !== undefined) {
     if (data.seoTitle === null || data.seoTitle === "") {
-      raffle.set("seoTitle", undefined);
+      activity.set("seoTitle", undefined);
     } else {
-      raffle.set("seoTitle", data.seoTitle);
+      activity.set("seoTitle", data.seoTitle);
     }
   }
 
   if (data.seoDescription !== undefined) {
     if (data.seoDescription === null || data.seoDescription === "") {
-      raffle.set("seoDescription", undefined);
+      activity.set("seoDescription", undefined);
     } else {
-      raffle.set("seoDescription", data.seoDescription);
+      activity.set("seoDescription", data.seoDescription);
     }
   }
 
@@ -244,45 +244,45 @@ export async function updateRaffleService(id: string, data: UpdateRaffleParams) 
           .map((tag) => String(tag).trim())
           .filter((tag) => tag.length > 0)
       : [];
-    raffle.tags = cleanTags;
+    activity.tags = cleanTags;
   }
 
   if (data.prize !== undefined) {
     const trimmed = String(data.prize).trim();
     if (!trimmed) throw new Error("El premio no puede estar vacío.");
-    raffle.prize = trimmed;
+    activity.prize = trimmed;
   }
 
   if (data.description !== undefined) {
     if (data.description === null || data.description === "") {
-      raffle.set("description", undefined);
+      activity.set("description", undefined);
     } else {
-      raffle.set("description", data.description);
+      activity.set("description", data.description);
     }
   }
 
   if (data.prizeImageUrl !== undefined) {
     if (data.prizeImageUrl === null || data.prizeImageUrl === "") {
-      raffle.set("prizeImageUrl", undefined);
+      activity.set("prizeImageUrl", undefined);
     } else {
-      raffle.set("prizeImageUrl", data.prizeImageUrl);
+      activity.set("prizeImageUrl", data.prizeImageUrl);
     }
   }
 
   if (data.imageUrl !== undefined) {
     if (data.imageUrl === null || data.imageUrl === "") {
-      raffle.set("imageUrl", undefined);
+      activity.set("imageUrl", undefined);
     } else {
-      raffle.set("imageUrl", data.imageUrl);
+      activity.set("imageUrl", data.imageUrl);
     }
   }
 
   if (data.ticketPrice !== undefined) {
-    if (raffle.soldTickets > 0) {
+    if (activity.soldTickets > 0) {
       throw new Error("No puedes cambiar el precio de una rifa con boletos vendidos.");
     }
     const nextPrice = getTicketPriceValue(data.ticketPrice);
-    raffle.ticketPrice = nextPrice;
+    activity.ticketPrice = nextPrice;
   }
 
   if (data.drawDate !== undefined) {
@@ -290,34 +290,34 @@ export async function updateRaffleService(id: string, data: UpdateRaffleParams) 
     if (Number.isNaN(parsed.getTime())) {
       throw new Error("La fecha del sorteo es inválida.");
     }
-    raffle.drawDate = parsed;
+    activity.drawDate = parsed;
   }
 
-  await raffle.save();
+  await activity.save();
 
-  const updatedRaffle = await Raffle.findById(raffleId)
+  const updatedActivity = await Activity.findById(activityId)
     .populate("winner", "name avatarUrl")
     .populate("createdBy", "name avatarUrl")
     .lean({ virtuals: true });
 
-  return updatedRaffle ? withRaffleSaleClosesAt(updatedRaffle) : raffle.toObject();
+  return updatedActivity ? withActivitySaleClosesAt(updatedActivity) : activity.toObject();
 }
 
-export async function deleteRaffleService(id: string) {
-  const raffleId = toObjectId(id, "Raffle ID");
-  await cleanupExpiredRaffleReservations(id);
+export async function deleteActivityService(id: string) {
+  const activityId = toObjectId(id, "Activity ID");
+  await cleanupExpiredActivityReservations(id);
 
-  const raffle = await Raffle.findById(raffleId).select("_id name status imageUrl prizeImageUrl").lean();
-  if (!raffle) {
+  const activity = await Activity.findById(activityId).select("_id name status imageUrl prizeImageUrl").lean();
+  if (!activity) {
     throw new Error("Rifa no encontrada.");
   }
 
-  if (raffle.status === RaffleStatus.DRAWN) {
+  if (activity.status === ActivityStatus.DRAWN) {
     throw new Error("No se puede eliminar una rifa que ya fue sorteada.");
   }
 
-  const blockingTicket = await RaffleTicket.findOne({
-    raffle: raffleId,
+  const blockingTicket = await ActivityTicket.findOne({
+    raffle: activityId,
     status: { $in: [TicketStatus.RESERVED, TicketStatus.PAID, TicketStatus.WINNER] },
   })
     .select("_id status")
@@ -327,12 +327,12 @@ export async function deleteRaffleService(id: string) {
     throw new Error("No se puede eliminar una rifa con boletos activos o confirmados.");
   }
 
-  const raffleTickets = await RaffleTicket.find({ raffle: raffleId }).select("_id").lean();
-  const ticketIds = raffleTickets.map((ticket) => ticket._id);
+  const activityTickets = await ActivityTicket.find({ raffle: activityId }).select("_id").lean();
+  const ticketIds = activityTickets.map((ticket) => ticket._id);
 
   const blockingPayment = ticketIds.length > 0
     ? await PaymentTransaction.findOne({
-      payableType: PaymentPayableType.RAFFLE_TICKET,
+      payableType: PaymentPayableType.ACTIVITY_TICKET,
       payableId: { $in: ticketIds },
       status: { $in: [PaymentTransactionStatus.PENDING, PaymentTransactionStatus.APPROVED] },
     })
@@ -345,26 +345,26 @@ export async function deleteRaffleService(id: string) {
   }
 
   const [deletedNumbers, deletedTickets, deletedPayments] = await Promise.all([
-    RaffleNumber.deleteMany({ raffle: raffleId }),
-    RaffleTicket.deleteMany({ raffle: raffleId }),
+    ActivityNumber.deleteMany({ raffle: activityId }),
+    ActivityTicket.deleteMany({ raffle: activityId }),
     ticketIds.length > 0
       ? PaymentTransaction.deleteMany({
-        payableType: PaymentPayableType.RAFFLE_TICKET,
+        payableType: PaymentPayableType.ACTIVITY_TICKET,
         payableId: { $in: ticketIds },
       })
       : Promise.resolve({ deletedCount: 0 }),
   ]);
 
-  await Raffle.deleteOne({ _id: raffleId });
+  await Activity.deleteOne({ _id: activityId });
 
   const [imageDeleted, prizeImageDeleted] = await Promise.all([
-    raffle.imageUrl ? deleteCloudinaryImageByUrl(raffle.imageUrl) : Promise.resolve(false),
-    raffle.prizeImageUrl ? deleteCloudinaryImageByUrl(raffle.prizeImageUrl) : Promise.resolve(false),
+    activity.imageUrl ? deleteCloudinaryImageByUrl(activity.imageUrl) : Promise.resolve(false),
+    activity.prizeImageUrl ? deleteCloudinaryImageByUrl(activity.prizeImageUrl) : Promise.resolve(false),
   ]);
 
   return {
-    raffleId: raffle._id,
-    raffleName: raffle.name,
+    activityId: activity._id,
+    activityName: activity.name,
     deletedNumbers: deletedNumbers.deletedCount ?? 0,
     deletedTickets: deletedTickets.deletedCount ?? 0,
     deletedPayments: deletedPayments.deletedCount ?? 0,
@@ -373,7 +373,7 @@ export async function deleteRaffleService(id: string) {
   };
 }
 
-export async function listRafflesService(params: ListRafflesParams) {
+export async function listActivitiesService(params: ListActivitiesParams) {
   const { status, page, limit } = params;
   const filter: Record<string, unknown> = {};
 
@@ -382,52 +382,52 @@ export async function listRafflesService(params: ListRafflesParams) {
   }
 
   const skip = (page - 1) * limit;
-  const [raffles, total] = await Promise.all([
-    Raffle.find(filter)
+  const [activities, total] = await Promise.all([
+    Activity.find(filter)
       .populate("winner", "name")
       .populate("createdBy", "name")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean({ virtuals: true }),
-    Raffle.countDocuments(filter),
+    Activity.countDocuments(filter),
   ]);
 
-  return { raffles: raffles.map((raffle) => withRaffleSaleClosesAt(raffle)), total };
+  return { activities: activities.map((activity) => withActivitySaleClosesAt(activity)), total };
 }
 
-export async function getRaffleByIdService(id: string) {
+export async function getActivityByIdService(id: string) {
   // Acepta ObjectId o slug. Si el id no es un ObjectId válido, intenta resolver por slug.
-  let raffleId: mongoose.Types.ObjectId;
+  let activityId: mongoose.Types.ObjectId;
   if (mongoose.Types.ObjectId.isValid(id)) {
-    raffleId = new mongoose.Types.ObjectId(id);
+    activityId = new mongoose.Types.ObjectId(id);
   } else {
-    const bySlug = await Raffle.findOne({ slug: id.trim().toLowerCase() }).select("_id").lean();
+    const bySlug = await Activity.findOne({ slug: id.trim().toLowerCase() }).select("_id").lean();
     if (!bySlug) {
       throw new Error("Rifa no encontrada.");
     }
-    raffleId = bySlug._id as mongoose.Types.ObjectId;
+    activityId = bySlug._id as mongoose.Types.ObjectId;
   }
-  await cleanupExpiredRaffleReservations(raffleId.toString());
+  await cleanupExpiredActivityReservations(activityId.toString());
 
-  const raffle = await Raffle.findById(raffleId)
+  const activity = await Activity.findById(activityId)
     .populate("winner", "name avatarUrl")
     .populate("createdBy", "name avatarUrl")
     .lean({ virtuals: true });
 
-  if (!raffle) {
+  if (!activity) {
     throw new Error("Rifa no encontrada.");
   }
 
   const [availableCount, reservedCount, paidCount, winnerCount] = await Promise.all([
-    RaffleNumber.countDocuments({ raffle: raffleId, status: RaffleNumberStatus.AVAILABLE }),
-    RaffleNumber.countDocuments({ raffle: raffleId, status: RaffleNumberStatus.RESERVED }),
-    RaffleNumber.countDocuments({ raffle: raffleId, status: RaffleNumberStatus.PAID }),
-    RaffleNumber.countDocuments({ raffle: raffleId, status: RaffleNumberStatus.WINNER }),
+    ActivityNumber.countDocuments({ raffle: activityId, status: ActivityNumberStatus.AVAILABLE }),
+    ActivityNumber.countDocuments({ raffle: activityId, status: ActivityNumberStatus.RESERVED }),
+    ActivityNumber.countDocuments({ raffle: activityId, status: ActivityNumberStatus.PAID }),
+    ActivityNumber.countDocuments({ raffle: activityId, status: ActivityNumberStatus.WINNER }),
   ]);
 
   return {
-    ...withRaffleSaleClosesAt(raffle),
+    ...withActivitySaleClosesAt(activity),
     numberSummary: {
       available: availableCount,
       reserved: reservedCount,
@@ -437,38 +437,38 @@ export async function getRaffleByIdService(id: string) {
   };
 }
 
-export async function getRaffleNumbersService(
+export async function getActivityNumbersService(
   id: string,
   options: { status?: string; page: number; limit: number },
 ) {
-  const raffleId = toObjectId(id, "Raffle ID");
-  await cleanupExpiredRaffleReservations(id);
-  const raffle = await Raffle.findById(raffleId).select("_id totalTickets drawDate").lean();
+  const activityId = toObjectId(id, "Activity ID");
+  await cleanupExpiredActivityReservations(id);
+  const activity = await Activity.findById(activityId).select("_id totalTickets drawDate").lean();
 
-  if (!raffle) {
+  if (!activity) {
     throw new Error("Rifa no encontrada.");
   }
 
-  const filter: Record<string, unknown> = { raffle: raffleId };
+  const filter: Record<string, unknown> = { raffle: activityId };
   if (options.status) {
     filter.status = options.status;
   }
 
   const skip = (options.page - 1) * options.limit;
   const [numbers, total] = await Promise.all([
-    RaffleNumber.find(filter)
+    ActivityNumber.find(filter)
       .sort({ numericValue: 1 })
       .skip(skip)
       .limit(options.limit)
       .lean(),
-    RaffleNumber.countDocuments(filter),
+    ActivityNumber.countDocuments(filter),
   ]);
 
   return {
-    raffleId: raffle._id,
-    totalTickets: raffle.totalTickets,
-    ...(withRaffleSaleClosesAt(raffle).saleClosesAt ? { saleClosesAt: withRaffleSaleClosesAt(raffle).saleClosesAt } : {}),
-    ...(withRaffleSaleClosesAt(raffle).saleStatus ? { saleStatus: withRaffleSaleClosesAt(raffle).saleStatus } : {}),
+    activityId: activity._id,
+    totalTickets: activity.totalTickets,
+    ...(withActivitySaleClosesAt(activity).saleClosesAt ? { saleClosesAt: withActivitySaleClosesAt(activity).saleClosesAt } : {}),
+    ...(withActivitySaleClosesAt(activity).saleStatus ? { saleStatus: withActivitySaleClosesAt(activity).saleStatus } : {}),
     total,
     page: options.page,
     limit: options.limit,
@@ -476,42 +476,42 @@ export async function getRaffleNumbersService(
   };
 }
 
-export async function getRaffleNumberOwnersService(
+export async function getActivityNumberOwnersService(
   id: string,
   options: { status?: string; page: number; limit: number },
 ) {
-  const raffleId = toObjectId(id, "Raffle ID");
-  await cleanupExpiredRaffleReservations(id);
+  const activityId = toObjectId(id, "Activity ID");
+  await cleanupExpiredActivityReservations(id);
 
-  const raffle = await Raffle.findById(raffleId)
+  const activity = await Activity.findById(activityId)
     .select("_id name totalTickets ticketPrice status winner winnerTicket")
     .populate("winner", "name avatarUrl phone webAuth.email")
     .lean({ virtuals: true });
 
-  if (!raffle) {
+  if (!activity) {
     throw new Error("Rifa no encontrada.");
   }
 
-  const ownerStatuses = [RaffleNumberStatus.RESERVED, RaffleNumberStatus.PAID, RaffleNumberStatus.WINNER];
+  const ownerStatuses = [ActivityNumberStatus.RESERVED, ActivityNumberStatus.PAID, ActivityNumberStatus.WINNER];
   const filter: Record<string, unknown> = {
-    raffle: raffleId,
+    raffle: activityId,
     status: options.status ?? { $in: ownerStatuses },
   };
 
   const skip = (options.page - 1) * options.limit;
   const [numbers, total] = await Promise.all([
-    RaffleNumber.find(filter)
+    ActivityNumber.find(filter)
       .populate("user", "name avatarUrl phone webAuth.email identityDocument")
       .populate("ticket", "status paymentStatus paymentReference paidAt createdAt")
       .sort({ numericValue: 1 })
       .skip(skip)
       .limit(options.limit)
       .lean(),
-    RaffleNumber.countDocuments(filter),
+    ActivityNumber.countDocuments(filter),
   ]);
 
   return {
-    raffle: withRaffleSaleClosesAt(raffle),
+    activity: withActivitySaleClosesAt(activity),
     total,
     page: options.page,
     limit: options.limit,
@@ -520,84 +520,84 @@ export async function getRaffleNumberOwnersService(
   };
 }
 
-export async function getAvailableRaffleNumbersService(id: string) {
-  const raffleId = toObjectId(id, "Raffle ID");
-  await cleanupExpiredRaffleReservations(id);
-  const raffle = await Raffle.findById(raffleId).select("_id totalTickets drawDate").lean();
+export async function getAvailableActivityNumbersService(id: string) {
+  const activityId = toObjectId(id, "Activity ID");
+  await cleanupExpiredActivityReservations(id);
+  const activity = await Activity.findById(activityId).select("_id totalTickets drawDate").lean();
 
-  if (!raffle) {
+  if (!activity) {
     throw new Error("Rifa no encontrada.");
   }
 
-  const raffleMetadata = withRaffleSaleClosesAt(raffle);
+  const activityMetadata = withActivitySaleClosesAt(activity);
 
-  const numbers = await RaffleNumber.findAvailableByRaffle(raffleId);
+  const numbers = await ActivityNumber.findAvailableByActivity(activityId);
 
   return {
-    raffleId: raffle._id,
-    totalTickets: raffle.totalTickets,
-    ...(raffleMetadata.saleClosesAt ? { saleClosesAt: raffleMetadata.saleClosesAt } : {}),
-    ...(raffleMetadata.saleStatus ? { saleStatus: raffleMetadata.saleStatus } : {}),
+    activityId: activity._id,
+    totalTickets: activity.totalTickets,
+    ...(activityMetadata.saleClosesAt ? { saleClosesAt: activityMetadata.saleClosesAt } : {}),
+    ...(activityMetadata.saleStatus ? { saleStatus: activityMetadata.saleStatus } : {}),
     availableCount: numbers.length,
     numbers,
   };
 }
 
-export async function getMyRaffleNumbersService(raffleId: string, userId: string) {
-  const raffleObjectId = toObjectId(raffleId, "Raffle ID");
+export async function getMyActivityNumbersService(activityId: string, userId: string) {
+  const activityObjectId = toObjectId(activityId, "Activity ID");
   const userObjectId = toObjectId(userId, "User ID");
-  await cleanupExpiredRaffleReservations(raffleId);
+  await cleanupExpiredActivityReservations(activityId);
 
-  const raffle = await Raffle.findById(raffleObjectId).select("_id totalTickets").lean();
-  if (!raffle) {
+  const activity = await Activity.findById(activityObjectId).select("_id totalTickets").lean();
+  if (!activity) {
     throw new Error("Rifa no encontrada.");
   }
 
-  const numbers = await RaffleNumber.find({
-    raffle: raffleObjectId,
+  const numbers = await ActivityNumber.find({
+    raffle: activityObjectId,
     user: userObjectId,
-    status: { $in: [RaffleNumberStatus.RESERVED, RaffleNumberStatus.PAID, RaffleNumberStatus.WINNER] },
+    status: { $in: [ActivityNumberStatus.RESERVED, ActivityNumberStatus.PAID, ActivityNumberStatus.WINNER] },
   })
     .select("number numericValue status reservedUntil paidAt")
     .sort({ numericValue: 1 })
     .lean();
 
   return {
-    raffleId: raffle._id,
-    totalTickets: raffle.totalTickets,
+    activityId: activity._id,
+    totalTickets: activity.totalTickets,
     numbers,
   };
 }
 
-export async function releaseMyRaffleReservationsService(
-  raffleId: string,
+export async function releaseMyActivityReservationsService(
+  activityId: string,
   userId: string,
   numbers?: string[],
 ) {
-  const raffleObjectId = toObjectId(raffleId, "Raffle ID");
+  const activityObjectId = toObjectId(activityId, "Activity ID");
   const userObjectId = toObjectId(userId, "User ID");
 
-  await cleanupExpiredRaffleReservations(raffleId);
+  await cleanupExpiredActivityReservations(activityId);
 
-  const raffle = await Raffle.findById(raffleObjectId).select("_id totalTickets").lean();
-  if (!raffle) {
+  const activity = await Activity.findById(activityObjectId).select("_id totalTickets").lean();
+  if (!activity) {
     throw new Error("Rifa no encontrada.");
   }
 
   const numberFilter: Record<string, unknown> = {
-    raffle: raffleObjectId,
+    raffle: activityObjectId,
     user: userObjectId,
-    status: RaffleNumberStatus.RESERVED,
+    status: ActivityNumberStatus.RESERVED,
   };
 
   if (Array.isArray(numbers) && numbers.length > 0) {
     const normalized = numbers.map((value) =>
-      normalizeRaffleNumberInput(value, raffle.totalTickets),
+      normalizeActivityNumberInput(value, activity.totalTickets),
     );
     numberFilter.number = { $in: normalized };
   }
 
-  const reservedNumbers = await RaffleNumber.find(numberFilter)
+  const reservedNumbers = await ActivityNumber.find(numberFilter)
     .select("_id ticket")
     .lean();
 
@@ -614,17 +614,17 @@ export async function releaseMyRaffleReservationsService(
     ),
   ).map((value) => new mongoose.Types.ObjectId(value));
 
-  await RaffleNumber.updateMany(
+  await ActivityNumber.updateMany(
     { _id: { $in: numberIds } },
     {
-      $set: { status: RaffleNumberStatus.AVAILABLE },
+      $set: { status: ActivityNumberStatus.AVAILABLE },
       $unset: { user: "", ticket: "", reservedAt: "", paidAt: "" },
     },
   );
 
   if (ticketIds.length > 0) {
     await Promise.all([
-      RaffleTicket.updateMany(
+      ActivityTicket.updateMany(
         { _id: { $in: ticketIds }, status: TicketStatus.RESERVED },
         {
           $set: {
@@ -636,7 +636,7 @@ export async function releaseMyRaffleReservationsService(
       ),
       PaymentTransaction.updateMany(
         {
-          payableType: PaymentPayableType.RAFFLE_TICKET,
+          payableType: PaymentPayableType.ACTIVITY_TICKET,
           payableId: { $in: ticketIds },
           status: PaymentTransactionStatus.PENDING,
         },
@@ -648,28 +648,28 @@ export async function releaseMyRaffleReservationsService(
   return { released: numberIds.length };
 }
 
-export async function purchaseRaffleTicketsService(
-  raffleId: string,
+export async function purchaseActivityTicketsService(
+  activityId: string,
   actor: ActorContext,
-  params: PurchaseRaffleTicketsParams,
+  params: PurchaseActivityTicketsParams,
 ) {
-  await cleanupExpiredRaffleReservations(raffleId);
-  const raffleObjectId = toObjectId(raffleId, "Raffle ID");
-  const raffle = await Raffle.findById(raffleObjectId);
+  await cleanupExpiredActivityReservations(activityId);
+  const activityObjectId = toObjectId(activityId, "Activity ID");
+  const activity = await Activity.findById(activityObjectId);
 
-  if (!raffle) {
+  if (!activity) {
     throw new Error("Rifa no encontrada.");
   }
 
-  if (raffle.status !== RaffleStatus.ACTIVE) {
+  if (activity.status !== ActivityStatus.ACTIVE) {
     throw new Error("La rifa no está activa para venta de boletos.");
   }
 
-  assertRaffleSalesOpen(raffle.drawDate);
+  assertActivitySalesOpen(activity.drawDate);
 
-  const raffleIsFree = raffle.ticketPrice === 0;
+  const activityIsFree = activity.ticketPrice === 0;
 
-  if (!raffleIsFree && (!params.numbers || params.numbers.length === 0)) {
+  if (!activityIsFree && (!params.numbers || params.numbers.length === 0)) {
     throw new Error("Debes enviar al menos un número.");
   }
 
@@ -684,27 +684,27 @@ export async function purchaseRaffleTicketsService(
     throw new Error("Usuario no encontrado.");
   }
 
-  const requestedNumbers = raffleIsFree
-    ? [await getRandomAvailableRaffleNumber(raffleObjectId)]
+  const requestedNumbers = activityIsFree
+    ? [await getRandomAvailableActivityNumber(activityObjectId)]
     : params.numbers;
   const requestedStatus = getTicketStatus(params.status as TicketStatus | undefined);
-  const status = raffleIsFree ? TicketStatus.PAID : requestedStatus;
+  const status = activityIsFree ? TicketStatus.PAID : requestedStatus;
   const channel = getPurchaseChannel(params.channel);
   const paymentMethod = getPaymentMethod(params.paymentMethod);
 
-  if (raffleIsFree && params.numbers?.length) {
+  if (activityIsFree && params.numbers?.length) {
     throw new Error("En rifas gratuitas el número se asigna automáticamente y no debes enviarlo.");
   }
 
-  if (raffleIsFree && params.status && requestedStatus !== TicketStatus.PAID) {
+  if (activityIsFree && params.status && requestedStatus !== TicketStatus.PAID) {
     throw new Error("Las rifas gratuitas se confirman automáticamente y no admiten estado RESERVED.");
   }
 
-  if (raffleIsFree && (paymentMethod || params.paymentReference)) {
+  if (activityIsFree && (paymentMethod || params.paymentReference)) {
     throw new Error("La rifa es gratuita y no requiere datos de pago.");
   }
 
-  if (raffleIsFree) {
+  if (activityIsFree) {
     if (!user.identityDocument) {
       throw new Error("El usuario debe tener documento de identidad registrado para participar en rifas gratuitas.");
     }
@@ -716,8 +716,8 @@ export async function purchaseRaffleTicketsService(
       .select("_id")
       .lean();
 
-    const existingFreeTicket = await RaffleTicket.exists({
-      raffle: raffleObjectId,
+    const existingFreeTicket = await ActivityTicket.exists({
+      raffle: activityObjectId,
       user: { $in: matchingUsers.map((entry) => entry._id) },
       status: { $ne: TicketStatus.CANCELLED },
     });
@@ -727,12 +727,12 @@ export async function purchaseRaffleTicketsService(
     }
   }
 
-  if (!raffleIsFree && status === TicketStatus.PAID && actor.role === UserRole.CUSTOMER) {
+  if (!activityIsFree && status === TicketStatus.PAID && actor.role === UserRole.CUSTOMER) {
     throw new Error("Un cliente no puede marcar una compra como pagada desde este endpoint.");
   }
 
   const ticketData: Record<string, unknown> = {
-    raffle: raffleObjectId,
+    raffle: activityObjectId,
     user: userObjectId,
     numbers: requestedNumbers,
     status,
@@ -740,7 +740,7 @@ export async function purchaseRaffleTicketsService(
     isWinner: false,
   };
 
-  if (raffleIsFree && user.identityDocument) {
+  if (activityIsFree && user.identityDocument) {
     ticketData.participantIdentityDocument = user.identityDocument;
   }
 
@@ -750,16 +750,16 @@ export async function purchaseRaffleTicketsService(
   let ticket;
 
   try {
-    ticket = await RaffleTicket.create(ticketData);
+    ticket = await ActivityTicket.create(ticketData);
   } catch (error) {
-    if (isFreeRaffleIdentityDuplicateError(error)) {
+    if (isFreeActivityIdentityDuplicateError(error)) {
       throw new Error("Ya existe una participación para este documento de identidad en esta rifa gratuita.");
     }
 
     throw error;
   }
 
-  const createdTicket = await RaffleTicket.findById(ticket._id)
+  const createdTicket = await ActivityTicket.findById(ticket._id)
     .populate("user", "name avatarUrl")
     .populate("raffle", "name prize ticketPrice status drawDate")
     .lean();
@@ -770,37 +770,37 @@ export async function purchaseRaffleTicketsService(
 
   return {
     ...createdTicket,
-    raffle: hasRaffleDrawDate(createdTicket.raffle) ? withRaffleSaleClosesAt(createdTicket.raffle) : createdTicket.raffle,
+    activity: hasActivityDrawDate(createdTicket.raffle) ? withActivitySaleClosesAt(createdTicket.raffle) : createdTicket.raffle,
   };
 }
 
-export async function drawRaffleService(id: string, winningNumberInput: string) {
-  const raffleId = toObjectId(id, "Raffle ID");
-  await cleanupExpiredRaffleReservations(id);
-  const raffle = await Raffle.findById(raffleId);
+export async function drawActivityService(id: string, winningNumberInput: string) {
+  const activityId = toObjectId(id, "Activity ID");
+  await cleanupExpiredActivityReservations(id);
+  const activity = await Activity.findById(activityId);
 
-  if (!raffle) {
+  if (!activity) {
     throw new Error("Rifa no encontrada.");
   }
 
-  if (raffle.status === RaffleStatus.DRAWN) {
+  if (activity.status === ActivityStatus.DRAWN) {
     throw new Error("La rifa ya fue sorteada.");
   }
 
-  if (raffle.status === RaffleStatus.CANCELLED || raffle.status === RaffleStatus.DRAFT) {
+  if (activity.status === ActivityStatus.CANCELLED || activity.status === ActivityStatus.DRAFT) {
     throw new Error("La rifa no está en un estado válido para sorteo.");
   }
 
-  const normalizedWinningNumber = normalizeWinningNumberInput(winningNumberInput, raffle.totalTickets);
+  const normalizedWinningNumber = normalizeWinningNumberInput(winningNumberInput, activity.totalTickets);
 
   if (!normalizedWinningNumber) {
     throw new Error("Se requiere el número ganador.");
   }
 
-  const formattedWinningNumber = normalizeRaffleNumberInput(normalizedWinningNumber, raffle.totalTickets);
+  const formattedWinningNumber = normalizeActivityNumberInput(normalizedWinningNumber, activity.totalTickets);
 
-  const winnerNumber = await RaffleNumber.findOne({
-    raffle: raffleId,
+  const winnerNumber = await ActivityNumber.findOne({
+    raffle: activityId,
     number: formattedWinningNumber,
   }).lean();
 
@@ -808,24 +808,24 @@ export async function drawRaffleService(id: string, winningNumberInput: string) 
     throw new Error("El número ganador indicado no existe en esta rifa.");
   }
 
-  const hasPaidOwner = winnerNumber.status === RaffleNumberStatus.PAID && !!winnerNumber.ticket && !!winnerNumber.user;
+  const hasPaidOwner = winnerNumber.status === ActivityNumberStatus.PAID && !!winnerNumber.ticket && !!winnerNumber.user;
 
-  const ticketResetOperation = RaffleTicket.updateMany(
-    { raffle: raffleId, isWinner: true },
+  const ticketResetOperation = ActivityTicket.updateMany(
+    { raffle: activityId, isWinner: true },
     { $set: { isWinner: false, status: TicketStatus.PAID } },
   );
 
   const updates: Array<Promise<unknown>> = [
-    RaffleNumber.updateOne(
+    ActivityNumber.updateOne(
       { _id: winnerNumber._id },
-      { $set: { status: RaffleNumberStatus.WINNER } },
+      { $set: { status: ActivityNumberStatus.WINNER } },
     ),
     ticketResetOperation,
   ];
 
   if (hasPaidOwner && winnerNumber.ticket && winnerNumber.user) {
     updates.push(
-      RaffleTicket.updateOne(
+      ActivityTicket.updateOne(
         { _id: winnerNumber.ticket },
         { $set: { isWinner: true, status: TicketStatus.WINNER } },
       ),
@@ -834,11 +834,11 @@ export async function drawRaffleService(id: string, winningNumberInput: string) 
 
   if (hasPaidOwner && winnerNumber.ticket && winnerNumber.user) {
     updates.push(
-      Raffle.updateOne(
-        { _id: raffleId },
+      Activity.updateOne(
+        { _id: activityId },
         {
           $set: {
-            status: RaffleStatus.DRAWN,
+            status: ActivityStatus.DRAWN,
             hasWinner: true,
             winnerTicket: winnerNumber.number,
             winner: winnerNumber.user,
@@ -848,11 +848,11 @@ export async function drawRaffleService(id: string, winningNumberInput: string) 
     );
   } else {
     updates.push(
-      Raffle.updateOne(
-        { _id: raffleId },
+      Activity.updateOne(
+        { _id: activityId },
         {
           $set: {
-            status: RaffleStatus.DRAWN,
+            status: ActivityStatus.DRAWN,
             hasWinner: false,
             winnerTicket: winnerNumber.number,
           },
@@ -866,13 +866,13 @@ export async function drawRaffleService(id: string, winningNumberInput: string) 
 
   await Promise.all(updates);
 
-  const raffleResult = await Raffle.findById(raffleId)
+  const activityResult = await Activity.findById(activityId)
     .populate("winner", "name avatarUrl phone")
     .populate("createdBy", "name")
     .lean({ virtuals: true });
 
   return {
-    raffle: raffleResult ? withRaffleSaleClosesAt(raffleResult) : raffleResult,
+    activity: activityResult ? withActivitySaleClosesAt(activityResult) : activityResult,
     hasWinner: hasPaidOwner,
     message: hasPaidOwner
       ? "Sorteo ejecutado correctamente con ganador asignado."

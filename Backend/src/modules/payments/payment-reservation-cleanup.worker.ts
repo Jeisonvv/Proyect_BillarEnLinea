@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { cleanupExpiredOrderReservations } from '../../services/order.service.js';
-import { cleanupExpiredRaffleReservations } from '../../services/payment.service.js';
+import { cleanupExpiredActivityReservations } from '../../services/payment.service.js';
 import { logError, logInfo } from '../../utils/logger.js';
 
 const DEFAULT_CLEANUP_INTERVAL_MS = 60_000;
@@ -63,7 +63,7 @@ export class PaymentReservationCleanupWorker implements OnModuleInit, OnModuleDe
 
     try {
       const [expiredRaffleReservations, expiredOrderReservations] = await Promise.all([
-        cleanupExpiredRaffleReservations(),
+        cleanupExpiredActivityReservations(),
         cleanupExpiredOrderReservations(),
       ]);
 

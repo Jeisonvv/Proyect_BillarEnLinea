@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
-import { RafflesNestController } from './raffles.controller.js';
-import { RafflesNestService } from './raffles.service.js';
+import { ActivitiesNestController } from './activities.controller.js';
+import { ActivitiesNestService } from './activities.service.js';
 
 @Module({
-  controllers: [RafflesNestController],
-  providers: [AuthGuard, RolesGuard, RafflesNestService],
+  controllers: [ActivitiesNestController],
+  providers: [AuthGuard, RolesGuard, ActivitiesNestService],
 })
-export class RafflesModule {}
+export class ActivitiesModule {}

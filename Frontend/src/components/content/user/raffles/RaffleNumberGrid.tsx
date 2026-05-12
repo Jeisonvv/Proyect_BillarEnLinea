@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { API_BASE_URL, ApiError, postJson } from "@/lib/api/client";
 import type { RaffleDetail } from "@/lib/api/public-content";
 import type { MyRaffleNumber, RaffleNumberItem } from "@/lib/api/public-content/raffles";
-import { AuthPromptModal } from "@/components/content/user/shared";
+import { AuthPromptModal, ConfirmModal } from "@/components/content/user/shared";
 import { formatMoney } from "../shared/utils";
 
 type WompiCheckoutConfig = {
@@ -100,6 +100,7 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
   const [selected, setSelected] = useState<Set<string>>(() => new Set(myPendingSet));
   const [feedback, setFeedback] = useState<string | null>(null);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [pendingRelease, setPendingRelease] = useState<string[] | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const isFree = raffle.isFree === true || raffle.ticketPrice === 0;
@@ -213,14 +214,15 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
     const target = numbersToRelease && numbersToRelease.length > 0
       ? numbersToRelease
       : Array.from(myPendingSet);
+    setPendingRelease(target);
+  }
 
-    const confirmed = typeof window !== "undefined"
-      ? window.confirm(
-          `¿Liberar ${target.length} número(s) reservado(s)? Quedarán disponibles para otros usuarios.`,
-        )
-      : true;
-    if (!confirmed) return;
-
+  function confirmReleaseReservations() {
+    const target = pendingRelease;
+    if (!target || target.length === 0) {
+      setPendingRelease(null);
+      return;
+    }
     setFeedback(null);
     startTransition(async () => {
       try {
@@ -256,6 +258,8 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
         router.refresh();
       } catch {
         setFeedback("No fue posible liberar los números.");
+      } finally {
+        setPendingRelease(null);
       }
     });
   }
@@ -425,6 +429,18 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
       description="Para reservar o comprar números de esta rifa debes iniciar sesión o crear una cuenta. Así podemos guardar tu reserva, tu pago y avisarte si ganas."
       dismissLabel="Seguir viendo la rifa"
       redirectTo={`/home/rifas/${raffle.id}`}
+    />
+    <ConfirmModal
+      open={pendingRelease !== null}
+      onClose={() => { if (!isPending) setPendingRelease(null); }}
+      onConfirm={confirmReleaseReservations}
+      eyebrow="Liberar reservas"
+      title={`¿Liberar ${pendingRelease?.length ?? 0} número(s)?`}
+      description="Estos números volverán a quedar disponibles para que otros usuarios puedan comprarlos. Esta acción no se puede deshacer."
+      confirmLabel={isPending ? "Liberando..." : "Sí, liberar"}
+      cancelLabel="Cancelar"
+      tone="danger"
+      disabled={isPending}
     />
     </>
   );

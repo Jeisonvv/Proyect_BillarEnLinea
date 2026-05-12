@@ -17,27 +17,27 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { UserRole } from '../../models/enums.js';
-import { isRaffleSalesClosedError } from '../../utils/raffle-sale-window.js';
+import { isActivitySalesClosedError } from '../../utils/activity-sale-window.js';
 import type {
-  CreateRaffleCheckoutDto,
-  CreateRaffleDto,
-  DrawRaffleDto,
-  ListRaffleNumbersQueryDto,
-  ListRafflesQueryDto,
-  PurchaseRaffleTicketsDto,
-  UpdateRaffleDto,
-} from './dto/raffles.dto.js';
-import { RafflesNestService } from './raffles.service.js';
+  CreateActivityCheckoutDto,
+  CreateActivityDto,
+  DrawActivityDto,
+  ListActivityNumbersQueryDto,
+  ListActivitiesQueryDto,
+  PurchaseActivityTicketsDto,
+  UpdateActivityDto,
+} from './dto/activities.dto.js';
+import { ActivitiesNestService } from './activities.service.js';
 
-@Controller('api/raffles')
-export class RafflesNestController {
-  constructor(private readonly rafflesService: RafflesNestService) {}
+@Controller('api/activities')
+export class ActivitiesNestController {
+  constructor(private readonly activitiesService: ActivitiesNestService) {}
 
   private buildErrorBody(error: any) {
     return {
       ok: false,
       message: error.message,
-      ...(isRaffleSalesClosedError(error)
+      ...(isActivitySalesClosedError(error)
         ? {
           code: error.code,
           saleClosesAt: error.saleClosesAt,
@@ -50,29 +50,29 @@ export class RafflesNestController {
   @Post()
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.STAFF)
-  async createRaffle(@Req() req: Request, @Body() body: CreateRaffleDto) {
+  async createActivity(@Req() req: Request, @Body() body: CreateActivityDto) {
     if (!req.user) {
       throw new HttpException({ ok: false, message: 'No autenticado.' }, HttpStatus.UNAUTHORIZED);
     }
 
     try {
-      const raffle = await this.rafflesService.createRaffle(body, req.user.id);
-      return { ok: true, data: raffle };
+      const activity = await this.activitiesService.createActivity(body, req.user.id);
+      return { ok: true, data: activity };
     } catch (error: any) {
       throw new HttpException({ ok: false, message: error.message }, HttpStatus.BAD_REQUEST);
     }
   }
 
   @Get()
-  async getRaffles(@Query() query: ListRafflesQueryDto) {
+  async getActivities(@Query() query: ListActivitiesQueryDto) {
     try {
       const page = Number(query.page ?? '1');
       const limit = Number(query.limit ?? '20');
-      const result = await this.rafflesService.listRaffles(query);
+      const result = await this.activitiesService.listActivities(query);
 
       return {
         ok: true,
-        data: result.raffles,
+        data: result.activities,
         pagination: {
           total: result.total,
           page,
@@ -85,10 +85,10 @@ export class RafflesNestController {
   }
 
   @Get(':id')
-  async getRaffleById(@Param('id') id: string) {
+  async getActivityById(@Param('id') id: string) {
     try {
-      const raffle = await this.rafflesService.getRaffleById(id);
-      return { ok: true, data: raffle };
+      const activity = await this.activitiesService.getActivityById(id);
+      return { ok: true, data: activity };
     } catch (error: any) {
       const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
@@ -96,9 +96,9 @@ export class RafflesNestController {
   }
 
   @Get(':id/numbers')
-  async getRaffleNumbers(@Param('id') id: string, @Query() query: ListRaffleNumbersQueryDto) {
+  async getActivityNumbers(@Param('id') id: string, @Query() query: ListActivityNumbersQueryDto) {
     try {
-      const result = await this.rafflesService.getRaffleNumbers(id, query);
+      const result = await this.activitiesService.getActivityNumbers(id, query);
       return { ok: true, data: result };
     } catch (error: any) {
       const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
@@ -109,9 +109,9 @@ export class RafflesNestController {
   @Get(':id/number-owners')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.STAFF)
-  async getRaffleNumberOwners(@Param('id') id: string, @Query() query: ListRaffleNumbersQueryDto) {
+  async getActivityNumberOwners(@Param('id') id: string, @Query() query: ListActivityNumbersQueryDto) {
     try {
-      const result = await this.rafflesService.getRaffleNumberOwners(id, query);
+      const result = await this.activitiesService.getActivityNumberOwners(id, query);
       return { ok: true, data: result };
     } catch (error: any) {
       const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
@@ -120,9 +120,9 @@ export class RafflesNestController {
   }
 
   @Get(':id/available-numbers')
-  async getAvailableRaffleNumbers(@Param('id') id: string) {
+  async getAvailableActivityNumbers(@Param('id') id: string) {
     try {
-      const result = await this.rafflesService.getAvailableRaffleNumbers(id);
+      const result = await this.activitiesService.getAvailableActivityNumbers(id);
       return { ok: true, data: result };
     } catch (error: any) {
       const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
@@ -132,13 +132,13 @@ export class RafflesNestController {
 
   @Get(':id/my-numbers')
   @UseGuards(AuthGuard)
-  async getMyRaffleNumbers(@Req() req: Request, @Param('id') id: string) {
+  async getMyActivityNumbers(@Req() req: Request, @Param('id') id: string) {
     if (!req.user) {
       throw new HttpException({ ok: false, message: 'No autenticado.' }, HttpStatus.UNAUTHORIZED);
     }
 
     try {
-      const result = await this.rafflesService.getMyRaffleNumbers(id, req.user.id);
+      const result = await this.activitiesService.getMyActivityNumbers(id, req.user.id);
       return { ok: true, data: result };
     } catch (error: any) {
       const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
@@ -148,7 +148,7 @@ export class RafflesNestController {
 
   @Delete(':id/my-numbers')
   @UseGuards(AuthGuard)
-  async releaseMyRaffleReservations(
+  async releaseMyActivityReservations(
     @Req() req: Request,
     @Param('id') id: string,
     @Body() body: { numbers?: string[] } = {},
@@ -161,7 +161,7 @@ export class RafflesNestController {
       const numbers = Array.isArray(body?.numbers)
         ? body.numbers.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
         : undefined;
-      const result = await this.rafflesService.releaseMyRaffleReservations(
+      const result = await this.activitiesService.releaseMyActivityReservations(
         id,
         req.user.id,
         numbers && numbers.length > 0 ? numbers : undefined,
@@ -175,17 +175,17 @@ export class RafflesNestController {
 
   @Post(':id/tickets')
   @UseGuards(AuthGuard, RolesGuard)
-  async purchaseRaffleTickets(
+  async purchaseActivityTickets(
     @Req() req: Request,
     @Param('id') id: string,
-    @Body() body: PurchaseRaffleTicketsDto,
+    @Body() body: PurchaseActivityTicketsDto,
   ) {
     if (!req.user) {
       throw new HttpException({ ok: false, message: 'No autenticado.' }, HttpStatus.UNAUTHORIZED);
     }
 
     try {
-      const ticket = await this.rafflesService.purchaseRaffleTickets(id, req.user, body);
+      const ticket = await this.activitiesService.purchaseActivityTickets(id, req.user, body);
       return { ok: true, data: ticket };
     } catch (error: any) {
       const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
@@ -198,14 +198,14 @@ export class RafflesNestController {
   async createWompiCheckout(
     @Req() req: Request,
     @Param('id') id: string,
-    @Body() body: CreateRaffleCheckoutDto,
+    @Body() body: CreateActivityCheckoutDto,
   ) {
     if (!req.user) {
       throw new HttpException({ ok: false, message: 'No autenticado.' }, HttpStatus.UNAUTHORIZED);
     }
 
     try {
-      const data = await this.rafflesService.createWompiCheckout(id, req.user, body);
+      const data = await this.activitiesService.createWompiCheckout(id, req.user, body);
       return { ok: true, data };
     } catch (error: any) {
       const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
@@ -216,10 +216,10 @@ export class RafflesNestController {
   @Post(':id/draw')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.STAFF)
-  async drawRaffle(@Param('id') id: string, @Body() body: DrawRaffleDto) {
+  async drawActivity(@Param('id') id: string, @Body() body: DrawActivityDto) {
     try {
-      const result = await this.rafflesService.drawRaffle(id, body);
-      return { ok: true, message: result.message, data: result.raffle, hasWinner: result.hasWinner };
+      const result = await this.activitiesService.drawActivity(id, body);
+      return { ok: true, message: result.message, data: result.activity, hasWinner: result.hasWinner };
     } catch (error: any) {
       const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
@@ -229,10 +229,10 @@ export class RafflesNestController {
   @Patch(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.STAFF)
-  async updateRaffle(@Param('id') id: string, @Body() body: UpdateRaffleDto) {
+  async updateActivity(@Param('id') id: string, @Body() body: UpdateActivityDto) {
     try {
-      const raffle = await this.rafflesService.updateRaffle(id, body);
-      return { ok: true, data: raffle };
+      const activity = await this.activitiesService.updateActivity(id, body);
+      return { ok: true, data: activity };
     } catch (error: any) {
       const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
@@ -242,9 +242,9 @@ export class RafflesNestController {
   @Delete(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.STAFF)
-  async deleteRaffle(@Param('id') id: string) {
+  async deleteActivity(@Param('id') id: string) {
     try {
-      const result = await this.rafflesService.deleteRaffle(id);
+      const result = await this.activitiesService.deleteActivity(id);
       return { ok: true, message: 'Rifa eliminada correctamente.', data: result };
     } catch (error: any) {
       const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;

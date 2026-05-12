@@ -18,7 +18,7 @@ Esta carpeta contiene la documentacion funcional, tecnica y operativa del backen
   - products.md
   - users.md
   - tournaments.md
-  - raffles.md
+  - activities.md
   - matches.md
   - events.md
   - posts.md

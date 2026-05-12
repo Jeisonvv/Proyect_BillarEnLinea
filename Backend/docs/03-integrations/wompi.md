@@ -7,7 +7,7 @@ WOMPI_PUBLIC_KEY=
 WOMPI_INTEGRITY_SECRET=
 WOMPI_EVENTS_SECRET=
 WOMPI_REDIRECT_URL=http://localhost:5173/payments/wompi
-WOMPI_RAFFLES_REDIRECT_URL=http://localhost:5173/payments/wompi/raffles
+WOMPI_ACTIVITIES_REDIRECT_URL=http://localhost:5173/payments/wompi/activities
 WOMPI_TOURNAMENTS_REDIRECT_URL=http://localhost:5173/payments/wompi/tournaments
 ```
 
@@ -22,7 +22,7 @@ WOMPI_TOURNAMENTS_REDIRECT_URL=http://localhost:5173/payments/wompi/tournaments
 Ruta principal:
 
 ```http
-POST /api/raffles/:id/wompi/checkout
+POST /api/activities/:id/wompi/checkout
 ```
 
 Ejemplo:

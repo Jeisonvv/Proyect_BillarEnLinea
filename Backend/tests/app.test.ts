@@ -3,15 +3,15 @@ import assert from 'node:assert/strict';
 import request from 'supertest';
 import { HttpException } from '@nestjs/common';
 import { createExpressApp } from '../src/app.js';
-import { RafflesNestController } from '../src/modules/raffles/raffles.controller.js';
+import { ActivitiesNestController } from '../src/modules/activities/activities.controller.js';
 import {
-	assertRaffleSalesOpen,
-	getRaffleReservationExpiration,
-	getRaffleSaleStatus,
-	getRaffleSalesDeadline,
-	RaffleSalesClosedError,
-	withRaffleSaleClosesAt,
-} from '../src/utils/raffle-sale-window.js';
+	assertActivitySalesOpen,
+	getActivityReservationExpiration,
+	getActivitySaleStatus,
+	getActivitySalesDeadline,
+	ActivitySalesClosedError,
+	withActivitySaleClosesAt,
+} from '../src/utils/activity-sale-window.js';
 import { resolveProductSelection } from '../src/utils/store-inventory.js';
 import { resolveOrderPaymentTransition } from '../src/utils/order-payment.js';
 import { getOrderInventoryReservationExpiresAt, shouldBlockLateOrderApproval, shouldReleaseOrderInventoryReservation } from '../src/utils/order-inventory-reservation.js';
@@ -46,9 +46,9 @@ test('la ventana de venta de rifas expone saleClosesAt y recorta reservas al lim
 	const drawDate = new Date('2026-05-03T03:40:00.000Z');
 	const now = new Date('2026-05-03T02:55:00.000Z');
 
-	const deadline = getRaffleSalesDeadline(drawDate);
-	const raffle = withRaffleSaleClosesAt({ drawDate, name: 'Rifa Mayo' });
-	const reservationExpiration = getRaffleReservationExpiration(drawDate, 15, now);
+	const deadline = getActivitySalesDeadline(drawDate);
+	const raffle = withActivitySaleClosesAt({ drawDate, name: 'Rifa Mayo' });
+	const reservationExpiration = getActivityReservationExpiration(drawDate, 15, now);
 
 	assert.equal(deadline.toISOString(), '2026-05-03T03:00:00.000Z');
 	assert.equal(raffle.saleClosesAt, '2026-05-03T03:00:00.000Z');
@@ -60,17 +60,17 @@ test('saleStatus cambia a CLOSED al llegar al limite de venta', () => {
 	const drawDate = new Date('2026-05-03T03:40:00.000Z');
 	const now = new Date('2026-05-03T03:00:00.000Z');
 
-	assert.equal(getRaffleSaleStatus(drawDate, now), 'CLOSED');
-	assert.equal(withRaffleSaleClosesAt({ drawDate }, now).saleStatus, 'CLOSED');
+	assert.equal(getActivitySaleStatus(drawDate, now), 'CLOSED');
+	assert.equal(withActivitySaleClosesAt({ drawDate }, now).saleStatus, 'CLOSED');
 });
 
 test('el cierre de venta lanza un error estructurado con la hora limite', () => {
 	const drawDate = new Date('2026-05-03T03:40:00.000Z');
 	const now = new Date('2026-05-03T03:00:00.000Z');
 
-	assert.throws(() => assertRaffleSalesOpen(drawDate, now), (error: unknown) => {
-		assert.ok(error instanceof RaffleSalesClosedError);
-		assert.equal(error.code, 'RAFFLE_SALES_CLOSED');
+	assert.throws(() => assertActivitySalesOpen(drawDate, now), (error: unknown) => {
+		assert.ok(error instanceof ActivitySalesClosedError);
+		assert.equal(error.code, 'ACTIVITY_SALES_CLOSED');
 		assert.equal(error.saleClosesAt, '2026-05-03T03:00:00.000Z');
 		assert.equal(error.timezone, 'America/Bogota');
 		return true;
@@ -79,22 +79,22 @@ test('el cierre de venta lanza un error estructurado con la hora limite', () => 
 
 test('el controlador de rifas devuelve error estructurado cuando la venta ya cerro', async () => {
 	const drawDate = new Date('2026-05-03T03:40:00.000Z');
-	const closedError = new RaffleSalesClosedError(getRaffleSalesDeadline(drawDate));
-	const controller = new RafflesNestController({
-		purchaseRaffleTickets: async () => {
+	const closedError = new ActivitySalesClosedError(getActivitySalesDeadline(drawDate));
+	const controller = new ActivitiesNestController({
+		purchaseActivityTickets: async () => {
 			throw closedError;
 		},
 	} as any);
 
 	await assert.rejects(
-		async () => controller.purchaseRaffleTickets({ user: { id: 'user-1', role: 'CUSTOMER' } } as any, 'raffle-1', {} as any),
+		async () => controller.purchaseActivityTickets({ user: { id: 'user-1', role: 'CUSTOMER' } } as any, 'raffle-1', {} as any),
 		(error: unknown) => {
 			assert.ok(error instanceof HttpException);
 			assert.equal(error.getStatus(), 400);
 			assert.deepEqual(error.getResponse(), {
 				ok: false,
 				message: closedError.message,
-				code: 'RAFFLE_SALES_CLOSED',
+				code: 'ACTIVITY_SALES_CLOSED',
 				saleClosesAt: '2026-05-03T03:00:00.000Z',
 				timezone: 'America/Bogota',
 			});

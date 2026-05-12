@@ -12,8 +12,8 @@ import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
 import Tournament from "../models/tournament.model.js";
 import TournamentRegistration from "../models/tournament-registration.model.js";
-import Raffle from "../models/raffle.model.js";
-import RaffleTicket from "../models/raffle-ticket.model.js";
+import Activity from "../models/activity.model.js";
+import ActivityTicket from "../models/activity-ticket.model.js";
 import TransmissionRequest from "../models/transmission-request.model.js";
 
 // Colores
@@ -65,8 +65,8 @@ async function verifyData() {
       { name: "Pedidos", model: Order, minExpected: 3 },
       { name: "Torneos", model: Tournament, minExpected: 2 },
       { name: "Inscripciones", model: TournamentRegistration, minExpected: 2 },
-      { name: "Rifas", model: Raffle, minExpected: 2 },
-      { name: "Boletos de Rifa", model: RaffleTicket, minExpected: 5 },
+      { name: "Rifas", model: Activity, minExpected: 2 },
+      { name: "Boletos de Rifa", model: ActivityTicket, minExpected: 5 },
       { name: "Solicitudes de Transmisión", model: TransmissionRequest, minExpected: 1 },
     ];
 
@@ -144,7 +144,7 @@ async function verifyData() {
         );
       }
 
-      const exampleRaffle = await Raffle.findOne();
+      const exampleRaffle = await Activity.findOne();
       if (exampleRaffle) {
         log(
           `  Rifa: ${exampleRaffle.name} - ${exampleRaffle.soldTickets}/${exampleRaffle.totalTickets} boletos vendidos`,

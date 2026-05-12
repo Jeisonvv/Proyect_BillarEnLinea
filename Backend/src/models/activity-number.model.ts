@@ -1,5 +1,5 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
-import { RaffleNumberStatus } from "./enums.js";
+import { ActivityNumberStatus } from "./enums.js";
 
 export function isPowerOfTen(value: number) {
   if (!Number.isInteger(value) || value < 10) return false;
@@ -12,33 +12,33 @@ export function isPowerOfTen(value: number) {
   return current === 1;
 }
 
-export function getRaffleNumberWidth(totalTickets: number) {
+export function getActivityNumberWidth(totalTickets: number) {
   return String(totalTickets - 1).length;
 }
 
-export function formatRaffleNumber(numericValue: number, totalTickets: number) {
+export function formatActivityNumber(numericValue: number, totalTickets: number) {
   if (!Number.isInteger(numericValue) || numericValue < 0 || numericValue >= totalTickets) {
     throw new Error("El número de rifa está fuera del rango permitido.");
   }
 
-  return String(numericValue).padStart(getRaffleNumberWidth(totalTickets), "0");
+  return String(numericValue).padStart(getActivityNumberWidth(totalTickets), "0");
 }
 
-export function normalizeRaffleNumberInput(value: string | number, totalTickets: number) {
+export function normalizeActivityNumberInput(value: string | number, totalTickets: number) {
   const rawValue = String(value).trim();
 
   if (!/^\d+$/.test(rawValue)) {
     throw new Error("Los números de rifa solo pueden contener dígitos.");
   }
 
-  return formatRaffleNumber(Number(rawValue), totalTickets);
+  return formatActivityNumber(Number(rawValue), totalTickets);
 }
 
-export interface IRaffleNumber {
+export interface IActivityNumber {
   raffle: mongoose.Types.ObjectId;
   number: string;
   numericValue: number;
-  status: RaffleNumberStatus;
+  status: ActivityNumberStatus;
   user?: mongoose.Types.ObjectId;
   ticket?: mongoose.Types.ObjectId;
   reservedAt?: Date;
@@ -47,23 +47,23 @@ export interface IRaffleNumber {
   updatedAt: Date;
 }
 
-export interface IRaffleNumberDocument extends IRaffleNumber, Document {}
+export interface IActivityNumberDocument extends IActivityNumber, Document {}
 
-export interface IRaffleNumberModel extends Model<IRaffleNumberDocument> {
-  generateForRaffle(
-    raffleId: mongoose.Types.ObjectId,
+export interface IActivityNumberModel extends Model<IActivityNumberDocument> {
+  generateForActivity(
+    activityId: mongoose.Types.ObjectId,
     totalTickets: number,
-  ): Promise<IRaffleNumberDocument[]>;
-  findAvailableByRaffle(
-    raffleId: mongoose.Types.ObjectId,
-  ): Promise<IRaffleNumberDocument[]>;
+  ): Promise<IActivityNumberDocument[]>;
+  findAvailableByActivity(
+    activityId: mongoose.Types.ObjectId,
+  ): Promise<IActivityNumberDocument[]>;
 }
 
-const raffleNumberSchema = new Schema<IRaffleNumberDocument, IRaffleNumberModel>(
+const activityNumberSchema = new Schema<IActivityNumberDocument, IActivityNumberModel>(
   {
     raffle: {
       type: Schema.Types.ObjectId,
-      ref: "Raffle",
+      ref: "Activity",
       required: true,
     },
     number: {
@@ -77,8 +77,8 @@ const raffleNumberSchema = new Schema<IRaffleNumberDocument, IRaffleNumberModel>
     },
     status: {
       type: String,
-      enum: Object.values(RaffleNumberStatus),
-      default: RaffleNumberStatus.AVAILABLE,
+      enum: Object.values(ActivityNumberStatus),
+      default: ActivityNumberStatus.AVAILABLE,
     },
     user: {
       type: Schema.Types.ObjectId,
@@ -86,7 +86,7 @@ const raffleNumberSchema = new Schema<IRaffleNumberDocument, IRaffleNumberModel>
     },
     ticket: {
       type: Schema.Types.ObjectId,
-      ref: "RaffleTicket",
+      ref: "ActivityTicket",
     },
     reservedAt: Date,
     paidAt: Date,
@@ -94,40 +94,40 @@ const raffleNumberSchema = new Schema<IRaffleNumberDocument, IRaffleNumberModel>
   { timestamps: true },
 );
 
-raffleNumberSchema.index({ raffle: 1, number: 1 }, { unique: true });
-raffleNumberSchema.index({ raffle: 1, numericValue: 1 }, { unique: true });
-raffleNumberSchema.index({ raffle: 1, status: 1, numericValue: 1 });
+activityNumberSchema.index({ raffle: 1, number: 1 }, { unique: true });
+activityNumberSchema.index({ raffle: 1, numericValue: 1 }, { unique: true });
+activityNumberSchema.index({ raffle: 1, status: 1, numericValue: 1 });
 
-raffleNumberSchema.statics.generateForRaffle = async function (
-  raffleId: mongoose.Types.ObjectId,
+activityNumberSchema.statics.generateForActivity = async function (
+  activityId: mongoose.Types.ObjectId,
   totalTickets: number,
-): Promise<IRaffleNumberDocument[]> {
-  const existingCount = await this.countDocuments({ raffle: raffleId });
+): Promise<IActivityNumberDocument[]> {
+  const existingCount = await this.countDocuments({ raffle: activityId });
   if (existingCount > 0) {
-    return this.find({ raffle: raffleId }).sort({ numericValue: 1 });
+    return this.find({ raffle: activityId }).sort({ numericValue: 1 });
   }
 
   const docs = Array.from({ length: totalTickets }, (_value, numericValue) => ({
-    raffle: raffleId,
-    number: formatRaffleNumber(numericValue, totalTickets),
+    raffle: activityId,
+    number: formatActivityNumber(numericValue, totalTickets),
     numericValue,
-    status: RaffleNumberStatus.AVAILABLE,
+    status: ActivityNumberStatus.AVAILABLE,
   }));
 
   await this.insertMany(docs, { ordered: true });
 
-  return this.find({ raffle: raffleId }).sort({ numericValue: 1 });
+  return this.find({ raffle: activityId }).sort({ numericValue: 1 });
 };
 
-raffleNumberSchema.statics.findAvailableByRaffle = function (
-  raffleId: mongoose.Types.ObjectId,
-): Promise<IRaffleNumberDocument[]> {
+activityNumberSchema.statics.findAvailableByActivity = function (
+  activityId: mongoose.Types.ObjectId,
+): Promise<IActivityNumberDocument[]> {
   return this.find({
-    raffle: raffleId,
-    status: RaffleNumberStatus.AVAILABLE,
+    raffle: activityId,
+    status: ActivityNumberStatus.AVAILABLE,
   }).sort({ numericValue: 1 });
 };
 
-const RaffleNumber = mongoose.model<IRaffleNumberDocument, IRaffleNumberModel>("RaffleNumber", raffleNumberSchema);
+const ActivityNumber = mongoose.model<IActivityNumberDocument, IActivityNumberModel>("ActivityNumber", activityNumberSchema);
 
-export default RaffleNumber;
+export default ActivityNumber;

@@ -1,12 +1,12 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { RaffleStatus } from "./enums.js";
-import RaffleNumber, { isPowerOfTen } from "./raffle-number.model.js";
+import { ActivityStatus } from "./enums.js";
+import ActivityNumber, { isPowerOfTen } from "./activity-number.model.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS DE SLUG
 // ─────────────────────────────────────────────────────────────────────────────
 
-function slugifyRaffleValue(value: string) {
+function slugifyActivityValue(value: string) {
   return (
     value
       .normalize("NFD")
@@ -18,24 +18,24 @@ function slugifyRaffleValue(value: string) {
   );
 }
 
-async function ensureUniqueRaffleSlug(raffle: IRaffleDocument) {
-  const RaffleModel = raffle.constructor as mongoose.Model<IRaffleDocument>;
+async function ensureUniqueActivitySlug(activity: IActivityDocument) {
+  const ActivityModel = activity.constructor as mongoose.Model<IActivityDocument>;
   // Si el usuario proporcionó un slug explícito, lo usamos como base; si no, lo derivamos del nombre.
-  const rawValue = raffle.slug && raffle.slug.trim() ? raffle.slug : raffle.name;
-  const baseSlug = slugifyRaffleValue(rawValue);
+  const rawValue = activity.slug && activity.slug.trim() ? activity.slug : activity.name;
+  const baseSlug = slugifyActivityValue(rawValue);
 
   let candidate = baseSlug;
   let suffix = 2;
 
-  while (await RaffleModel.exists({ slug: candidate, _id: { $ne: raffle._id } })) {
+  while (await ActivityModel.exists({ slug: candidate, _id: { $ne: activity._id } })) {
     candidate = `${baseSlug}-${suffix}`;
     suffix += 1;
   }
 
-  raffle.slug = candidate;
+  activity.slug = candidate;
 }
 
-export { slugifyRaffleValue };
+export { slugifyActivityValue };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERFACES
@@ -45,17 +45,17 @@ export { slugifyRaffleValue };
  * Rifa organizada por el negocio.
  *
  * Una rifa tiene una cantidad fija de boletos numerados.
- * Los usuarios compran uno o varios boletos (ver RaffleTicket).
+ * Los usuarios compran uno o varios boletos (ver ActivityTicket).
  * En la fecha del sorteo se elige un número ganador al azar.
  *
  * Ciclo de vida típico:
  *   DRAFT → ACTIVE (empezar venta) → CLOSED (cerrar venta) → DRAWN (sortear)
  */
-export interface IRaffle {
+export interface IActivity {
   name: string;
   slug: string;
   description?: string;
-  status: RaffleStatus;
+  status: ActivityStatus;
 
   // SEO
   seoTitle?: string;
@@ -79,6 +79,7 @@ export interface IRaffle {
   winner?: mongoose.Types.ObjectId;      // Usuario ganador (ref a User)
 
   imageUrl?: string; // Imagen promocional de la rifa
+  promoVideoUrl?: string; // URL de video promocional (YouTube, Vimeo, MP4, etc.)
 
   // Quién creó la rifa (admin o staff)
   createdBy: mongoose.Types.ObjectId;
@@ -88,9 +89,9 @@ export interface IRaffle {
 }
 
 /**
- * IRaffleDocument: IRaffle + métodos de mongoose + virtuals
+ * IActivityDocument: IActivity + métodos de mongoose + virtuals
  */
-export interface IRaffleDocument extends IRaffle, Document {
+export interface IActivityDocument extends IActivity, Document {
   // Virtual: boletos que aún están disponibles para comprar
   readonly availableTickets: number;
 
@@ -108,7 +109,7 @@ export interface IRaffleDocument extends IRaffle, Document {
 // ESQUEMA PRINCIPAL
 // ─────────────────────────────────────────────────────────────────────────────
 
-const raffleSchema = new Schema<IRaffleDocument>(
+const activitySchema = new Schema<IActivityDocument>(
   {
     name: {
       type: String,
@@ -131,8 +132,8 @@ const raffleSchema = new Schema<IRaffleDocument>(
     description: String,
     status: {
       type: String,
-      enum: Object.values(RaffleStatus),
-      default: RaffleStatus.DRAFT, // Empieza como borrador hasta que la actives
+      enum: Object.values(ActivityStatus),
+      default: ActivityStatus.DRAFT, // Empieza como borrador hasta que la actives
     },
     prize: {
       type: String,
@@ -172,6 +173,10 @@ const raffleSchema = new Schema<IRaffleDocument>(
       ref: "User", // Referencia al usuario que ganó
     },
     imageUrl: String,
+    promoVideoUrl: {
+      type: String,
+      trim: true,
+    },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -190,17 +195,17 @@ const raffleSchema = new Schema<IRaffleDocument>(
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Para listar rifas activas ordenadas por fecha de sorteo (las más próximas primero)
-raffleSchema.index({ status: 1, drawDate: 1 });
+activitySchema.index({ status: 1, drawDate: 1 });
 
 // Para resolver páginas públicas por URL amigable sin lookup por ObjectId
-raffleSchema.index({ slug: 1 }, { unique: true });
+activitySchema.index({ slug: 1 }, { unique: true });
 
-raffleSchema.pre("validate", async function () {
-  const raffle = this as IRaffleDocument;
-  await ensureUniqueRaffleSlug(raffle);
+activitySchema.pre("validate", async function () {
+  const activity = this as IActivityDocument;
+  await ensureUniqueActivitySlug(activity);
 });
 
-raffleSchema.pre("save", function () {
+activitySchema.pre("save", function () {
   if (!this.isNew && this.isModified("totalTickets")) {
     throw new Error("No puedes cambiar totalTickets después de crear la rifa.");
   }
@@ -212,10 +217,10 @@ raffleSchema.pre("save", function () {
   this.$locals.wasNew = this.isNew;
 });
 
-raffleSchema.post("save", async function (doc) {
+activitySchema.post("save", async function (doc) {
   if (!doc.$locals.wasNew) return;
 
-  await RaffleNumber.generateForRaffle(doc._id, doc.totalTickets);
+  await ActivityNumber.generateForActivity(doc._id, doc.totalTickets);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -224,20 +229,20 @@ raffleSchema.post("save", async function (doc) {
 
 // Boletos disponibles = total - vendidos
 // Se calcula en tiempo real para mostrar "quedan X boletos"
-raffleSchema.virtual("availableTickets").get(function (this: IRaffleDocument) {
+activitySchema.virtual("availableTickets").get(function (this: IActivityDocument) {
   return this.totalTickets - this.soldTickets;
 });
 
 // true si ya no quedan boletos disponibles
-raffleSchema.virtual("isSoldOut").get(function (this: IRaffleDocument) {
+activitySchema.virtual("isSoldOut").get(function (this: IActivityDocument) {
   return this.soldTickets >= this.totalTickets;
 });
 
-raffleSchema.virtual("isFree").get(function (this: IRaffleDocument) {
+activitySchema.virtual("isFree").get(function (this: IActivityDocument) {
   return this.ticketPrice === 0;
 });
 
-raffleSchema.virtual("requiresPayment").get(function (this: IRaffleDocument) {
+activitySchema.virtual("requiresPayment").get(function (this: IActivityDocument) {
   return this.ticketPrice > 0;
 });
 
@@ -245,6 +250,6 @@ raffleSchema.virtual("requiresPayment").get(function (this: IRaffleDocument) {
 // EXPORTACIÓN
 // ─────────────────────────────────────────────────────────────────────────────
 
-const Raffle = mongoose.model<IRaffleDocument>("Raffle", raffleSchema);
+const Activity = mongoose.model<IActivityDocument>("Activity", activitySchema);
 
-export default Raffle;
+export default Activity;

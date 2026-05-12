@@ -1,29 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import type { UserRole } from '../../models/enums.js';
-import { createWompiCheckoutForRaffle } from '../../services/payment.service.js';
+import { createWompiCheckoutForActivity } from '../../services/payment.service.js';
 import {
-  createRaffleService,
-  deleteRaffleService,
-  drawRaffleService,
-  getAvailableRaffleNumbersService,
-  getMyRaffleNumbersService,
-  releaseMyRaffleReservationsService,
-  getRaffleByIdService,
-  getRaffleNumberOwnersService,
-  getRaffleNumbersService,
-  listRafflesService,
-  purchaseRaffleTicketsService,
-  updateRaffleService,
-} from '../../services/raffle.service.js';
+  createActivityService,
+  deleteActivityService,
+  drawActivityService,
+  getAvailableActivityNumbersService,
+  getMyActivityNumbersService,
+  releaseMyActivityReservationsService,
+  getActivityByIdService,
+  getActivityNumberOwnersService,
+  getActivityNumbersService,
+  listActivitiesService,
+  purchaseActivityTicketsService,
+  updateActivityService,
+} from '../../services/activity.service.js';
 import type {
-  CreateRaffleCheckoutDto,
-  CreateRaffleDto,
-  DrawRaffleDto,
-  ListRaffleNumbersQueryDto,
-  ListRafflesQueryDto,
-  PurchaseRaffleTicketsDto,
-  UpdateRaffleDto,
-} from './dto/raffles.dto.js';
+  CreateActivityCheckoutDto,
+  CreateActivityDto,
+  DrawActivityDto,
+  ListActivityNumbersQueryDto,
+  ListActivitiesQueryDto,
+  PurchaseActivityTicketsDto,
+  UpdateActivityDto,
+} from './dto/activities.dto.js';
 
 interface ActorContext {
   id: string;
@@ -31,68 +31,68 @@ interface ActorContext {
 }
 
 @Injectable()
-export class RafflesNestService {
-  createRaffle(data: CreateRaffleDto, createdBy: string) {
-    return createRaffleService(data, createdBy);
+export class ActivitiesNestService {
+  createActivity(data: CreateActivityDto, createdBy: string) {
+    return createActivityService(data, createdBy);
   }
 
-  updateRaffle(id: string, data: UpdateRaffleDto) {
-    return updateRaffleService(id, data);
+  updateActivity(id: string, data: UpdateActivityDto) {
+    return updateActivityService(id, data);
   }
 
-  listRaffles(query: ListRafflesQueryDto) {
-    return listRafflesService({
+  listActivities(query: ListActivitiesQueryDto) {
+    return listActivitiesService({
       ...(query.status !== undefined && { status: query.status }),
       page: Number(query.page ?? '1'),
       limit: Number(query.limit ?? '20'),
     });
   }
 
-  getRaffleById(id: string) {
-    return getRaffleByIdService(id);
+  getActivityById(id: string) {
+    return getActivityByIdService(id);
   }
 
-  getRaffleNumbers(id: string, query: ListRaffleNumbersQueryDto) {
-    return getRaffleNumbersService(id, {
+  getActivityNumbers(id: string, query: ListActivityNumbersQueryDto) {
+    return getActivityNumbersService(id, {
       ...(query.status !== undefined && { status: query.status }),
       page: Number(query.page ?? '1'),
       limit: Number(query.limit ?? '100'),
     });
   }
 
-  getRaffleNumberOwners(id: string, query: ListRaffleNumbersQueryDto) {
-    return getRaffleNumberOwnersService(id, {
+  getActivityNumberOwners(id: string, query: ListActivityNumbersQueryDto) {
+    return getActivityNumberOwnersService(id, {
       ...(query.status !== undefined && { status: query.status }),
       page: Number(query.page ?? '1'),
       limit: Number(query.limit ?? '100'),
     });
   }
 
-  getAvailableRaffleNumbers(id: string) {
-    return getAvailableRaffleNumbersService(id);
+  getAvailableActivityNumbers(id: string) {
+    return getAvailableActivityNumbersService(id);
   }
 
-  getMyRaffleNumbers(id: string, userId: string) {
-    return getMyRaffleNumbersService(id, userId);
+  getMyActivityNumbers(id: string, userId: string) {
+    return getMyActivityNumbersService(id, userId);
   }
 
-  releaseMyRaffleReservations(id: string, userId: string, numbers?: string[]) {
-    return releaseMyRaffleReservationsService(id, userId, numbers);
+  releaseMyActivityReservations(id: string, userId: string, numbers?: string[]) {
+    return releaseMyActivityReservationsService(id, userId, numbers);
   }
 
-  purchaseRaffleTickets(id: string, actor: ActorContext, data: PurchaseRaffleTicketsDto) {
-    return purchaseRaffleTicketsService(id, actor, data);
+  purchaseActivityTickets(id: string, actor: ActorContext, data: PurchaseActivityTicketsDto) {
+    return purchaseActivityTicketsService(id, actor, data);
   }
 
-  createWompiCheckout(id: string, actor: ActorContext, data: CreateRaffleCheckoutDto) {
-    return createWompiCheckoutForRaffle(id, actor, data);
+  createWompiCheckout(id: string, actor: ActorContext, data: CreateActivityCheckoutDto) {
+    return createWompiCheckoutForActivity(id, actor, data);
   }
 
-  drawRaffle(id: string, data: DrawRaffleDto) {
-    return drawRaffleService(id, data.winningNumber);
+  drawActivity(id: string, data: DrawActivityDto) {
+    return drawActivityService(id, data.winningNumber);
   }
 
-  deleteRaffle(id: string) {
-    return deleteRaffleService(id);
+  deleteActivity(id: string) {
+    return deleteActivityService(id);
   }
 }

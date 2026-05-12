@@ -12,7 +12,7 @@
 
 // ── Canales de comunicación ───────────────────────────────────────────────────
 // Por qué canal se comunica el usuario con el negocio.
-// Se usa en User, Order, TournamentRegistration y RaffleTicket.
+// Se usa en User, Order, TournamentRegistration y ActivityTicket.
 export enum Channel {
   WHATSAPP = "WHATSAPP",
   WEB = "WEB",
@@ -81,7 +81,7 @@ export enum InterestType {
   STORE = "STORE",               // Tienda de productos (tacos, bolas, accesorios)
   TRANSMISSION = "TRANSMISSION", // Transmisiones en vivo
   EVENTS = "EVENTS",             // Eventos generales
-  RAFFLES = "RAFFLES",           // Rifas y sorteos
+  ACTIVITIES = "ACTIVITIES",     // Actividades (sorteos, dinamicas)
   TOURNAMENTS = "TOURNAMENTS",   // Torneos de billar
 }
 
@@ -213,13 +213,13 @@ export enum RegistrationStatus {
 }
 
 // ── Estados de una rifa ───────────────────────────────────────────────────────
-// Ciclo de vida de una rifa.
-export enum RaffleStatus {
+// Ciclo de vida de una actividad (sorteo, dinámica, etc.).
+export enum ActivityStatus {
   DRAFT = "DRAFT",         // Borrador, aún no publicada
   ACTIVE = "ACTIVE",       // Activa: se están vendiendo boletos
   CLOSED = "CLOSED",       // Venta cerrada, pendiente del sorteo
   DRAWN = "DRAWN",         // Sorteo realizado, hay ganador
-  CANCELLED = "CANCELLED", // Rifa cancelada
+  CANCELLED = "CANCELLED", // Actividad cancelada
 }
 
 // ── Estados de un boleto de rifa ──────────────────────────────────────────────
@@ -233,9 +233,9 @@ export enum TicketStatus {
 }
 
 // ── Estado de un número individual de la rifa ───────────────────────────────
-// Cada número existe desde la creación de la rifa y cambia de estado
+// Cada número existe desde la creación de la actividad y cambia de estado
 // a medida que se reserva, se paga o gana.
-export enum RaffleNumberStatus {
+export enum ActivityNumberStatus {
   AVAILABLE = "AVAILABLE",
   RESERVED = "RESERVED",
   PAID = "PAID",
@@ -248,10 +248,10 @@ export enum PaymentProvider {
 }
 
 // ── Tipo de objeto pagable ──────────────────────────────────────────────────
-// Permite reutilizar la misma infraestructura de pagos para rifas,
+// Permite reutilizar la misma infraestructura de pagos para actividades,
 // inscripciones a torneos, pedidos y otros cobros futuros.
 export enum PaymentPayableType {
-  RAFFLE_TICKET = "RAFFLE_TICKET",
+  ACTIVITY_TICKET = "ACTIVITY_TICKET",
   TOURNAMENT_REGISTRATION = "TOURNAMENT_REGISTRATION",
   ORDER = "ORDER",
 }

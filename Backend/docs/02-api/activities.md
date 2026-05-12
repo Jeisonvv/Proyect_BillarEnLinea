@@ -1,6 +1,6 @@
 # API Raffles
 
-Base path: /api/raffles
+Base path: /api/activities
 
 ## Resumen
 
@@ -20,7 +20,7 @@ Metadata de venta:
 
 ## Endpoints publicos
 
-### GET /api/raffles
+### GET /api/activities
 
 Query:
 
@@ -28,9 +28,9 @@ Query:
 - page
 - limit
 
-### GET /api/raffles/:id
+### GET /api/activities/:id
 
-### GET /api/raffles/:id/numbers
+### GET /api/activities/:id/numbers
 
 Query:
 
@@ -38,7 +38,7 @@ Query:
 - page
 - limit
 
-### GET /api/raffles/:id/available-numbers
+### GET /api/activities/:id/available-numbers
 
 Respuesta conceptual:
 
@@ -46,7 +46,7 @@ Respuesta conceptual:
 
 ## Endpoints privados de cliente autenticado
 
-### POST /api/raffles/:id/tickets
+### POST /api/activities/:id/tickets
 
 Acceso: usuario autenticado
 
@@ -71,7 +71,7 @@ Error estructurado cuando la venta ya cerro:
 }
 ```
 
-### POST /api/raffles/:id/wompi/checkout
+### POST /api/activities/:id/wompi/checkout
 
 Acceso: usuario autenticado
 
@@ -91,7 +91,7 @@ Respuesta conceptual:
 
 ## Endpoints administrativos
 
-### POST /api/raffles
+### POST /api/activities
 
 Acceso: ADMIN, STAFF
 
@@ -114,11 +114,11 @@ Notas:
 - En la practica conviene enviarlo en formato ISO 8601.
 - Ejemplo: 2 de mayo de 2026 a las 10:40 p. m. hora Colombia equivale a 2026-05-03T03:40:00.000Z.
 
-### GET /api/raffles/:id/number-owners
+### GET /api/activities/:id/number-owners
 
 Acceso: ADMIN, STAFF
 
-### POST /api/raffles/:id/draw
+### POST /api/activities/:id/draw
 
 Acceso: ADMIN, STAFF
 
@@ -144,6 +144,6 @@ Respuesta conceptual:
 - Con ganador: message indica que hubo ganador asignado y hasWinner=true.
 - Sin ganador: message indica que el numero se registro sin usuario asignado y hasWinner=false.
 
-### DELETE /api/raffles/:id
+### DELETE /api/activities/:id
 
 Acceso: ADMIN, STAFF

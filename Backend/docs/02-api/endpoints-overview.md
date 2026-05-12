@@ -135,18 +135,18 @@ Base path: /api/posts
 
 ## Raffles
 
-Base path: /api/raffles
+Base path: /api/activities
 
-- POST /api/raffles: crea una rifa.
-- GET /api/raffles: lista rifas con filtros y paginacion.
-- GET /api/raffles/:id: obtiene el detalle de una rifa.
-- GET /api/raffles/:id/numbers: lista los numeros de una rifa y su estado.
-- GET /api/raffles/:id/number-owners: lista los propietarios de numeros de la rifa.
-- GET /api/raffles/:id/available-numbers: devuelve los numeros disponibles para compra.
-- POST /api/raffles/:id/tickets: compra o reserva boletas o numeros de la rifa.
-- POST /api/raffles/:id/wompi/checkout: crea el checkout de pago Wompi para la rifa.
-- POST /api/raffles/:id/draw: registra manualmente el numero ganador de la rifa, incluso si no fue vendido o estaba solo reservado.
-- DELETE /api/raffles/:id: elimina una rifa.
+- POST /api/activities: crea una rifa.
+- GET /api/activities: lista rifas con filtros y paginacion.
+- GET /api/activities/:id: obtiene el detalle de una rifa.
+- GET /api/activities/:id/numbers: lista los numeros de una rifa y su estado.
+- GET /api/activities/:id/number-owners: lista los propietarios de numeros de la rifa.
+- GET /api/activities/:id/available-numbers: devuelve los numeros disponibles para compra.
+- POST /api/activities/:id/tickets: compra o reserva boletas o numeros de la rifa.
+- POST /api/activities/:id/wompi/checkout: crea el checkout de pago Wompi para la rifa.
+- POST /api/activities/:id/draw: registra manualmente el numero ganador de la rifa, incluso si no fue vendido o estaba solo reservado.
+- DELETE /api/activities/:id: elimina una rifa.
 
 ## Transmissions
 

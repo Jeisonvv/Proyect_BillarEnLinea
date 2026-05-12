@@ -6,10 +6,10 @@
 // En lugar de importar desde cada archivo por separado:
 //   import User from "./models/user.model";
 //   import Order from "./models/order.model";
-//   import Raffle from "./models/raffle.model";
+//   import Activity from "./models/activity.model";
 //
 // Puedes importar todo desde un solo lugar:
-//   import { User, Order, Raffle } from "./models";
+//   import { User, Order, Activity } from "./models";
 //
 // Esto hace el código más limpio y fácil de mantener.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -57,17 +57,17 @@ export type { IPost, IPostDocument } from "./post.model.js";
 export { default as TournamentRegistration } from "./tournament-registration.model.js";
 export type { ITournamentRegistration, ITournamentRegistrationDocument, ITournamentRegistrationModel } from "./tournament-registration.model.js";
 
-// Modelo de rifas
-export { default as Raffle } from "./raffle.model.js";
-export type { IRaffle, IRaffleDocument } from "./raffle.model.js";
+// Modelo de actividades (rifas y otros sorteos por boletos numerados)
+export { default as Activity } from "./activity.model.js";
+export type { IActivity, IActivityDocument } from "./activity.model.js";
 
 // Modelo de números de rifa
-export { default as RaffleNumber } from "./raffle-number.model.js";
-export type { IRaffleNumber, IRaffleNumberDocument, IRaffleNumberModel } from "./raffle-number.model.js";
+export { default as ActivityNumber } from "./activity-number.model.js";
+export type { IActivityNumber, IActivityNumberDocument, IActivityNumberModel } from "./activity-number.model.js";
 
 // Modelo de boletos de rifa
-export { default as RaffleTicket } from "./raffle-ticket.model.js";
-export type { IRaffleTicket, IRaffleTicketDocument, IRaffleTicketModel } from "./raffle-ticket.model.js";
+export { default as ActivityTicket } from "./activity-ticket.model.js";
+export type { IActivityTicket, IActivityTicketDocument, IActivityTicketModel } from "./activity-ticket.model.js";
 
 // Modelo de transmisiones
 export { default as Transmission } from "./transmission-request.model.js";

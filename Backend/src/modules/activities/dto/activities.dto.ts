@@ -1,7 +1,7 @@
 import { IsArray, IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { Channel } from '../../../models/enums.js';
 
-export class CreateRaffleDto {
+export class CreateActivityDto {
   @IsString()
   @IsNotEmpty()
   name!: string;
@@ -53,7 +53,7 @@ export class CreateRaffleDto {
   [key: string]: unknown;
 }
 
-export class UpdateRaffleDto {
+export class UpdateActivityDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
@@ -107,7 +107,7 @@ export class UpdateRaffleDto {
   status?: string;
 }
 
-export class ListRafflesQueryDto {
+export class ListActivitiesQueryDto {
   @IsOptional()
   @IsString()
   status?: string;
@@ -123,7 +123,7 @@ export class ListRafflesQueryDto {
   limit?: number;
 }
 
-export class ListRaffleNumbersQueryDto {
+export class ListActivityNumbersQueryDto {
   @IsOptional()
   @IsString()
   status?: string;
@@ -139,7 +139,7 @@ export class ListRaffleNumbersQueryDto {
   limit?: number;
 }
 
-export class PurchaseRaffleTicketsDto {
+export class PurchaseActivityTicketsDto {
   @IsOptional()
   @IsString()
   userId?: string;
@@ -165,7 +165,7 @@ export class PurchaseRaffleTicketsDto {
   status?: string;
 }
 
-export class CreateRaffleCheckoutDto {
+export class CreateActivityCheckoutDto {
   @IsOptional()
   @IsString()
   userId?: string;
@@ -179,7 +179,7 @@ export class CreateRaffleCheckoutDto {
   channel?: string;
 }
 
-export class DrawRaffleDto {
+export class DrawActivityDto {
   @IsNotEmpty()
   @IsString()
   winningNumber!: string;
