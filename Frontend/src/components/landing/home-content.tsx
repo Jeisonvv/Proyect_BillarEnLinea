@@ -4,7 +4,7 @@ import type { LandingSnapshot } from "@/lib/api/public-content";
 import { EventCard } from "@/components/content/user/events";
 import { PostCard } from "@/components/content/user/posts";
 import { ProductCard } from "@/components/content/user/products";
-import { RaffleCard } from "@/components/content/user/raffles";
+import { ActivityCard } from "@/components/content/user/activities";
 import { getTournamentShowcaseProps } from "@/components/content/user/tournaments";
 import { EmptyState, MetricCard, SectionHeading, ShowcaseCard } from "@/components/content/user/shared";
 import { absoluteUrl, siteConfig } from "@/lib/site";
@@ -62,7 +62,7 @@ function getStructuredData(snapshot: LandingSnapshot) {
         hasPart: [
           { "@type": "ItemList", name: "Torneos", numberOfItems: snapshot.tournaments.total },
           { "@type": "ItemList", name: "Eventos", numberOfItems: snapshot.events.total },
-          { "@type": "ItemList", name: "Sorteos", numberOfItems: snapshot.raffles.total },
+          { "@type": "ItemList", name: "Sorteos", numberOfItems: snapshot.activities.total },
           { "@type": "ItemList", name: "Noticias", numberOfItems: snapshot.posts.total },
           { "@type": "ItemList", name: "Tienda", numberOfItems: snapshot.products.total },
         ],
@@ -88,8 +88,8 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
     },
     {
       id: "rifas",
-      eyebrow: "Rifas",
-      title: "Rifas de billar — sorteos activos con premios reales.",
+      eyebrow: "Actividades",
+      title: "Actividades de billar — sorteos activos con premios reales.",
       body: "Revisa los sorteos de billar activos, conoce los premios disponibles y participa en pocos pasos desde una plataforma confiable.",
     },
     {
@@ -101,7 +101,7 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
   ];
   const serviceBenefits = [
     "Consulta torneos de billar activos y sus fechas sin navegar de más.",
-    "Descubre eventos, rifas y productos especializados en una sola experiencia.",
+    "Descubre eventos, actividades y productos especializados en una sola experiencia.",
     "Crea tu cuenta gratis y recibe novedades de la comunidad del billar en Colombia.",
   ];
 
@@ -137,7 +137,7 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
                   Torneos, eventos y tienda de billar en un solo lugar
                 </p>
                 <h1 className="max-w-3xl text-2xl font-semibold leading-tight text-white sm:text-3xl xl:text-4xl">
-                  Consulta torneos activos, descubre eventos y rifas, y encuentra productos de billar seleccionados para jugadores y aficionados como tu.
+                  Consulta torneos activos, descubre eventos y actividades, y encuentra productos de billar seleccionados para jugadores y aficionados como tu.
                 </h1>
                
                 <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -153,8 +153,8 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
                 <article className="rounded-[1.7rem] border border-white/10 bg-white/6 p-5">
                   <p className="text-[0.7rem] uppercase tracking-[0.26em] text-white/42">Para ti</p>
-                  <h2 className="mt-3 text-xl font-semibold text-white">Accede a torneos, eventos, rifas y tienda desde la portada</h2>
-                  <p className="mt-2 text-sm leading-7 text-white/68">En Billar en Linea organizamos cada sección para que llegues directo a lo que buscas: torneos para competir, eventos para disfrutar, rifas para participar y productos para tu juego.</p>
+                  <h2 className="mt-3 text-xl font-semibold text-white">Accede a torneos, eventos, actividades y tienda desde la portada</h2>
+                  <p className="mt-2 text-sm leading-7 text-white/68">En Billar en Linea organizamos cada sección para que llegues directo a lo que buscas: torneos para competir, eventos para disfrutar, actividades para participar y productos para tu juego.</p>
                 </article>
                 <article className="rounded-[1.7rem] border border-[rgba(246,196,79,0.22)] bg-[rgba(246,196,79,0.08)] p-5">
                   <p className="text-[0.7rem] uppercase tracking-[0.26em] text-[rgba(246,196,79,0.7)]">Registro rapido</p>
@@ -170,9 +170,9 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
                   note="Torneos activos con fechas, formatos y cupos disponibles para inscribirse."
                 />
                 <MetricCard
-                  value={`${snapshot.totals.events + snapshot.totals.raffles}+`}
-                  label="Eventos y rifas"
-                  note="Eventos y rifas para jugadores, aficionados y marcas del billar en Colombia."
+                  value={`${snapshot.totals.events + snapshot.totals.activities}+`}
+                  label="Eventos y actividades"
+                  note="Eventos y actividades para jugadores, aficionados y marcas del billar en Colombia."
                 />
                 <MetricCard
                   value={`${snapshot.totals.posts + snapshot.totals.products}+`}
@@ -188,8 +188,8 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
           <div className="space-y-6 xl:sticky xl:top-24">
             <SectionHeading
               eyebrow="Servicios"
-              title="Todo lo que necesitas para vivir el billar: torneos, eventos, rifas y tienda especializada."
-              description="Billar en Linea reúne en un solo sitio los torneos donde competir, los eventos donde participar, las rifas disponibles y los productos de billar para tu equipamiento."
+              title="Todo lo que necesitas para vivir el billar: torneos, eventos, actividades y tienda especializada."
+              description="Billar en Linea reúne en un solo sitio los torneos donde competir, los eventos donde participar, las actividades disponibles y los productos de billar para tu equipamiento."
             />
 
             <article className="rounded-[1.7rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.18)]">
@@ -235,8 +235,8 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
         <section className="defer-render space-y-8 pb-18">
           <SectionHeading
             eyebrow="Explorar"
-            title="Navega torneos, eventos, rifas y tienda de billar en una sola plataforma."
-            description="La portada de Billar en Linea está diseñada para que pases de torneos a eventos, rifas o tienda sin fricción, con información relevante en cada paso."
+            title="Navega torneos, eventos, actividades y tienda de billar en una sola plataforma."
+            description="La portada de Billar en Linea está diseñada para que pases de torneos a eventos, actividades o tienda sin fricción, con información relevante en cada paso."
           />
 
           <div id="torneos-contenido" className="grid gap-5 xl:grid-cols-2">
@@ -287,16 +287,16 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
                 <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
                   <div>
                     <p className="font-mono text-[0.68rem] uppercase tracking-[0.3em] text-stone-500">Sorteos</p>
-                    <h3 className="mt-2 text-2xl font-semibold text-white">Rifas y premios para la comunidad</h3>
+                    <h3 className="mt-2 text-2xl font-semibold text-white">Actividades y premios para la comunidad</h3>
                   </div>
-                  <span className="rounded-full border border-white/10 px-3 py-1 text-sm text-stone-400">{snapshot.raffles.total}</span>
+                  <span className="rounded-full border border-white/10 px-3 py-1 text-sm text-stone-400">{snapshot.activities.total}</span>
                 </div>
                 <div className="mt-5 grid gap-4">
-                  {snapshot.raffles.items.length > 0 ? (
-                    snapshot.raffles.items.map((item) => <RaffleCard key={item.id} item={item} />)
+                  {snapshot.activities.items.length > 0 ? (
+                    snapshot.activities.items.map((item) => <ActivityCard key={item.id} item={item} />)
                   ) : (
                     <EmptyState
-                        title="Nuevas rifas muy pronto"
+                        title="Nuevas actividades muy pronto"
                         body="Cuando haya sorteos disponibles, podras verlos aqui de forma clara y rapida."
                     />
                   )}
@@ -353,7 +353,7 @@ export function HomeContent({ snapshot }: { snapshot: LandingSnapshot }) {
               </h2>
               <h2 className="font-display text-3xl leading-tight text-white sm:text-4xl lg:text-5xl">Crea tu cuenta y sigue todo lo que pasa en Billar en Linea.</h2>
               <p className="text-sm leading-7 text-white/75 sm:text-base lg:text-lg lg:leading-8">
-                Regístrate gratis en Billar en Linea y accede a torneos activos, eventos, rifas y la tienda especializada de billar en Colombia.
+                Regístrate gratis en Billar en Linea y accede a torneos activos, eventos, actividades y la tienda especializada de billar en Colombia.
               </p>
             </div>
 

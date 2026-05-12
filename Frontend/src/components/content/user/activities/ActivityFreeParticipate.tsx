@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, postJson } from "@/lib/api/client";
-import type { RaffleDetail } from "@/lib/api/public-content";
-import type { MyRaffleNumber } from "@/lib/api/public-content/raffles";
+import type { ActivityDetail } from "@/lib/api/public-content";
+import type { MyActivityNumber } from "@/lib/api/public-content/activities";
 import { AuthPromptModal } from "@/components/content/user/shared";
 
 type FreeTicketResponse = {
@@ -17,16 +17,16 @@ type FreeTicketResponse = {
 
 type Phase = "idle" | "rolling" | "revealed" | "error";
 
-type RaffleFreeParticipateProps = {
-  raffle: RaffleDetail;
-  myNumbers?: MyRaffleNumber[];
+type ActivityFreeParticipateProps = {
+  activity: ActivityDetail;
+  myNumbers?: MyActivityNumber[];
 };
 
 function pad(value: number, width: number) {
   return String(value).padStart(width, "0");
 }
 
-export function RaffleFreeParticipate({ raffle, myNumbers = [] }: RaffleFreeParticipateProps) {
+export function ActivityFreeParticipate({ activity, myNumbers = [] }: ActivityFreeParticipateProps) {
   const router = useRouter();
 
   // Si el usuario ya tiene un número en esta rifa, lo mostramos como ya participado
@@ -42,9 +42,9 @@ export function RaffleFreeParticipate({ raffle, myNumbers = [] }: RaffleFreePart
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const totalTickets = raffle.totalTickets ?? 100;
+  const totalTickets = activity.totalTickets ?? 100;
   const numberWidth = String(Math.max(0, totalTickets - 1)).length;
-  const isActive = raffle.status === "ACTIVE";
+  const isActive = activity.status === "ACTIVE";
   const alreadyParticipated = existingNumber !== null;
 
   useEffect(() => {
@@ -95,7 +95,7 @@ export function RaffleFreeParticipate({ raffle, myNumbers = [] }: RaffleFreePart
       // Aseguramos al menos ~1.2s de animación
       const minimumDelay = new Promise<void>((resolve) => setTimeout(resolve, 1200));
       const requestPromise = postJson<FreeTicketResponse, { channel: string }>(
-        `/api/raffles/${encodeURIComponent(raffle.id)}/tickets`,
+        `/api/activities/${encodeURIComponent(activity.id)}/tickets`,
         { channel: "WEB" },
         { credentials: "include" },
       );
@@ -141,7 +141,7 @@ export function RaffleFreeParticipate({ raffle, myNumbers = [] }: RaffleFreePart
     <section className="grid gap-6 rounded-4xl border border-white/10 bg-[linear-gradient(180deg,rgba(15,18,24,0.96),rgba(9,11,16,0.98))] p-5 sm:p-7">
       <header className="grid gap-2 text-center">
         <p className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.82)]">
-          Rifa gratuita
+          Actividad gratuita
         </p>
         <h2 className="text-2xl font-semibold text-white sm:text-3xl">
           {phase === "revealed"
@@ -153,7 +153,7 @@ export function RaffleFreeParticipate({ raffle, myNumbers = [] }: RaffleFreePart
         <p className="mx-auto max-w-xl text-sm leading-7 text-white/68">
           {phase === "revealed"
             ? "Guarda este número. Si coincide con el número ganador del sorteo, ¡eres el afortunado!"
-            : "Esta rifa es gratuita. Al presionar Participar, el sistema te asignará un número al azar."}
+            : "Esta actividad es gratuita. Al presionar Participar, el sistema te asignará un número al azar."}
         </p>
       </header>
 
@@ -204,7 +204,7 @@ export function RaffleFreeParticipate({ raffle, myNumbers = [] }: RaffleFreePart
               <strong className="font-mono text-base text-emerald-50">{existingNumber}</strong>.
             </p>
             <p className="text-center text-xs text-white/55">
-              Solo se permite una participación por persona en esta rifa gratuita.
+              Solo se permite una participación por persona en esta actividad gratuita.
             </p>
           </div>
         ) : phase === "idle" || phase === "error" ? (
@@ -246,13 +246,13 @@ export function RaffleFreeParticipate({ raffle, myNumbers = [] }: RaffleFreePart
         ) : null}
 
         {phase === "revealed" && finalNumber ? (
-          <ShareRaffle raffle={raffle} myNumber={finalNumber} />
+          <ShareActivity activity={activity} myNumber={finalNumber} />
         ) : null}
       </div>
 
       {!isActive ? (
         <p className="rounded-2xl border border-amber-300/24 bg-amber-400/10 px-4 py-3 text-center text-sm text-amber-100">
-          La rifa no está activa para participar.
+          La actividad no está activa para participar.
         </p>
       ) : null}
     </section>
@@ -260,16 +260,16 @@ export function RaffleFreeParticipate({ raffle, myNumbers = [] }: RaffleFreePart
       open={showAuthPrompt}
       onClose={() => setShowAuthPrompt(false)}
       title="Necesitas una cuenta para participar"
-      description="Para participar en esta rifa gratuita debes iniciar sesión o crear una cuenta. Así guardamos tu número asignado y podemos avisarte si resultas ganador."
-      dismissLabel="Seguir viendo la rifa"
-      redirectTo={`/home/rifas/${raffle.id}`}
+      description="Para participar en esta actividad gratuita debes iniciar sesión o crear una cuenta. Así guardamos tu número asignado y podemos avisarte si resultas ganador."
+      dismissLabel="Seguir viendo la actividad"
+      redirectTo={`/home/activities/${activity.id}`}
     />
     </>
   );
 }
 
-type ShareRaffleProps = {
-  raffle: RaffleDetail;
+type ShareActivityProps = {
+  activity: ActivityDetail;
   myNumber: string;
 };
 
@@ -280,7 +280,7 @@ function subscribeNoop() {
   return () => {};
 }
 
-function ShareRaffle({ raffle, myNumber }: ShareRaffleProps) {
+function ShareActivity({ activity, myNumber }: ShareActivityProps) {
   const [copied, setCopied] = useState(false);
   const origin = useSyncExternalStore(
     subscribeNoop,
@@ -288,13 +288,13 @@ function ShareRaffle({ raffle, myNumber }: ShareRaffleProps) {
     () => "",
   );
   const shareUrl = origin
-    ? `${origin}/home/rifas/${raffle.id}`
-    : `/home/rifas/${raffle.id}`;
+    ? `${origin}/home/activities/${activity.id}`
+    : `/home/activities/${activity.id}`;
 
   const shareText = useMemo(() => {
-    const prize = raffle.prize ? ` Puedes ganar: ${raffle.prize}.` : "";
-    return `🎰 Estoy participando en la rifa gratuita "${raffle.name}" en Billar en Línea con el número ${myNumber}.${prize} ¡Participa tú también, no te la pierdas! 🎲`;
-  }, [raffle.name, raffle.prize, myNumber]);
+    const prize = activity.prize ? ` Puedes ganar: ${activity.prize}.` : "";
+    return `🎰 Estoy participando en la actividad gratuita "${activity.name}" en Billar en Línea con el número ${myNumber}.${prize} ¡Participa tú también, no te la pierdas! 🎲`;
+  }, [activity.name, activity.prize, myNumber]);
 
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`;
   const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
@@ -328,7 +328,7 @@ function ShareRaffle({ raffle, myNumber }: ShareRaffleProps) {
           Comparte
         </p>
         <h3 className="mt-1 text-base font-semibold text-white">
-          Comparte esta rifa para que ninguno de tus amigos se la pierda
+          Comparte esta actividad para que ninguno de tus amigos se la pierda
         </h3>
       </div>
 

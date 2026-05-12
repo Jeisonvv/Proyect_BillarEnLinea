@@ -3,8 +3,8 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL, ApiError, postJson } from "@/lib/api/client";
-import type { RaffleDetail } from "@/lib/api/public-content";
-import type { MyRaffleNumber, RaffleNumberItem } from "@/lib/api/public-content/raffles";
+import type { ActivityDetail } from "@/lib/api/public-content";
+import type { MyActivityNumber, ActivityNumberItem } from "@/lib/api/public-content/activities";
 import { AuthPromptModal, ConfirmModal } from "@/components/content/user/shared";
 import { formatMoney } from "../shared/utils";
 
@@ -79,15 +79,15 @@ function getNumberClass(state: "available" | "selected" | "sold" | "mine-pending
   }
 }
 
-type RaffleNumberGridProps = {
-  raffle: RaffleDetail;
-  initialNumbers: RaffleNumberItem[];
-  myNumbers?: MyRaffleNumber[];
+type ActivityNumberGridProps = {
+  activity: ActivityDetail;
+  initialNumbers: ActivityNumberItem[];
+  myNumbers?: MyActivityNumber[];
 };
 
-export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: RaffleNumberGridProps) {
+export function ActivityNumberGrid({ activity, initialNumbers, myNumbers = [] }: ActivityNumberGridProps) {
   const router = useRouter();
-  const [numbers, setNumbers] = useState<RaffleNumberItem[]>(initialNumbers);
+  const [numbers, setNumbers] = useState<ActivityNumberItem[]>(initialNumbers);
   const myPendingSet = useMemo(
     () => new Set(myNumbers.filter((n) => n.status === "RESERVED").map((n) => n.number)),
     [myNumbers],
@@ -103,9 +103,9 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
   const [pendingRelease, setPendingRelease] = useState<string[] | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const isFree = raffle.isFree === true || raffle.ticketPrice === 0;
-  const isActive = raffle.status === "ACTIVE";
-  const ticketPrice = raffle.ticketPrice ?? 0;
+  const isFree = activity.isFree === true || activity.ticketPrice === 0;
+  const isActive = activity.status === "ACTIVE";
+  const ticketPrice = activity.ticketPrice ?? 0;
   const totalAmount = ticketPrice * selected.size;
 
   const stats = useMemo(() => {
@@ -118,7 +118,7 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
     return { available, sold, total: numbers.length };
   }, [numbers]);
 
-  function toggleNumber(item: RaffleNumberItem) {
+  function toggleNumber(item: ActivityNumberItem) {
     if (!isActive) return;
     const isMinePending = myPendingSet.has(item.number);
     if (item.status !== "AVAILABLE" && !isMinePending) return;
@@ -137,19 +137,19 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
 
   async function refreshNumbers() {
     try {
-      const res = await fetch(`/api/raffles/${encodeURIComponent(raffle.id)}/numbers?limit=1000`, {
+      const res = await fetch(`/api/activities/${encodeURIComponent(activity.id)}/numbers?limit=1000`, {
         cache: "no-store",
       });
       const json = await res.json();
       if (json?.data?.numbers && Array.isArray(json.data.numbers)) {
-        const fresh: RaffleNumberItem[] = json.data.numbers
+        const fresh: ActivityNumberItem[] = json.data.numbers
           .filter((n: unknown): n is { number: string; numericValue: number; status: string } =>
             typeof n === "object" && n !== null && "number" in n && "status" in n,
           )
           .map((n: { number: string; numericValue: number; status: string }) => ({
             number: String(n.number),
             numericValue: Number(n.numericValue),
-            status: n.status as RaffleNumberItem["status"],
+            status: n.status as ActivityNumberItem["status"],
           }));
         setNumbers(fresh);
       }
@@ -168,7 +168,7 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
       try {
         if (isFree) {
           const response = await postJson<FreeTicketResponse, { numbers: string[]; channel: string }>(
-            `/api/raffles/${encodeURIComponent(raffle.id)}/tickets`,
+            `/api/activities/${encodeURIComponent(activity.id)}/tickets`,
             { numbers: selectedArray, channel: "WEB" },
             { credentials: "include" },
           );
@@ -180,7 +180,7 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
         }
 
         const response = await postJson<CheckoutResponse, { numbers: string[]; channel: string }>(
-          `/api/raffles/${encodeURIComponent(raffle.id)}/wompi/checkout`,
+          `/api/activities/${encodeURIComponent(activity.id)}/wompi/checkout`,
           { numbers: selectedArray, channel: "WEB" },
           { credentials: "include" },
         );
@@ -226,7 +226,7 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
     setFeedback(null);
     startTransition(async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/raffles/${encodeURIComponent(raffle.id)}/my-numbers`, {
+        const res = await fetch(`${API_BASE_URL}/api/activities/${encodeURIComponent(activity.id)}/my-numbers`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -303,7 +303,7 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
 
       {numbers.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-white/4 p-6 text-center text-sm text-white/60">
-          Aún no hay números disponibles para esta rifa.
+          Aún no hay números disponibles para esta actividad.
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -426,9 +426,9 @@ export function RaffleNumberGrid({ raffle, initialNumbers, myNumbers = [] }: Raf
       open={showAuthPrompt}
       onClose={() => setShowAuthPrompt(false)}
       title="Necesitas una cuenta para participar"
-      description="Para reservar o comprar números de esta rifa debes iniciar sesión o crear una cuenta. Así podemos guardar tu reserva, tu pago y avisarte si ganas."
-      dismissLabel="Seguir viendo la rifa"
-      redirectTo={`/home/rifas/${raffle.id}`}
+      description="Para reservar o comprar números de esta actividad debes iniciar sesión o crear una cuenta. Así podemos guardar tu reserva, tu pago y avisarte si ganas."
+      dismissLabel="Seguir viendo la actividad"
+      redirectTo={`/home/activities/${activity.id}`}
     />
     <ConfirmModal
       open={pendingRelease !== null}

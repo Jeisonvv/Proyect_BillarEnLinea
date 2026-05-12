@@ -85,7 +85,7 @@ export function HomeSiteShell({
           <div className="space-y-4">
             <p className="font-display text-3xl text-white">{siteConfig.name}</p>
             <p className="max-w-2xl text-sm leading-7 text-white/64 sm:text-base text-center lg:text-left">
-              La plataforma de torneos, eventos, rifas y tienda de billar para la comunidad en Colombia.
+              La plataforma de torneos, eventos, actividades y tienda de billar para la comunidad en Colombia.
             </p>
           </div>
 
@@ -93,7 +93,7 @@ export function HomeSiteShell({
             <div className="space-y-2 text-center lg:text-left">
               <p className="text-xs uppercase tracking-[0.28em] text-white/42">Siguenos</p>
               <p className="text-sm leading-7 text-white/64">
-                siguenos en redes sociales para estar al tanto de los torneos, eventos, rifas y novedades de la comunidad del billar en Colombia.
+                siguenos en redes sociales para estar al tanto de los torneos, eventos, actividades y novedades de la comunidad del billar en Colombia.
               </p>
             </div>
 

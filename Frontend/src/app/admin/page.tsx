@@ -68,11 +68,11 @@ export default async function AdminPage() {
       helper: snapshot.events.error ?? `${snapshot.events.items.filter((item) => item.status === "SCHEDULED").length} programados`,
     },
     {
-      label: "Rifas",
-      href: "/admin/rifas",
-      value: snapshot.totals.raffles,
+      label: "Actividades",
+      href: "/admin/activities",
+      value: snapshot.totals.activities,
       accent: "text-[rgba(255,168,119,0.96)]",
-      helper: snapshot.raffles.error ?? `${snapshot.raffles.items.filter((item) => item.saleStatus === "ACTIVE").length} activas`,
+      helper: snapshot.activities.error ?? `${snapshot.activities.items.filter((item) => item.saleStatus === "ACTIVE").length} activas`,
     },
     {
       label: "Productos",
@@ -120,7 +120,7 @@ export default async function AdminPage() {
                 {name}, aqui tienes una vista rapida del pulso operativo de Billar en Linea.
               </h1>
               <p className="mx-auto max-w-3xl text-sm leading-7 text-white/70 sm:text-base">
-                Usa este panel para detectar contenido pendiente, entrar a las herramientas internas y revisar si torneos, eventos, rifas y tienda mantienen ritmo de publicacion.
+                Usa este panel para detectar contenido pendiente, entrar a las herramientas internas y revisar si torneos, eventos, actividades y tienda mantienen ritmo de publicacion.
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-3 pt-2">
@@ -269,8 +269,8 @@ export default async function AdminPage() {
                 <p className="mt-2 text-2xl font-semibold text-white">{snapshot.totals.events}</p>
               </div>
               <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Rifas</p>
-                <p className="mt-2 text-2xl font-semibold text-white">{snapshot.totals.raffles}</p>
+                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Actividades</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{snapshot.totals.activities}</p>
               </div>
               <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
                 <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Posts</p>

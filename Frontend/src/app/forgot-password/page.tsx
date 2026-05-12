@@ -4,7 +4,7 @@ import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
 export const metadata: Metadata = {
   title: "Recuperar acceso",
-  description: "Recupera el acceso a tu cuenta de Billar en Linea para seguir conectado con torneos, eventos, rifas y tienda.",
+  description: "Recupera el acceso a tu cuenta de Billar en Linea para seguir conectado con torneos, eventos, actividades y tienda.",
   robots: {
     index: false,
     follow: true,
@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
                   Recupera tu acceso y vuelve a la plataforma.
                 </h1>
                 <p className="max-w-xl text-base leading-8 text-muted sm:text-lg">
-                  Si olvidaste tu contraseña, te ayudamos a retomar tu cuenta para que continúes explorando torneos, eventos, rifas y productos.
+                  Si olvidaste tu contraseña, te ayudamos a retomar tu cuenta para que continúes explorando torneos, eventos, actividades y productos.
                 </p>
               </div>
             </div>

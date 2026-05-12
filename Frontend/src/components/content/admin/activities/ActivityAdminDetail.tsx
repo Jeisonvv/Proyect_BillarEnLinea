@@ -13,29 +13,29 @@ import { ApiError } from "@/lib/api/client";
 import { parseTagsInput, toDateTimeLocalValue, toIsoDate as toIsoFromLocal } from "@/components/content/admin/shared";
 import { ADMIN_INPUT as inputClass } from "@/components/ui/styles";
 import {
-  RAFFLE_NUMBER_STATUSES,
-  RAFFLE_STATUSES,
-  drawRaffleAdmin,
-  getRaffleNumberOwnersAdmin,
-  updateRaffleAdmin,
-  uploadRaffleImage,
-  type RaffleAdminDetailDto,
-  type RaffleNumberOwner,
-  type RaffleNumberStatus,
-  type RaffleStatus,
-  type UpdateRaffleInput,
-} from "@/lib/api/admin-raffles";
+  ACTIVITY_NUMBER_STATUSES,
+  ACTIVITY_STATUSES,
+  drawActivityAdmin,
+  getActivityNumberOwnersAdmin,
+  updateActivityAdmin,
+  uploadActivityImage,
+  type ActivityAdminDetailDto,
+  type ActivityNumberOwner,
+  type ActivityNumberStatus,
+  type ActivityStatus,
+  type UpdateActivityInput,
+} from "@/lib/api/admin-activities";
 
 type FeedbackState = { kind: "idle" | "success" | "error"; message?: string };
 
-const RAFFLE_STATUS_LABELS: Record<RaffleStatus, string> = {
+const ACTIVITY_STATUS_LABELS: Record<ActivityStatus, string> = {
   DRAFT: "Borrador",
   ACTIVE: "Activa",
   CLOSED: "Cerrada",
   DRAWN: "Sorteada",
 };
 
-const NUMBER_STATUS_LABELS: Record<RaffleNumberStatus, string> = {
+const NUMBER_STATUS_LABELS: Record<ActivityNumberStatus, string> = {
   AVAILABLE: "Disponible",
   RESERVED: "Reservado",
   PAID: "Pagado",
@@ -50,7 +50,7 @@ function areTagsEqual(a: string[], b: string[]) {
   return true;
 }
 
-function getStatusBadgeClass(status: RaffleStatus | string | null | undefined) {
+function getStatusBadgeClass(status: ActivityStatus | string | null | undefined) {
   switch (status) {
     case "ACTIVE":
       return "border-emerald-300/24 bg-emerald-400/12 text-emerald-100";
@@ -64,7 +64,7 @@ function getStatusBadgeClass(status: RaffleStatus | string | null | undefined) {
   }
 }
 
-function getNumberStatusBadgeClass(status: RaffleNumberStatus | string | null | undefined) {
+function getNumberStatusBadgeClass(status: ActivityNumberStatus | string | null | undefined) {
   switch (status) {
     case "PAID":
       return "border-emerald-300/24 bg-emerald-400/12 text-emerald-100";
@@ -78,27 +78,27 @@ function getNumberStatusBadgeClass(status: RaffleNumberStatus | string | null | 
   }
 }
 
-export type RaffleAdminDetailProps = {
-  raffle: RaffleAdminDetailDto;
-  initialOwners: RaffleNumberOwner[];
+export type ActivityAdminDetailProps = {
+  activity: ActivityAdminDetailDto;
+  initialOwners: ActivityNumberOwner[];
   ownersError?: string | null;
 };
 
-export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, ownersError }: RaffleAdminDetailProps) {
+export function ActivityAdminDetail({ activity: initialActivity, initialOwners, ownersError }: ActivityAdminDetailProps) {
   const router = useRouter();
-  const [raffle, setRaffle] = useState<RaffleAdminDetailDto>(initialRaffle);
+  const [activity, setActivity] = useState<ActivityAdminDetailDto>(initialActivity);
   const [editFeedback, setEditFeedback] = useState<FeedbackState>({ kind: "idle" });
   const [drawFeedback, setDrawFeedback] = useState<FeedbackState>({ kind: "idle" });
   const [editPending, startEditTransition] = useTransition();
   const [drawPending, startDrawTransition] = useTransition();
 
-  const [imageUrl, setImageUrl] = useState<string>(raffle.imageUrl ?? "");
-  const [prizeImageUrl, setPrizeImageUrl] = useState<string>(raffle.prizeImageUrl ?? "");
+  const [imageUrl, setImageUrl] = useState<string>(activity.imageUrl ?? "");
+  const [prizeImageUrl, setPrizeImageUrl] = useState<string>(activity.prizeImageUrl ?? "");
   const [imageUploading, setImageUploading] = useState(false);
   const [prizeImageUploading, setPrizeImageUploading] = useState(false);
 
-  const [ownersFilter, setOwnersFilter] = useState<RaffleNumberStatus | "ALL">("ALL");
-  const [owners, setOwners] = useState<RaffleNumberOwner[]>(initialOwners);
+  const [ownersFilter, setOwnersFilter] = useState<ActivityNumberStatus | "ALL">("ALL");
+  const [owners, setOwners] = useState<ActivityNumberOwner[]>(initialOwners);
   const [ownersLoading, setOwnersLoading] = useState(false);
   const [ownersFeedback, setOwnersFeedback] = useState<FeedbackState>(() =>
     ownersError && initialOwners.length === 0
@@ -106,18 +106,18 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
       : { kind: "idle" },
   );
 
-  const isDrawn = raffle.status === "DRAWN";
-  const totalSold = raffle.soldTickets ?? 0;
-  const total = raffle.totalTickets ?? 0;
+  const isDrawn = activity.status === "DRAWN";
+  const totalSold = activity.soldTickets ?? 0;
+  const total = activity.totalTickets ?? 0;
   const percent = total > 0 ? Math.min(100, Math.round((totalSold / total) * 100)) : 0;
 
-  async function refreshOwners(nextFilter: RaffleNumberStatus | "ALL" = ownersFilter) {
+  async function refreshOwners(nextFilter: ActivityNumberStatus | "ALL" = ownersFilter) {
     setOwnersLoading(true);
     setOwnersFeedback({ kind: "idle" });
     try {
       const params: { status?: string; limit: number } = { limit: 200 };
       if (nextFilter !== "ALL") params.status = nextFilter;
-      const result = await getRaffleNumberOwnersAdmin(raffle._id, params);
+      const result = await getActivityNumberOwnersAdmin(activity._id, params);
       setOwners(result.data?.numbers ?? []);
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudieron cargar los números.";
@@ -138,7 +138,7 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
     setUploading(true);
     try {
       const suffix = target === "image" ? "promo" : "premio";
-      const result = await uploadRaffleImage(file, `${raffle.name || "rifa"}-${suffix}`);
+      const result = await uploadActivityImage(file, `${activity.name || "rifa"}-${suffix}`);
       setUrl(result.data.url);
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo subir la imagen.";
@@ -162,36 +162,36 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
     const tags = parseTagsInput(tagsRaw) ?? [];
     const prize = String(fd.get("prize") ?? "").trim();
     const description = String(fd.get("description") ?? "").trim();
-    const status = String(fd.get("status") ?? raffle.status) as RaffleStatus;
+    const status = String(fd.get("status") ?? activity.status) as ActivityStatus;
     const ticketPriceRaw = String(fd.get("ticketPrice") ?? "").trim();
     const drawDateRaw = String(fd.get("drawDate") ?? "").trim();
 
-    const patch: UpdateRaffleInput = {};
-    if (name && name !== raffle.name) patch.name = name;
-    if (slug !== (raffle.slug ?? "")) patch.slug = slug;
-    if (seoTitle !== (raffle.seoTitle ?? "")) patch.seoTitle = seoTitle;
-    if (seoDescription !== (raffle.seoDescription ?? "")) patch.seoDescription = seoDescription;
-    if (!areTagsEqual(tags, raffle.tags ?? [])) patch.tags = tags;
-    if (prize && prize !== raffle.prize) patch.prize = prize;
-    if ((description || "") !== (raffle.description ?? "")) patch.description = description;
-    if (status && status !== raffle.status && status !== "DRAWN") patch.status = status;
+    const patch: UpdateActivityInput = {};
+    if (name && name !== activity.name) patch.name = name;
+    if (slug !== (activity.slug ?? "")) patch.slug = slug;
+    if (seoTitle !== (activity.seoTitle ?? "")) patch.seoTitle = seoTitle;
+    if (seoDescription !== (activity.seoDescription ?? "")) patch.seoDescription = seoDescription;
+    if (!areTagsEqual(tags, activity.tags ?? [])) patch.tags = tags;
+    if (prize && prize !== activity.prize) patch.prize = prize;
+    if ((description || "") !== (activity.description ?? "")) patch.description = description;
+    if (status && status !== activity.status && status !== "DRAWN") patch.status = status;
 
     if (ticketPriceRaw !== "") {
       const value = Number(ticketPriceRaw);
-      if (Number.isFinite(value) && value !== raffle.ticketPrice) {
+      if (Number.isFinite(value) && value !== activity.ticketPrice) {
         patch.ticketPrice = value;
       }
     }
 
     const isoDraw = toIsoFromLocal(drawDateRaw);
-    if (isoDraw && isoDraw !== new Date(raffle.drawDate).toISOString()) {
+    if (isoDraw && isoDraw !== new Date(activity.drawDate).toISOString()) {
       patch.drawDate = isoDraw;
     }
 
-    if (imageUrl !== (raffle.imageUrl ?? "")) {
+    if (imageUrl !== (activity.imageUrl ?? "")) {
       patch.imageUrl = imageUrl;
     }
-    if (prizeImageUrl !== (raffle.prizeImageUrl ?? "")) {
+    if (prizeImageUrl !== (activity.prizeImageUrl ?? "")) {
       patch.prizeImageUrl = prizeImageUrl;
     }
 
@@ -202,14 +202,14 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
 
     startEditTransition(async () => {
       try {
-        const result = await updateRaffleAdmin(raffle._id, patch);
-        setRaffle(result.data);
+        const result = await updateActivityAdmin(activity._id, patch);
+        setActivity(result.data);
         setImageUrl(result.data.imageUrl ?? "");
         setPrizeImageUrl(result.data.prizeImageUrl ?? "");
-        setEditFeedback({ kind: "success", message: "Rifa actualizada correctamente." });
+        setEditFeedback({ kind: "success", message: "Actividad actualizada correctamente." });
         router.refresh();
       } catch (error) {
-        let message = "No se pudo actualizar la rifa.";
+        let message = "No se pudo actualizar la actividad.";
         if (error instanceof ApiError) {
           const payload = error.payload as { message?: string } | undefined;
           message = payload?.message ?? error.message;
@@ -235,8 +235,8 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
 
     startDrawTransition(async () => {
       try {
-        const result = await drawRaffleAdmin(raffle._id, { winningNumber });
-        if (result.data) setRaffle(result.data);
+        const result = await drawActivityAdmin(activity._id, { winningNumber });
+        if (result.data) setActivity(result.data);
         setDrawFeedback({
           kind: "success",
           message: result.message ?? (result.hasWinner ? "Sorteo completado." : "Sorteo registrado sin ganador."),
@@ -261,9 +261,9 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
       <section className="overflow-hidden rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
         <div className="grid gap-5 lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-start">
           <div className="relative aspect-4/5 min-h-48 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(135deg,rgba(246,196,79,0.16),rgba(13,110,174,0.16),rgba(255,255,255,0.04))]">
-            {raffle.imageUrl ? (
+            {activity.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={raffle.imageUrl} alt={raffle.name} className="h-full w-full object-cover" />
+              <img src={activity.imageUrl} alt={activity.name} className="h-full w-full object-cover" />
             ) : null}
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,14,0.08),rgba(8,10,14,0.18),rgba(8,10,14,0.88))]" />
             <div className="absolute inset-x-0 bottom-0 p-4">
@@ -273,23 +273,23 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
           <div>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-semibold text-white">{raffle.name}</h2>
-                <p className="mt-1 text-sm leading-7 text-white/64">Premio: {raffle.prize}</p>
-                <p className="text-sm leading-7 text-white/64">Sorteo: {formatAdminDate(raffle.drawDate)}</p>
+                <h2 className="text-2xl font-semibold text-white">{activity.name}</h2>
+                <p className="mt-1 text-sm leading-7 text-white/64">Premio: {activity.prize}</p>
+                <p className="text-sm leading-7 text-white/64">Sorteo: {formatAdminDate(activity.drawDate)}</p>
               </div>
               <span
                 className={`rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] ${getStatusBadgeClass(
-                  raffle.status,
+                  activity.status,
                 )}`}
               >
-                {RAFFLE_STATUS_LABELS[raffle.status as RaffleStatus] ?? humanizeAdminToken(raffle.status)}
+                {ACTIVITY_STATUS_LABELS[activity.status as ActivityStatus] ?? humanizeAdminToken(activity.status)}
               </span>
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
                 <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Boleto</p>
                 <p className="mt-2 text-base font-semibold text-white">
-                  {raffle.ticketPrice === 0 ? "Gratis" : formatAdminMoney(raffle.ticketPrice)}
+                  {activity.ticketPrice === 0 ? "Gratis" : formatAdminMoney(activity.ticketPrice)}
                 </p>
               </div>
               <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
@@ -307,40 +307,40 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
               <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
                 <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Ganador</p>
                 <p className="mt-2 text-base font-semibold text-white">
-                  {raffle.hasWinner
-                    ? `${raffle.winnerTicket ?? "—"} · ${raffle.winner?.name ?? "Sin asignar"}`
+                  {activity.hasWinner
+                    ? `${activity.winnerTicket ?? "—"} · ${activity.winner?.name ?? "Sin asignar"}`
                     : "Aún no se ha sorteado"}
                 </p>
               </div>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <Link
-                href="/admin/rifas"
+                href="/admin/activities"
                 className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/10"
               >
                 ← Volver
               </Link>
               <Link
-                href={`/home/rifas/${raffle._id}`}
+                href={`/home/activities/${activity._id}`}
                 className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/10"
               >
                 Ver vista pública
               </Link>
               <AdminDeleteItemButton
-                deletePath={`/api/raffles/${raffle._id}`}
-                itemLabel="rifa"
-                itemName={raffle.name}
+                deletePath={`/api/activities/${activity._id}`}
+                itemLabel="actividad"
+                itemName={activity.name}
                 consequences={[
-                  "Se eliminarán los números, boletos y reservas vinculadas a esta rifa.",
+                  "Se eliminarán los números, boletos y reservas vinculadas a esta actividad.",
                   "También se borrarán las transacciones de pago asociadas.",
                   "Las imágenes en Cloudinary quedarán removidas.",
                 ]}
                 description={
                   <>
-                    Vas a eliminar <span className="font-semibold text-white">{raffle.name}</span>. Esta acción es permanente.
+                    Vas a eliminar <span className="font-semibold text-white">{activity.name}</span>. Esta acción es permanente.
                   </>
                 }
-                successMessage="Rifa eliminada correctamente."
+                successMessage="Actividad eliminada correctamente."
                 variant="text"
               />
             </div>
@@ -352,7 +352,7 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
       <section className="rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
         <header className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[#f6c44f]">Editar rifa</p>
+            <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[#f6c44f]">Editar actividad</p>
             <h3 className="mt-1 text-xl font-semibold text-white">Datos generales</h3>
           </div>
         </header>
@@ -360,28 +360,28 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-[0.72rem] uppercase tracking-[0.18em] text-white/56">Nombre</span>
-              <input name="name" type="text" defaultValue={raffle.name} className={inputClass} disabled={isDrawn} />
+              <input name="name" type="text" defaultValue={activity.name} className={inputClass} disabled={isDrawn} />
             </label>
             <label className="grid gap-2">
               <span className="text-[0.72rem] uppercase tracking-[0.18em] text-white/56">Estado</span>
-              <select name="status" defaultValue={raffle.status} className={inputClass} disabled={isDrawn}>
-                {RAFFLE_STATUSES.map((s) => (
-                  <option key={s} value={s} disabled={s === "DRAWN" && raffle.status !== "DRAWN"} className="bg-[#0b0d12]">
-                    {RAFFLE_STATUS_LABELS[s] ?? s}
+              <select name="status" defaultValue={activity.status} className={inputClass} disabled={isDrawn}>
+                {ACTIVITY_STATUSES.map((s) => (
+                  <option key={s} value={s} disabled={s === "DRAWN" && activity.status !== "DRAWN"} className="bg-[#0b0d12]">
+                    {ACTIVITY_STATUS_LABELS[s] ?? s}
                   </option>
                 ))}
               </select>
             </label>
             <label className="grid gap-2 md:col-span-2">
               <span className="text-[0.72rem] uppercase tracking-[0.18em] text-white/56">Premio</span>
-              <input name="prize" type="text" defaultValue={raffle.prize} className={inputClass} disabled={isDrawn} />
+              <input name="prize" type="text" defaultValue={activity.prize} className={inputClass} disabled={isDrawn} />
             </label>
             <label className="grid gap-2 md:col-span-2">
               <span className="text-[0.72rem] uppercase tracking-[0.18em] text-white/56">Descripción</span>
               <textarea
                 name="description"
                 rows={4}
-                defaultValue={raffle.description ?? ""}
+                defaultValue={activity.description ?? ""}
                 className={`${inputClass} resize-y`}
                 disabled={isDrawn}
               />
@@ -391,7 +391,7 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
               <input
                 name="slug"
                 type="text"
-                defaultValue={raffle.slug ?? ""}
+                defaultValue={activity.slug ?? ""}
                 placeholder="se generará desde el nombre si lo dejas vacío"
                 className={inputClass}
                 disabled={isDrawn}
@@ -405,7 +405,7 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
               <input
                 name="seoTitle"
                 type="text"
-                defaultValue={raffle.seoTitle ?? ""}
+                defaultValue={activity.seoTitle ?? ""}
                 placeholder="Título para buscadores y redes"
                 maxLength={120}
                 className={inputClass}
@@ -417,7 +417,7 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
               <textarea
                 name="seoDescription"
                 rows={3}
-                defaultValue={raffle.seoDescription ?? ""}
+                defaultValue={activity.seoDescription ?? ""}
                 placeholder="Resumen breve para SEO (≈160 caracteres)"
                 maxLength={300}
                 className={`${inputClass} resize-y`}
@@ -429,7 +429,7 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
               <input
                 name="tags"
                 type="text"
-                defaultValue={(raffle.tags ?? []).join(", ")}
+                defaultValue={(activity.tags ?? []).join(", ")}
                 placeholder="navidad, premium, gratis (separadas por coma)"
                 className={inputClass}
                 disabled={isDrawn}
@@ -445,7 +445,7 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
                 type="number"
                 min={0}
                 step={1000}
-                defaultValue={raffle.ticketPrice}
+                defaultValue={activity.ticketPrice}
                 className={inputClass}
                 disabled={isDrawn || totalSold > 0}
               />
@@ -458,7 +458,7 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
               <input
                 name="drawDate"
                 type="datetime-local"
-                defaultValue={toDateTimeLocalValue(raffle.drawDate)}
+                defaultValue={toDateTimeLocalValue(activity.drawDate)}
                 className={inputClass}
                 disabled={isDrawn}
               />
@@ -532,13 +532,13 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
             <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[#f6c44f]">Sorteo</p>
             <h3 className="mt-1 text-xl font-semibold text-white">Ejecutar el sorteo</h3>
             <p className="mt-1 text-sm text-white/64">
-              Ingresa el número ganador. Si fue vendido, ese boleto será el ganador y la rifa pasará a estado <strong>DRAWN</strong>.
+              Ingresa el número ganador. Si fue vendido, ese boleto será el ganador y la actividad pasará a estado <strong>DRAWN</strong>.
             </p>
           </div>
         </header>
         {isDrawn ? (
           <p className="rounded-2xl border border-violet-300/24 bg-violet-400/10 px-4 py-3 text-sm text-violet-100">
-            La rifa ya fue sorteada{raffle.winnerTicket ? ` con el número ${raffle.winnerTicket}` : ""}.
+            La actividad ya fue sorteada{activity.winnerTicket ? ` con el número ${activity.winnerTicket}` : ""}.
           </p>
         ) : (
           <form onSubmit={handleDrawSubmit} className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
@@ -586,14 +586,14 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
             <select
               value={ownersFilter}
               onChange={(e) => {
-                const next = e.target.value as RaffleNumberStatus | "ALL";
+                const next = e.target.value as ActivityNumberStatus | "ALL";
                 setOwnersFilter(next);
                 refreshOwners(next);
               }}
               className="rounded-full border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/82"
             >
               <option value="ALL" className="bg-[#0b0d12]">Todos</option>
-              {RAFFLE_NUMBER_STATUSES.map((s) => (
+              {ACTIVITY_NUMBER_STATUSES.map((s) => (
                 <option key={s} value={s} className="bg-[#0b0d12]">
                   {NUMBER_STATUS_LABELS[s]}
                 </option>
@@ -642,7 +642,7 @@ export function RaffleAdminDetail({ raffle: initialRaffle, initialOwners, owners
                           owner.status,
                         )}`}
                       >
-                        {NUMBER_STATUS_LABELS[owner.status as RaffleNumberStatus] ?? owner.status}
+                        {NUMBER_STATUS_LABELS[owner.status as ActivityNumberStatus] ?? owner.status}
                       </span>
                     </td>
                     <td className="px-3 py-3">

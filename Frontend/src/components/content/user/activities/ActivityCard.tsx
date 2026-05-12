@@ -1,8 +1,8 @@
-import type { LandingRaffle } from "@/lib/api/public-content";
+import type { LandingActivity } from "@/lib/api/public-content";
 import { ShowcaseCard } from "../shared";
 import { formatDate, formatMoney, humanizeToken } from "../shared/utils";
 
-function getRaffleBadgeTone(status: string | null) {
+function getActivityBadgeTone(status: string | null) {
   switch (status) {
     case "ACTIVE":
       return "open" as const;
@@ -16,7 +16,7 @@ function getRaffleBadgeTone(status: string | null) {
   }
 }
 
-export function RaffleCard({ item }: { item: LandingRaffle }) {
+export function ActivityCard({ item }: { item: LandingActivity }) {
   const ticketLabel = item.isFree || item.ticketPrice === 0 ? "Gratis" : formatMoney(item.ticketPrice);
   const sold = item.soldTickets ?? 0;
   const total = item.totalTickets ?? 0;
@@ -24,11 +24,11 @@ export function RaffleCard({ item }: { item: LandingRaffle }) {
 
   return (
     <ShowcaseCard
-      href={`/home/rifas/${item.id}`}
-      badge={{ label: humanizeToken(item.status), tone: getRaffleBadgeTone(item.status) }}
-      ctaLabel="Ver rifa"
+      href={`/home/activities/${item.id}`}
+      badge={{ label: humanizeToken(item.status), tone: getActivityBadgeTone(item.status) }}
+      ctaLabel="Ver actividad"
       description={item.prize ?? "Premios pensados para mantener activa a la comunidad y premiar su participación."}
-      eyebrow="Rifas Billar En Linea"
+      eyebrow="Actividades Billar En Linea"
       footer={`Sorteo ${formatDate(item.drawDate)}`}
       metrics={[
         { label: "Boleto", value: ticketLabel },
@@ -39,7 +39,7 @@ export function RaffleCard({ item }: { item: LandingRaffle }) {
       title={item.name}
       image={item.image ? {
         src: item.image,
-        alt: `Imagen de la rifa ${item.name}`,
+        alt: `Imagen de la actividad ${item.name}`,
       } : item.prizeImage ? {
         src: item.prizeImage,
         alt: `Premio ${item.prize ?? item.name}`,

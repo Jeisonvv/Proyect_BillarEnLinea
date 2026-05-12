@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { getLandingEvents, getLandingPosts, getLandingProducts, getLandingRaffles, getLandingTournaments } from "@/lib/api/public-content";
+import { getLandingEvents, getLandingPosts, getLandingProducts, getLandingActivities, getLandingTournaments } from "@/lib/api/public-content";
 import { EventCard } from "@/components/content/user/events";
 import { PostCard } from "@/components/content/user/posts";
 import { ProductCard } from "@/components/content/user/products";
-import { RaffleCard } from "@/components/content/user/raffles";
+import { ActivityCard } from "@/components/content/user/activities";
 import { ShowcaseCard } from "@/components/content/user/shared";
 import { getTournamentShowcaseProps } from "@/components/content/user/tournaments";
 import { getServerSession } from "@/lib/auth/server-session";
@@ -44,10 +44,10 @@ function HomeSection({
 }
 
 export default async function PageHome() {
-  const [torneos, eventos, rifas, noticias, productos] = await Promise.all([
+  const [torneos, eventos, activities, noticias, productos] = await Promise.all([
     getLandingTournaments(),
     getLandingEvents(),
-    getLandingRaffles(),
+    getLandingActivities(),
     getLandingPosts(),
     getLandingProducts(),
     getServerSession(),
@@ -74,18 +74,18 @@ export default async function PageHome() {
       </HomeSection>
 
       <HomeSection
-        eyebrow="Rifas"
+        eyebrow="Actividades"
         title="Premios y dinamicas activas"
-        description="Muestra las rifas destacadas para que el cliente vea rapido el premio, el valor del numero y la fecha del sorteo."
-        href="/home/rifas"
-        cta="Ver todas las rifas"
+        description="Muestra las actividades destacadas para que el cliente vea rapido el premio, el valor del numero y la fecha del sorteo."
+        href="/home/activities"
+        cta="Ver todas las actividades"
       >
         <div className="grid gap-4">
-          {rifas.items.length > 0 ? rifas.items.map((rifa) => (
-            <RaffleCard key={rifa.id} item={rifa} />
+          {activities.items.length > 0 ? activities.items.map((activity) => (
+            <ActivityCard key={activity.id} item={activity} />
           )) : (
             <div className="rounded-3xl border border-dashed border-white/10 bg-black/12 px-5 py-6 text-sm leading-7 text-white/62">
-              No hay rifas activas en este momento.
+              No hay actividades activas en este momento.
             </div>
           )}
         </div>

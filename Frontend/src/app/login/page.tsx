@@ -12,7 +12,7 @@ function getIntentMessage(intent?: string) {
     case "eventos":
       return "Para entrar a los eventos primero debes iniciar sesion o registrarte.";
     case "rifas":
-      return "Para participar en las rifas primero debes iniciar sesion o registrarte.";
+      return "Para participar en las actividades primero debes iniciar sesion o registrarte.";
     case "tienda":
       return "Para continuar hacia la tienda primero debes iniciar sesion o registrarte.";
     default:

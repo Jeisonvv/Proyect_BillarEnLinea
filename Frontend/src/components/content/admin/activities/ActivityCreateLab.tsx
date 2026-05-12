@@ -7,17 +7,17 @@ import { ApiError } from "@/lib/api/client";
 import { parseTagsInput, toIsoDate } from "@/components/content/admin/shared";
 import { ADMIN_INPUT as inputClass } from "@/components/ui/styles";
 import {
-  RAFFLE_STATUSES,
-  createRaffleAdmin,
-  uploadRaffleImage,
-  type CreateRaffleInput,
-  type RaffleStatus,
-} from "@/lib/api/admin-raffles";
+  ACTIVITY_STATUSES,
+  createActivityAdmin,
+  uploadActivityImage,
+  type CreateActivityInput,
+  type ActivityStatus,
+} from "@/lib/api/admin-activities";
 
 type FormState = {
   kind: "idle" | "success" | "error";
   message?: string;
-  raffleId?: string;
+  activityId?: string;
 };
 
 type FieldErrors = Partial<Record<string, string>>;
@@ -34,7 +34,7 @@ function isPowerOfTen(value: number) {
   return n === 1;
 }
 
-export function RaffleCreateLab() {
+export function ActivityCreateLab() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [state, setState] = useState<FormState>(initialState);
@@ -61,7 +61,7 @@ export function RaffleCreateLab() {
     try {
       const nameInput = (formRef.current?.elements.namedItem("name") as HTMLInputElement | null)?.value ?? "";
       const suffix = target === "image" ? "promo" : "premio";
-      const result = await uploadRaffleImage(file, `${nameInput || "rifa"}-${suffix}`);
+      const result = await uploadActivityImage(file, `${nameInput || "rifa"}-${suffix}`);
       setUrl(result.data.url);
       setState({ kind: "idle" });
     } catch (error) {
@@ -87,7 +87,7 @@ export function RaffleCreateLab() {
     const tags = parseTagsInput(String(formData.get("tags") ?? ""));
     const prize = String(formData.get("prize") ?? "").trim();
     const description = String(formData.get("description") ?? "").trim();
-    const status = String(formData.get("status") ?? "DRAFT") as RaffleStatus;
+    const status = String(formData.get("status") ?? "DRAFT") as ActivityStatus;
     const ticketPriceRaw = String(formData.get("ticketPrice") ?? "").trim();
     const totalTicketsRaw = String(formData.get("totalTickets") ?? "").trim();
     const drawDateRaw = String(formData.get("drawDate") ?? "").trim();
@@ -116,7 +116,7 @@ export function RaffleCreateLab() {
       return;
     }
 
-    const payload: CreateRaffleInput = {
+    const payload: CreateActivityInput = {
       name,
       prize,
       ticketPrice,
@@ -135,19 +135,19 @@ export function RaffleCreateLab() {
 
     startTransition(async () => {
       try {
-        const result = await createRaffleAdmin(payload);
+        const result = await createActivityAdmin(payload);
         const id = result.data?._id;
         setState({
           kind: "success",
-          message: "Rifa creada correctamente.",
-          raffleId: id,
+          message: "Actividad creada correctamente.",
+          activityId: id,
         });
         if (id) {
-          router.push(`/admin/rifas/${id}`);
+          router.push(`/admin/activities/${id}`);
           router.refresh();
         }
       } catch (error) {
-        let message = "No se pudo crear la rifa.";
+        let message = "No se pudo crear la actividad.";
         if (error instanceof ApiError) {
           const payload = error.payload as { message?: string } | undefined;
           message = payload?.message ?? error.message;
@@ -168,9 +168,9 @@ export function RaffleCreateLab() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[#f6c44f]">Laboratorio de creación</p>
-          <h2 className="mt-2 text-2xl font-semibold text-white">Nueva rifa</h2>
+          <h2 className="mt-2 text-2xl font-semibold text-white">Nueva actividad</h2>
         </div>
-        <Link href="/admin/rifas" className="text-sm font-medium text-white/62 transition hover:text-white">
+        <Link href="/admin/activities" className="text-sm font-medium text-white/62 transition hover:text-white">
           ← Volver al panel
         </Link>
       </header>
@@ -181,7 +181,7 @@ export function RaffleCreateLab() {
           <input
             name="name"
             type="text"
-            placeholder="Ej. Rifa fin de año Billar en Línea"
+            placeholder="Ej. Actividad fin de año Billar en Línea"
             className={inputClass}
             required
           />
@@ -191,7 +191,7 @@ export function RaffleCreateLab() {
         <label className="grid gap-2">
           <span className="text-[0.72rem] uppercase tracking-[0.18em] text-white/56">Estado inicial</span>
           <select name="status" defaultValue="DRAFT" className={inputClass}>
-            {RAFFLE_STATUSES.filter((s) => s !== "DRAWN").map((s) => (
+            {ACTIVITY_STATUSES.filter((s) => s !== "DRAWN").map((s) => (
               <option key={s} value={s} className="bg-[#0b0d12]">
                 {s}
               </option>
@@ -252,7 +252,7 @@ export function RaffleCreateLab() {
             className={inputClass}
           />
           <span className="text-[0.7rem] text-white/45">
-            Sirven para filtrar/agrupar rifas en la web. Separa cada etiqueta con una coma.
+            Sirven para filtrar/agrupar actividades en la web. Separa cada etiqueta con una coma.
           </span>
         </label>
 
@@ -267,7 +267,7 @@ export function RaffleCreateLab() {
             className={inputClass}
             required
           />
-          <span className="text-[0.7rem] text-white/45">Usa 0 para una rifa gratuita.</span>
+          <span className="text-[0.7rem] text-white/45">Usa 0 para una actividad gratuita.</span>
           {fieldErrors.ticketPrice ? <span className="text-xs text-rose-300">{fieldErrors.ticketPrice}</span> : null}
         </label>
 
@@ -344,7 +344,7 @@ export function RaffleCreateLab() {
 
       <div className="flex flex-wrap items-center justify-end gap-3">
         <Link
-          href="/admin/rifas"
+          href="/admin/activities"
           className="rounded-full border border-white/12 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/78 transition hover:bg-white/10"
         >
           Cancelar
@@ -354,7 +354,7 @@ export function RaffleCreateLab() {
           disabled={isPending || imageUploading || prizeImageUploading}
           className="rounded-full bg-[linear-gradient(135deg,#f6c44f,#e0a936)] px-6 py-2.5 text-sm font-semibold text-[#1c160a] shadow-[0_8px_24px_rgba(246,196,79,0.25)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending ? "Creando…" : "Crear rifa"}
+          {isPending ? "Creando…" : "Crear actividad"}
         </button>
       </div>
     </form>

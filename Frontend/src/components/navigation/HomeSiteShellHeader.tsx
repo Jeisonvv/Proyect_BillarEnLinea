@@ -10,7 +10,7 @@ const userNavItems = [
   { label: "Inicio", href: "/home" },
   { label: "Torneos", href: "/home/torneos" },
   { label: "Eventos", href: "/home/eventos" },
-  { label: "Rifas", href: "/home/rifas" },
+  { label: "Actividades", href: "/home/activities" },
   { label: "Tienda", href: "/home/tienda" },
   { label: "Perfil", href: "/home/perfil" },
 ] as const;
@@ -19,7 +19,7 @@ const adminNavItems = [
   { label: "Dashboard", href: "/admin" },
   { label: "Torneos", href: "/admin/torneos" },
   { label: "Eventos", href: "/admin/eventos" },
-  { label: "Rifas", href: "/admin/rifas" },
+  { label: "Actividades", href: "/admin/activities" },
   { label: "Tienda", href: "/admin/tienda" },
   { label: "Noticias", href: "/admin/noticias" },
 ] as const;

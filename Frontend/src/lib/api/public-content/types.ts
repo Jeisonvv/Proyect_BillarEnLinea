@@ -130,7 +130,7 @@ export type EventDetail = {
   }>;
 };
 
-export type LandingRaffle = {
+export type LandingActivity = {
   id: string;
   name: string;
   slug: string | null;
@@ -147,7 +147,7 @@ export type LandingRaffle = {
   isFree: boolean | null;
 };
 
-export type RaffleDetail = LandingRaffle & {
+export type ActivityDetail = LandingActivity & {
   description: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
@@ -186,13 +186,13 @@ export type LandingProduct = {
 export type LandingSnapshot = {
   tournaments: CollectionState<LandingTournament>;
   events: CollectionState<LandingEvent>;
-  raffles: CollectionState<LandingRaffle>;
+  activities: CollectionState<LandingActivity>;
   posts: CollectionState<LandingPost>;
   products: CollectionState<LandingProduct>;
   totals: {
     tournaments: number;
     events: number;
-    raffles: number;
+    activities: number;
     posts: number;
     products: number;
   };

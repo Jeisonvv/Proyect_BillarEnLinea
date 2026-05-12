@@ -5,7 +5,7 @@ import { RegisterForm } from "@/components/auth/register-form";
 
 export const metadata: Metadata = {
   title: "Crear cuenta",
-  description: "Crea tu cuenta en Billar en Linea para participar en torneos, descubrir eventos, acceder a rifas y seguir la actividad de la comunidad.",
+  description: "Crea tu cuenta en Billar en Linea para participar en torneos, descubrir eventos, acceder a actividades y seguir la actividad de la comunidad.",
   robots: {
     index: false,
     follow: true,

@@ -9,7 +9,7 @@ import {
   resolveApiAssetUrl,
   type JsonRecord,
 } from "./shared";
-import type { LandingRaffle, RaffleDetail } from "./types";
+import type { LandingActivity, ActivityDetail } from "./types";
 
 function pickBoolean(record: JsonRecord, keys: string[]): boolean | null {
   for (const key of keys) {
@@ -19,7 +19,7 @@ function pickBoolean(record: JsonRecord, keys: string[]): boolean | null {
   return null;
 }
 
-function normalizeRaffle(record: JsonRecord): LandingRaffle | null {
+function normalizeActivity(record: JsonRecord): LandingActivity | null {
   const name = pickString(record, ["name", "title"]);
   const id = pickString(record, ["_id", "id"]);
 
@@ -45,8 +45,8 @@ function normalizeRaffle(record: JsonRecord): LandingRaffle | null {
   };
 }
 
-function normalizeRaffleDetail(record: JsonRecord): RaffleDetail | null {
-  const base = normalizeRaffle(record);
+function normalizeActivityDetail(record: JsonRecord): ActivityDetail | null {
+  const base = normalizeActivity(record);
   if (!base) return null;
 
   const winnerRecord = isRecord(record.winner) ? record.winner : null;
@@ -72,18 +72,18 @@ function normalizeRaffleDetail(record: JsonRecord): RaffleDetail | null {
   };
 }
 
-export async function getLandingRaffles(limit = 3) {
+export async function getLandingActivities(limit = 3) {
   // no-store: las rifas cambian con frecuencia (creación, cambios de estado,
   // sorteos) y necesitamos ver lo más reciente sin esperar a que expire el
   // revalidate por defecto.
-  return fetchCollection(`/api/raffles?limit=${limit}`, normalizeRaffle, {
+  return fetchCollection(`/api/activities?limit=${limit}`, normalizeActivity, {
     cache: "no-store",
   });
 }
 
-export async function getRaffleDetailById(id: string) {
+export async function getActivityDetailById(id: string) {
   try {
-    const payload = await getJson<{ data?: unknown }>(`/api/raffles/${encodeURIComponent(id)}`, {
+    const payload = await getJson<{ data?: unknown }>(`/api/activities/${encodeURIComponent(id)}`, {
       cache: "no-store",
     });
 
@@ -91,32 +91,32 @@ export async function getRaffleDetailById(id: string) {
       return null;
     }
 
-    return normalizeRaffleDetail(payload.data);
+    return normalizeActivityDetail(payload.data);
   } catch (error) {
     if (process.env.NODE_ENV !== "production") {
-      console.warn("getRaffleDetailById error", formatError(error));
+      console.warn("getActivityDetailById error", formatError(error));
     }
     return null;
   }
 }
 
-export type RaffleNumberItem = {
+export type ActivityNumberItem = {
   number: string;
   numericValue: number;
   status: "AVAILABLE" | "RESERVED" | "PAID" | "WINNER";
 };
 
-export type RaffleNumbersResponse = {
-  numbers: RaffleNumberItem[];
+export type ActivityNumbersResponse = {
+  numbers: ActivityNumberItem[];
   totalTickets: number | null;
   saleStatus: string | null;
   saleClosesAt: string | null;
 };
 
-export async function getRaffleNumbers(id: string, limit = 1000): Promise<RaffleNumbersResponse | null> {
+export async function getActivityNumbers(id: string, limit = 1000): Promise<ActivityNumbersResponse | null> {
   try {
     const payload = await getJson<{ data?: unknown }>(
-      `/api/raffles/${encodeURIComponent(id)}/numbers?limit=${limit}`,
+      `/api/activities/${encodeURIComponent(id)}/numbers?limit=${limit}`,
       { cache: "no-store" },
     );
 
@@ -126,7 +126,7 @@ export async function getRaffleNumbers(id: string, limit = 1000): Promise<Raffle
 
     const data = payload.data;
     const rawNumbers = Array.isArray(data.numbers) ? data.numbers : [];
-    const numbers: RaffleNumberItem[] = [];
+    const numbers: ActivityNumberItem[] = [];
 
     for (const item of rawNumbers) {
       if (!isRecord(item)) continue;
@@ -146,22 +146,22 @@ export async function getRaffleNumbers(id: string, limit = 1000): Promise<Raffle
     };
   } catch (error) {
     if (process.env.NODE_ENV !== "production") {
-      console.warn("getRaffleNumbers error", formatError(error));
+      console.warn("getActivityNumbers error", formatError(error));
     }
     return null;
   }
 }
 
-export { normalizeRaffle, normalizeRaffleDetail };
-export type { LandingRaffle, RaffleDetail };
+export { normalizeActivity, normalizeActivityDetail };
+export type { LandingActivity, ActivityDetail };
 
-export type MyRaffleNumber = {
+export type MyActivityNumber = {
   number: string;
   numericValue: number;
   status: "RESERVED" | "PAID" | "WINNER";
 };
 
-export async function getMyRaffleNumbers(id: string): Promise<MyRaffleNumber[]> {
+export async function getMyActivityNumbers(id: string): Promise<MyActivityNumber[]> {
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
@@ -177,13 +177,13 @@ export async function getMyRaffleNumbers(id: string): Promise<MyRaffleNumber[]> 
     if (!cookieHeader) return [];
 
     const payload = await getJson<{ data?: unknown }>(
-      `/api/raffles/${encodeURIComponent(id)}/my-numbers`,
+      `/api/activities/${encodeURIComponent(id)}/my-numbers`,
       { cache: "no-store", headers: { Cookie: cookieHeader } },
     );
 
     if (!isRecord(payload) || !isRecord(payload.data)) return [];
     const rawNumbers = Array.isArray(payload.data.numbers) ? payload.data.numbers : [];
-    const result: MyRaffleNumber[] = [];
+    const result: MyActivityNumber[] = [];
 
     for (const item of rawNumbers) {
       if (!isRecord(item)) continue;

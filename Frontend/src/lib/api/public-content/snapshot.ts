@@ -1,15 +1,15 @@
 import { getLandingEvents } from "./events";
 import { getLandingPosts } from "./posts";
 import { getLandingProducts } from "./products";
-import { getLandingRaffles } from "./raffles";
+import { getLandingActivities } from "./activities";
 import { getLandingTournaments } from "./tournaments";
 import type { LandingSnapshot } from "./types";
 
 export async function getLandingSnapshot(): Promise<LandingSnapshot> {
-  const [tournaments, events, raffles, posts, products] = await Promise.all([
+  const [tournaments, events, activities, posts, products] = await Promise.all([
     getLandingTournaments(3),
     getLandingEvents(3),
-    getLandingRaffles(3),
+    getLandingActivities(3),
     getLandingPosts(3),
     getLandingProducts(3),
   ]);
@@ -17,13 +17,13 @@ export async function getLandingSnapshot(): Promise<LandingSnapshot> {
   return {
     tournaments,
     events,
-    raffles,
+    activities,
     posts,
     products,
     totals: {
       tournaments: tournaments.total,
       events: events.total,
-      raffles: raffles.total,
+      activities: activities.total,
       posts: posts.total,
       products: products.total,
     },

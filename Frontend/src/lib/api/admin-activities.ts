@@ -1,12 +1,12 @@
 import { deleteJson, getJson, patchJson, postFormData, postJson } from "@/lib/api/client";
 
-export const RAFFLE_STATUSES = ["DRAFT", "ACTIVE", "CLOSED", "DRAWN"] as const;
-export type RaffleStatus = (typeof RAFFLE_STATUSES)[number];
+export const ACTIVITY_STATUSES = ["DRAFT", "ACTIVE", "CLOSED", "DRAWN"] as const;
+export type ActivityStatus = (typeof ACTIVITY_STATUSES)[number];
 
-export const RAFFLE_NUMBER_STATUSES = ["AVAILABLE", "RESERVED", "PAID", "WINNER"] as const;
-export type RaffleNumberStatus = (typeof RAFFLE_NUMBER_STATUSES)[number];
+export const ACTIVITY_NUMBER_STATUSES = ["AVAILABLE", "RESERVED", "PAID", "WINNER"] as const;
+export type ActivityNumberStatus = (typeof ACTIVITY_NUMBER_STATUSES)[number];
 
-export type CreateRaffleInput = {
+export type CreateActivityInput = {
   name: string;
   slug?: string;
   description?: string;
@@ -19,10 +19,10 @@ export type CreateRaffleInput = {
   totalTickets: number;
   drawDate: string;
   imageUrl?: string;
-  status?: RaffleStatus;
+  status?: ActivityStatus;
 };
 
-export type UpdateRaffleInput = {
+export type UpdateActivityInput = {
   name?: string;
   slug?: string;
   description?: string;
@@ -34,14 +34,14 @@ export type UpdateRaffleInput = {
   imageUrl?: string;
   ticketPrice?: number;
   drawDate?: string;
-  status?: RaffleStatus;
+  status?: ActivityStatus;
 };
 
-export type DrawRaffleInput = {
+export type DrawActivityInput = {
   winningNumber: string;
 };
 
-export type RaffleAdminListItem = {
+export type ActivityAdminListItem = {
   _id: string;
   name: string;
   slug?: string;
@@ -49,7 +49,7 @@ export type RaffleAdminListItem = {
   seoTitle?: string;
   seoDescription?: string;
   tags?: string[];
-  status: RaffleStatus;
+  status: ActivityStatus;
   prize: string;
   prizeImageUrl?: string;
   imageUrl?: string;
@@ -67,7 +67,7 @@ export type RaffleAdminListItem = {
   isFree?: boolean;
 };
 
-export type RaffleAdminDetailDto = RaffleAdminListItem & {
+export type ActivityAdminDetailDto = ActivityAdminListItem & {
   numberSummary?: {
     available: number;
     reserved: number;
@@ -76,11 +76,11 @@ export type RaffleAdminDetailDto = RaffleAdminListItem & {
   };
 };
 
-export type RaffleNumberOwner = {
+export type ActivityNumberOwner = {
   _id?: string;
-  raffle?: string;
+  activity?: string;
   number: string;
-  status: RaffleNumberStatus;
+  status: ActivityNumberStatus;
   user?: {
     _id?: string;
     name?: string | null;
@@ -94,50 +94,50 @@ export type RaffleNumberOwner = {
   paidAt?: string | null;
 };
 
-export type ListRafflesAdminResponse = {
+export type ListActivitiesAdminResponse = {
   ok: boolean;
-  data: RaffleAdminListItem[];
+  data: ActivityAdminListItem[];
   pagination?: { total: number; page: number; limit: number };
 };
 
-export type RaffleAdminResponse = {
+export type ActivityAdminResponse = {
   ok: boolean;
-  data: RaffleAdminDetailDto;
+  data: ActivityAdminDetailDto;
 };
 
-export type RaffleNumberOwnersResponse = {
+export type ActivityNumberOwnersResponse = {
   ok: boolean;
   data: {
-    numbers: RaffleNumberOwner[];
+    numbers: ActivityNumberOwner[];
     total: number;
     page: number;
     limit: number;
   };
 };
 
-export type CreateRaffleResponse = {
+export type CreateActivityResponse = {
   ok: boolean;
-  data: RaffleAdminListItem & { _id: string };
+  data: ActivityAdminListItem & { _id: string };
 };
 
-export type UpdateRaffleResponse = {
+export type UpdateActivityResponse = {
   ok: boolean;
-  data: RaffleAdminDetailDto;
+  data: ActivityAdminDetailDto;
 };
 
-export type DrawRaffleResponse = {
+export type DrawActivityResponse = {
   ok: boolean;
   message?: string;
   hasWinner?: boolean;
-  data?: RaffleAdminDetailDto;
+  data?: ActivityAdminDetailDto;
 };
 
-export type DeleteRaffleResponse = {
+export type DeleteActivityResponse = {
   ok: boolean;
   message?: string;
   data?: {
-    raffleId?: string;
-    raffleName?: string;
+    activityId?: string;
+    activityName?: string;
     deletedNumbers?: number;
     deletedTickets?: number;
     deletedPayments?: number;
@@ -161,7 +161,7 @@ export type UploadImageResponse = {
   };
 };
 
-export async function uploadRaffleImage(file: File, name?: string) {
+export async function uploadActivityImage(file: File, name?: string) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("folder", "billar-en-linea/rifas");
@@ -180,52 +180,52 @@ export async function uploadRaffleImage(file: File, name?: string) {
   });
 }
 
-export async function listRafflesAdmin(params?: { status?: string; page?: number; limit?: number }) {
+export async function listActivitiesAdmin(params?: { status?: string; page?: number; limit?: number }) {
   const search = new URLSearchParams();
   if (params?.status) search.set("status", params.status);
   if (params?.page) search.set("page", String(params.page));
   if (params?.limit) search.set("limit", String(params.limit));
 
   const qs = search.toString();
-  return getJson<ListRafflesAdminResponse>(`/api/raffles${qs ? `?${qs}` : ""}`, {
+  return getJson<ListActivitiesAdminResponse>(`/api/activities${qs ? `?${qs}` : ""}`, {
     credentials: "include",
     cache: "no-store",
   });
 }
 
-export async function getRaffleByIdAdmin(raffleId: string) {
-  return getJson<RaffleAdminResponse>(`/api/raffles/${raffleId}`, {
+export async function getActivityByIdAdmin(activityId: string) {
+  return getJson<ActivityAdminResponse>(`/api/activities/${activityId}`, {
     credentials: "include",
     cache: "no-store",
   });
 }
 
-export async function createRaffleAdmin(input: CreateRaffleInput) {
-  return postJson<CreateRaffleResponse, CreateRaffleInput>("/api/raffles", input, {
+export async function createActivityAdmin(input: CreateActivityInput) {
+  return postJson<CreateActivityResponse, CreateActivityInput>("/api/activities", input, {
     credentials: "include",
   });
 }
 
-export async function updateRaffleAdmin(raffleId: string, input: UpdateRaffleInput) {
-  return patchJson<UpdateRaffleResponse, UpdateRaffleInput>(`/api/raffles/${raffleId}`, input, {
+export async function updateActivityAdmin(activityId: string, input: UpdateActivityInput) {
+  return patchJson<UpdateActivityResponse, UpdateActivityInput>(`/api/activities/${activityId}`, input, {
     credentials: "include",
   });
 }
 
-export async function drawRaffleAdmin(raffleId: string, input: DrawRaffleInput) {
-  return postJson<DrawRaffleResponse, DrawRaffleInput>(`/api/raffles/${raffleId}/draw`, input, {
+export async function drawActivityAdmin(activityId: string, input: DrawActivityInput) {
+  return postJson<DrawActivityResponse, DrawActivityInput>(`/api/activities/${activityId}/draw`, input, {
     credentials: "include",
   });
 }
 
-export async function deleteRaffleAdmin(raffleId: string) {
-  return deleteJson<DeleteRaffleResponse>(`/api/raffles/${raffleId}`, {
+export async function deleteActivityAdmin(activityId: string) {
+  return deleteJson<DeleteActivityResponse>(`/api/activities/${activityId}`, {
     credentials: "include",
   });
 }
 
-export async function getRaffleNumberOwnersAdmin(
-  raffleId: string,
+export async function getActivityNumberOwnersAdmin(
+  activityId: string,
   params?: { status?: string; page?: number; limit?: number },
 ) {
   const search = new URLSearchParams();
@@ -234,8 +234,8 @@ export async function getRaffleNumberOwnersAdmin(
   if (params?.limit) search.set("limit", String(params.limit));
 
   const qs = search.toString();
-  return getJson<RaffleNumberOwnersResponse>(
-    `/api/raffles/${raffleId}/number-owners${qs ? `?${qs}` : ""}`,
+  return getJson<ActivityNumberOwnersResponse>(
+    `/api/activities/${activityId}/number-owners${qs ? `?${qs}` : ""}`,
     { credentials: "include", cache: "no-store" },
   );
 }

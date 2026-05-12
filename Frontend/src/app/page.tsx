@@ -6,10 +6,10 @@ import { absoluteUrl, siteConfig } from "@/lib/site";
 export const revalidate = 300;
 
 const landingSocialImage = "/hero_portada.png";
-const landingTitle = "Billar en Linea — Torneos, Eventos, Rifas y Tienda de Billar";
-const landingDescription = "Participa en torneos de billar, sigue eventos, accede a rifas y compra accesorios. Todo en un solo lugar para la comunidad del billar en Colombia.";
-const landingSocialTitle = "Billar en Linea | Torneos, eventos, rifas y tienda de billar";
-const landingSocialDescription = "Participa en torneos de billar, sigue eventos, accede a rifas y compra accesorios. Todo en un solo lugar para la comunidad del billar en Colombia.";
+const landingTitle = "Billar en Linea — Torneos, Eventos, Actividades y Tienda de Billar";
+const landingDescription = "Participa en torneos de billar, sigue eventos, accede a actividades y compra accesorios. Todo en un solo lugar para la comunidad del billar en Colombia.";
+const landingSocialTitle = "Billar en Linea | Torneos, eventos, actividades y tienda de billar";
+const landingSocialDescription = "Participa en torneos de billar, sigue eventos, accede a actividades y compra accesorios. Todo en un solo lugar para la comunidad del billar en Colombia.";
 
 export const metadata: Metadata = {
   title: landingTitle,
