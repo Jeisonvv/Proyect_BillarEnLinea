@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
-import type { AddCartItemDto, CheckoutCartDto, RemoveCartItemDto, UpdateCartItemDto } from './dto/cart.dto.js';
+import { AddCartItemDto, CheckoutCartDto, RemoveCartItemDto, UpdateCartItemDto } from './dto/cart.dto.js';
 import { CartNestService } from './cart.service.js';
 
 @Controller('api/cart')

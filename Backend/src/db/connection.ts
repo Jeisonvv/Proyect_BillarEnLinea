@@ -23,6 +23,7 @@ const MONGO_READY_STATES: Record<number, 'disconnected' | 'connected' | 'connect
  */
 export const connectDB = async (): Promise<void> => {
   try {
+    console.log('MONGODB_URI:', process.env.MONGODB_URI);
     await mongoose.connect(process.env.MONGODB_URI as string);
     console.log('Conectado a MongoDB');
   } catch (err) {

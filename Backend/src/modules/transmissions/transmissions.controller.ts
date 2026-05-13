@@ -14,7 +14,7 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { UserRole } from '../../models/enums.js';
-import type { CreateTransmissionDto, UpdateTransmissionDto } from './dto/transmissions.dto.js';
+import { CreateTransmissionDto, UpdateTransmissionDto } from './dto/transmissions.dto.js';
 import { TransmissionsNestService } from './transmissions.service.js';
 
 @Controller('api/transmissions')

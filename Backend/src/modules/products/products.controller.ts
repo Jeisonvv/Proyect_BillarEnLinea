@@ -15,7 +15,7 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { UserRole } from '../../models/enums.js';
-import type {
+import {
   CreateProductDto,
   ListAdminProductsQueryDto,
   ListProductsQueryDto,

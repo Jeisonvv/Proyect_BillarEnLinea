@@ -18,7 +18,7 @@ import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { UserRole } from '../../models/enums.js';
 import { isActivitySalesClosedError } from '../../utils/activity-sale-window.js';
-import type {
+import {
   CreateActivityCheckoutDto,
   CreateActivityDto,
   DrawActivityDto,

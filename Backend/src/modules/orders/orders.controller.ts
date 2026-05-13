@@ -16,7 +16,7 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { UserRole } from '../../models/enums.js';
-import type { CreateOrderCheckoutDto, CreateOrderDto, ListOrdersQueryDto, UpdateOrderStatusDto } from './dto/orders.dto.js';
+import { CreateOrderCheckoutDto, CreateOrderDto, ListOrdersQueryDto, UpdateOrderStatusDto } from './dto/orders.dto.js';
 import { OrdersNestService } from './orders.service.js';
 
 @Controller('api/orders')

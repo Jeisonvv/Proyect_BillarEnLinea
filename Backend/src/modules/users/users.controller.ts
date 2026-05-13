@@ -17,7 +17,7 @@ import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { BotGuard } from '../../common/guards/bot.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { UserRole } from '../../models/enums.js';
-import type { CreateUserDto, UpdateConversationStateDto, UpdateUserDto } from './dto/users.dto.js';
+import { CreateUserDto, UpdateConversationStateDto, UpdateUserDto } from './dto/users.dto.js';
 import { UsersNestService } from './users.service.js';
 
 @Controller('api/users')

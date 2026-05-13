@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BotGuard } from '../../common/guards/bot.guard.js';
-import type {
+import {
   EnsureLeadSessionDto,
   UpdateLeadSessionDataDto,
   UpdateLeadSessionStateDto,

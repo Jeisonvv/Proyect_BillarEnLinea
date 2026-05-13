@@ -12,7 +12,7 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { UserRole } from '../../models/enums.js';
-import type { RecordMatchResultDto } from './dto/matches.dto.js';
+import { RecordMatchResultDto } from './dto/matches.dto.js';
 import { MatchesNestService } from './matches.service.js';
 
 @Controller('api/matches')

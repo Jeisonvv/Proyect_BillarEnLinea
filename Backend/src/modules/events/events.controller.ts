@@ -17,7 +17,7 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { UserRole } from '../../models/enums.js';
-import type { CreateEventDto, ListEventsQueryDto, UpdateEventDto } from './dto/events.dto.js';
+import { CreateEventDto, ListEventsQueryDto, UpdateEventDto } from './dto/events.dto.js';
 import { EventsNestService } from './events.service.js';
 
 @Controller('api/events')

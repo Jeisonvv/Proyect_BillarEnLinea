@@ -45,7 +45,6 @@ const cartSchema = new Schema<ICartDocument>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true,
     },
     items: {
       type: [cartItemSchema],

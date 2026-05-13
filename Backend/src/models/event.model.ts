@@ -108,7 +108,6 @@ const eventSchema = new Schema<IEventDocument>(
     slug: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       lowercase: true,
     },

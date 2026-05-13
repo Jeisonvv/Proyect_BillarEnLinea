@@ -12,7 +12,7 @@ import {
 import type { Request, Response } from 'express';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { clearAuthCookie, setAuthCookie } from '../../utils/auth-token.js';
-import type { ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto } from './dto/auth.dto.js';
+import { ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto } from './dto/auth.dto.js';
 import { AuthNestService } from './auth.service.js';
 
 @Controller('api/auth')

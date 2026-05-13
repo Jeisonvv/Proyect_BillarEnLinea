@@ -221,7 +221,6 @@ const tournamentSchema = new Schema<ITournamentDocument>(
     slug: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       lowercase: true,
     },
