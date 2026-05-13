@@ -18,7 +18,7 @@ export function getActivityNumberWidth(totalTickets: number) {
 
 export function formatActivityNumber(numericValue: number, totalTickets: number) {
   if (!Number.isInteger(numericValue) || numericValue < 0 || numericValue >= totalTickets) {
-    throw new Error("El número de rifa está fuera del rango permitido.");
+    throw new Error("El número de actividad está fuera del rango permitido.");
   }
 
   return String(numericValue).padStart(getActivityNumberWidth(totalTickets), "0");
@@ -28,14 +28,14 @@ export function normalizeActivityNumberInput(value: string | number, totalTicket
   const rawValue = String(value).trim();
 
   if (!/^\d+$/.test(rawValue)) {
-    throw new Error("Los números de rifa solo pueden contener dígitos.");
+    throw new Error("Los números de actividad solo pueden contener dígitos.");
   }
 
   return formatActivityNumber(Number(rawValue), totalTickets);
 }
 
 export interface IActivityNumber {
-  raffle: mongoose.Types.ObjectId;
+  activity: mongoose.Types.ObjectId;
   number: string;
   numericValue: number;
   status: ActivityNumberStatus;
@@ -61,7 +61,7 @@ export interface IActivityNumberModel extends Model<IActivityNumberDocument> {
 
 const activityNumberSchema = new Schema<IActivityNumberDocument, IActivityNumberModel>(
   {
-    raffle: {
+    activity: {
       type: Schema.Types.ObjectId,
       ref: "Activity",
       required: true,
@@ -94,21 +94,21 @@ const activityNumberSchema = new Schema<IActivityNumberDocument, IActivityNumber
   { timestamps: true },
 );
 
-activityNumberSchema.index({ raffle: 1, number: 1 }, { unique: true });
-activityNumberSchema.index({ raffle: 1, numericValue: 1 }, { unique: true });
-activityNumberSchema.index({ raffle: 1, status: 1, numericValue: 1 });
+activityNumberSchema.index({ activity: 1, number: 1 }, { unique: true });
+activityNumberSchema.index({ activity: 1, numericValue: 1 }, { unique: true });
+activityNumberSchema.index({ activity: 1, status: 1, numericValue: 1 });
 
 activityNumberSchema.statics.generateForActivity = async function (
   activityId: mongoose.Types.ObjectId,
   totalTickets: number,
 ): Promise<IActivityNumberDocument[]> {
-  const existingCount = await this.countDocuments({ raffle: activityId });
+  const existingCount = await this.countDocuments({ activity: activityId });
   if (existingCount > 0) {
-    return this.find({ raffle: activityId }).sort({ numericValue: 1 });
+    return this.find({ activity: activityId }).sort({ numericValue: 1 });
   }
 
   const docs = Array.from({ length: totalTickets }, (_value, numericValue) => ({
-    raffle: activityId,
+    activity: activityId,
     number: formatActivityNumber(numericValue, totalTickets),
     numericValue,
     status: ActivityNumberStatus.AVAILABLE,
@@ -116,14 +116,14 @@ activityNumberSchema.statics.generateForActivity = async function (
 
   await this.insertMany(docs, { ordered: true });
 
-  return this.find({ raffle: activityId }).sort({ numericValue: 1 });
+  return this.find({ activity: activityId }).sort({ numericValue: 1 });
 };
 
 activityNumberSchema.statics.findAvailableByActivity = function (
   activityId: mongoose.Types.ObjectId,
 ): Promise<IActivityNumberDocument[]> {
   return this.find({
-    raffle: activityId,
+    activity: activityId,
     status: ActivityNumberStatus.AVAILABLE,
   }).sort({ numericValue: 1 });
 };

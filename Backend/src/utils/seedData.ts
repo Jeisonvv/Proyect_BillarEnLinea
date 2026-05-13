@@ -386,10 +386,10 @@ async function seedTournamentRegistrations(users: any[], tournaments: any[], cou
 }
 
 /**
- * Crea rifas ficticias
+ * Crea actividades ficticias
  */
 async function seedActivities(users: any[], count: number = 2) {
-  log(`\n→ Creando ${count} rifas...`, colors.cyan);
+  log(`\n→ Creando ${count} actividades...`, colors.cyan);
 
   const activities = [];
 
@@ -398,7 +398,7 @@ async function seedActivities(users: any[], count: number = 2) {
     const drawDate = faker.date.future();
 
     const activityData = {
-      name: `Rifa ${faker.commerce.product()}`,
+      name: `Actividad ${faker.commerce.product()}`,
       description: faker.lorem.paragraph(),
       status: ActivityStatus.ACTIVE,
       prize: faker.commerce.productName(),
@@ -415,11 +415,11 @@ async function seedActivities(users: any[], count: number = 2) {
       const activity = await Activity.create(activityData);
       activities.push(activity);
       log(
-        `  ✓ Rifa creada: ${activity.name} (${activity._id})`,
+        `  ✓ Actividad creada: ${activity.name} (${activity._id})`,
         colors.yellow
       );
     } catch (error) {
-      log(`  ✗ Error creando rifa`, colors.red);
+      log(`  ✗ Error creando actividad`, colors.red);
       console.error(error);
     }
   }
@@ -428,10 +428,10 @@ async function seedActivities(users: any[], count: number = 2) {
 }
 
 /**
- * Crea boletos de rifa
+ * Crea boletos de actividad
  */
 async function seedActivityTickets(users: any[], activities: any[], count: number = 5) {
-  log(`\n→ Creando ${count} boletos de rifa...`, colors.cyan);
+  log(`\n→ Creando ${count} boletos de actividad...`, colors.cyan);
 
   const tickets: any[] = [];
 
@@ -448,7 +448,7 @@ async function seedActivityTickets(users: any[], activities: any[], count: numbe
     const ticketStatus = faker.helpers.arrayElement([TicketStatus.RESERVED, TicketStatus.PAID]);
 
     const ticketData: Record<string, unknown> = {
-      raffle: activity._id,
+      activity: activity._id,
       user: user._id,
       numbers: ticketNumbers,
       quantity: ticketNumbers.length,
@@ -605,7 +605,7 @@ async function seedDatabase() {
   • Pedidos:       ${orders.length}
   • Torneos:       ${tournaments.length}
   • Inscripciones: ${mainRegistrations} en torneo principal + 10 aleatorias
-  • Rifas:         ${activities.length}
+  • Actividades:   ${activities.length}
   • Boletos:       8
   • Solicitudes de transmisión: 2
 

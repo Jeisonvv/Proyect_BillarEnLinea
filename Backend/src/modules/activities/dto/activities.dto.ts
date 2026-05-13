@@ -1,5 +1,5 @@
 import { IsArray, IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
-import { Channel } from '../../../models/enums.js';
+import { ActivityStatus, Channel } from '../../../models/enums.js';
 
 export class CreateActivityDto {
   @IsString()
@@ -49,6 +49,10 @@ export class CreateActivityDto {
 
   @IsDateString()
   drawDate!: string;
+
+  @IsOptional()
+  @IsEnum(ActivityStatus)
+  status?: ActivityStatus;
 
   [key: string]: unknown;
 }

@@ -462,7 +462,7 @@ export async function cleanupExpiredActivityReservations(activityId?: string) {
   };
 
   if (activityId) {
-    filter.raffle = toObjectId(activityId, "Activity ID");
+    filter.activity = toObjectId(activityId, "Activity ID");
   }
 
   const expiredTickets = await ActivityTicket.find(filter)
@@ -546,7 +546,7 @@ async function markReservedTicketAsPaid(ticketId: mongoose.Types.ObjectId, trans
       },
     ),
     Activity.updateOne(
-      { _id: ticket.raffle },
+      { _id: ticket.activity },
       { $inc: { soldTickets: ticket.numbers.length } },
     ),
     ActivityTicket.updateOne(
@@ -565,16 +565,16 @@ async function markReservedTicketAsPaid(ticketId: mongoose.Types.ObjectId, trans
 
   return ActivityTicket.findById(ticket._id)
     .populate("user", "name avatarUrl")
-    .populate("raffle", "name prize ticketPrice status drawDate")
+    .populate("activity", "name prize ticketPrice status drawDate")
     .lean()
     .then((activityTicket) => {
       if (!activityTicket) return activityTicket;
 
       return {
         ...activityTicket,
-        activity: hasActivityDrawDate(activityTicket.raffle)
-          ? withActivitySaleClosesAt(activityTicket.raffle)
-          : activityTicket.raffle,
+        activity: hasActivityDrawDate(activityTicket.activity)
+          ? withActivitySaleClosesAt(activityTicket.activity)
+          : activityTicket.activity,
       };
     });
 }
@@ -624,16 +624,16 @@ async function cancelReservedTicket(ticketId: mongoose.Types.ObjectId, paymentSt
 
   return ActivityTicket.findById(ticket._id)
     .populate("user", "name avatarUrl")
-    .populate("raffle", "name prize ticketPrice status drawDate")
+    .populate("activity", "name prize ticketPrice status drawDate")
     .lean()
     .then((activityTicket) => {
       if (!activityTicket) return activityTicket;
 
       return {
         ...activityTicket,
-        activity: hasActivityDrawDate(activityTicket.raffle)
-          ? withActivitySaleClosesAt(activityTicket.raffle)
-          : activityTicket.raffle,
+        activity: hasActivityDrawDate(activityTicket.activity)
+          ? withActivitySaleClosesAt(activityTicket.activity)
+          : activityTicket.activity,
       };
     });
 }
@@ -651,17 +651,17 @@ export async function createWompiCheckoutForActivity(
     .lean();
 
   if (!activity) {
-    throw new Error("Rifa no encontrada.");
+    throw new Error("Actividad no encontrada.");
   }
 
   if (activity.status !== ActivityStatus.ACTIVE) {
-    throw new Error("La rifa no está activa para recibir pagos.");
+    throw new Error("La actividad no está activa para recibir pagos.");
   }
 
   assertActivitySalesOpen(activity.drawDate);
 
   if (activity.ticketPrice === 0) {
-    throw new Error("La rifa es gratuita y no requiere checkout.");
+    throw new Error("La actividad es gratuita y no requiere checkout.");
   }
 
   if (!params.numbers || params.numbers.length === 0) {
@@ -732,7 +732,7 @@ export async function createWompiCheckoutForActivity(
     }
 
     const retryTicket = await ActivityTicket.create({
-      raffle: activityObjectId,
+      activity: activityObjectId,
       user: userObjectId,
       numbers: requestedNumbers,
       status: TicketStatus.RESERVED,
@@ -805,7 +805,7 @@ export async function createWompiCheckoutForActivity(
   }
 
   const ticket = await ActivityTicket.create({
-    raffle: activityObjectId,
+    activity: activityObjectId,
     user: userObjectId,
     numbers: requestedNumbers,
     status: TicketStatus.RESERVED,

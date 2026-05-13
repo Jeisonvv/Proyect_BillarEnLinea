@@ -62,14 +62,14 @@ export class PaymentReservationCleanupWorker implements OnModuleInit, OnModuleDe
     const startedAt = Date.now();
 
     try {
-      const [expiredRaffleReservations, expiredOrderReservations] = await Promise.all([
+      const [expiredActivityReservations, expiredOrderReservations] = await Promise.all([
         cleanupExpiredActivityReservations(),
         cleanupExpiredOrderReservations(),
       ]);
 
       logInfo('payment_reservation_cleanup_completed', {
         trigger,
-        expiredRaffleReservations,
+        expiredActivityReservations,
         expiredOrderReservations,
         durationMs: Date.now() - startedAt,
       });

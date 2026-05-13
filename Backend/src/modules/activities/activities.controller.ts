@@ -90,7 +90,7 @@ export class ActivitiesNestController {
       const activity = await this.activitiesService.getActivityById(id);
       return { ok: true, data: activity };
     } catch (error: any) {
-      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      const status = error.message === 'Actividad no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
@@ -101,7 +101,7 @@ export class ActivitiesNestController {
       const result = await this.activitiesService.getActivityNumbers(id, query);
       return { ok: true, data: result };
     } catch (error: any) {
-      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      const status = error.message === 'Actividad no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
@@ -114,7 +114,7 @@ export class ActivitiesNestController {
       const result = await this.activitiesService.getActivityNumberOwners(id, query);
       return { ok: true, data: result };
     } catch (error: any) {
-      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      const status = error.message === 'Actividad no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
@@ -125,7 +125,7 @@ export class ActivitiesNestController {
       const result = await this.activitiesService.getAvailableActivityNumbers(id);
       return { ok: true, data: result };
     } catch (error: any) {
-      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      const status = error.message === 'Actividad no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
@@ -141,7 +141,7 @@ export class ActivitiesNestController {
       const result = await this.activitiesService.getMyActivityNumbers(id, req.user.id);
       return { ok: true, data: result };
     } catch (error: any) {
-      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      const status = error.message === 'Actividad no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
@@ -168,7 +168,7 @@ export class ActivitiesNestController {
       );
       return { ok: true, data: result };
     } catch (error: any) {
-      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      const status = error.message === 'Actividad no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
@@ -188,7 +188,7 @@ export class ActivitiesNestController {
       const ticket = await this.activitiesService.purchaseActivityTickets(id, req.user, body);
       return { ok: true, data: ticket };
     } catch (error: any) {
-      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      const status = error.message === 'Actividad no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException(this.buildErrorBody(error), status);
     }
   }
@@ -208,7 +208,7 @@ export class ActivitiesNestController {
       const data = await this.activitiesService.createWompiCheckout(id, req.user, body);
       return { ok: true, data };
     } catch (error: any) {
-      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      const status = error.message === 'Actividad no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException(this.buildErrorBody(error), status);
     }
   }
@@ -221,7 +221,7 @@ export class ActivitiesNestController {
       const result = await this.activitiesService.drawActivity(id, body);
       return { ok: true, message: result.message, data: result.activity, hasWinner: result.hasWinner };
     } catch (error: any) {
-      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      const status = error.message === 'Actividad no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
@@ -234,7 +234,7 @@ export class ActivitiesNestController {
       const activity = await this.activitiesService.updateActivity(id, body);
       return { ok: true, data: activity };
     } catch (error: any) {
-      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      const status = error.message === 'Actividad no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
     }
   }
@@ -245,9 +245,9 @@ export class ActivitiesNestController {
   async deleteActivity(@Param('id') id: string) {
     try {
       const result = await this.activitiesService.deleteActivity(id);
-      return { ok: true, message: 'Rifa eliminada correctamente.', data: result };
+      return { ok: true, message: 'Actividad eliminada correctamente.', data: result };
     } catch (error: any) {
-      const status = error.message === 'Rifa no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      const status = error.message === 'Actividad no encontrada.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
     }
   }

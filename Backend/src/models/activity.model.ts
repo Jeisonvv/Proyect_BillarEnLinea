@@ -14,7 +14,7 @@ function slugifyActivityValue(value: string) {
       .toLowerCase()
       .trim()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "rifa"
+      .replace(/^-+|-+$/g, "") || "actividad"
   );
 }
 
@@ -42,9 +42,9 @@ export { slugifyActivityValue };
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Rifa organizada por el negocio.
+ * Actividad organizada por el negocio.
  *
- * Una rifa tiene una cantidad fija de boletos numerados.
+ * Una actividad tiene una cantidad fija de boletos numerados.
  * Los usuarios compran uno o varios boletos (ver ActivityTicket).
  * En la fecha del sorteo se elige un número ganador al azar.
  *
@@ -78,10 +78,10 @@ export interface IActivity {
   winnerTicket?: string;                 // Número del boleto ganador respetando ceros a la izquierda
   winner?: mongoose.Types.ObjectId;      // Usuario ganador (ref a User)
 
-  imageUrl?: string; // Imagen promocional de la rifa
+  imageUrl?: string; // Imagen promocional de la actividad
   promoVideoUrl?: string; // URL de video promocional (YouTube, Vimeo, MP4, etc.)
 
-  // Quién creó la rifa (admin o staff)
+  // Quién creó la actividad (admin o staff)
   createdBy: mongoose.Types.ObjectId;
 
   createdAt: Date;
@@ -98,10 +98,10 @@ export interface IActivityDocument extends IActivity, Document {
   // Virtual: true si ya se vendieron todos los boletos
   readonly isSoldOut: boolean;
 
-  // Virtual: true cuando la rifa no requiere pago por boleto
+  // Virtual: true cuando la actividad no requiere pago por boleto
   readonly isFree: boolean;
 
-  // Virtual: true cuando la rifa requiere pago por boleto
+  // Virtual: true cuando la actividad requiere pago por boleto
   readonly requiresPayment: boolean;
 }
 
@@ -193,7 +193,7 @@ const activitySchema = new Schema<IActivityDocument>(
 // ÍNDICES
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Para listar rifas activas ordenadas por fecha de sorteo (las más próximas primero)
+// Para listar actividades activas ordenadas por fecha de sorteo (las más próximas primero)
 activitySchema.index({ status: 1, drawDate: 1 });
 
 // Para resolver páginas públicas por URL amigable sin lookup por ObjectId
@@ -206,7 +206,7 @@ activitySchema.pre("validate", async function () {
 
 activitySchema.pre("save", function () {
   if (!this.isNew && this.isModified("totalTickets")) {
-    throw new Error("No puedes cambiar totalTickets después de crear la rifa.");
+    throw new Error("No puedes cambiar totalTickets después de crear la actividad.");
   }
 
   if (this.soldTickets > this.totalTickets) {

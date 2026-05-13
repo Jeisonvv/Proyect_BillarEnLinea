@@ -46,8 +46,8 @@ function isFreeActivityIdentityDuplicateError(error: unknown) {
   };
 
   return duplicateError.code === 11000 && (
-    (duplicateError.keyPattern?.raffle === 1 && duplicateError.keyPattern?.participantIdentityDocument === 1)
-    || duplicateError.message?.includes("free_raffle_identity_once_per_raffle")
+    (duplicateError.keyPattern?.activity === 1 && duplicateError.keyPattern?.participantIdentityDocument === 1)
+    || duplicateError.message?.includes("free_activity_identity_once_per_activity")
   );
 }
 
@@ -97,17 +97,17 @@ function normalizeWinningNumberInput(value: string | number, totalTickets: numbe
 
 async function getRandomAvailableActivityNumber(activityId: mongoose.Types.ObjectId) {
   const availableCount = await ActivityNumber.countDocuments({
-    raffle: activityId,
+    activity: activityId,
     status: ActivityNumberStatus.AVAILABLE,
   });
 
   if (availableCount === 0) {
-    throw new Error("No hay números disponibles en esta rifa.");
+    throw new Error("No hay números disponibles en esta actividad.");
   }
 
   const randomOffset = Math.floor(Math.random() * availableCount);
   const randomNumber = await ActivityNumber.findOne({
-    raffle: activityId,
+    activity: activityId,
     status: ActivityNumberStatus.AVAILABLE,
   })
     .sort({ numericValue: 1 })
@@ -116,7 +116,7 @@ async function getRandomAvailableActivityNumber(activityId: mongoose.Types.Objec
     .lean();
 
   if (!randomNumber) {
-    throw new Error("No fue posible asignar un número aleatorio para la rifa.");
+    throw new Error("No fue posible asignar un número aleatorio para la actividad.");
   }
 
   return randomNumber.number;
@@ -137,11 +137,11 @@ function normalizeActivityPricingData(data: Record<string, unknown>) {
   const explicitIsFree = typeof data.isFree === "boolean" ? data.isFree : undefined;
 
   if (explicitIsFree === true && ticketPrice > 0) {
-    throw new Error("Una rifa gratuita debe tener ticketPrice en 0.");
+    throw new Error("Una actividad gratuita debe tener ticketPrice en 0.");
   }
 
   if (explicitIsFree === false && ticketPrice === 0) {
-    throw new Error("Una rifa con costo debe tener ticketPrice mayor a 0.");
+    throw new Error("Una actividad con costo debe tener ticketPrice mayor a 0.");
   }
 
   return {
@@ -183,31 +183,31 @@ export interface UpdateActivityParams {
 }
 
 /**
- * Actualiza una rifa existente. No permite cambiar `totalTickets` ni `soldTickets`
+ * Actualiza una actividad existente. No permite cambiar `totalTickets` ni `soldTickets`
  * (campos estructurales). El status `DRAWN` solo lo asigna el sorteo, no esta función.
- * El `ticketPrice` solo puede modificarse si la rifa todavía no tiene boletos vendidos.
+ * El `ticketPrice` solo puede modificarse si la actividad todavía no tiene boletos vendidos.
  */
 export async function updateActivityService(id: string, data: UpdateActivityParams) {
   const activityId = toObjectId(id, "Activity ID");
 
   const activity = await Activity.findById(activityId);
   if (!activity) {
-    throw new Error("Rifa no encontrada.");
+    throw new Error("Actividad no encontrada.");
   }
 
   if (data.status !== undefined) {
     if (!Object.values(ActivityStatus).includes(data.status as ActivityStatus)) {
-      throw new Error("Estado de rifa inválido.");
+      throw new Error("Estado de actividad inválido.");
     }
     if (data.status === ActivityStatus.DRAWN) {
       throw new Error("El estado DRAWN solo puede asignarse al ejecutar el sorteo.");
     }
     if (activity.status === ActivityStatus.DRAWN) {
-      throw new Error("No puedes modificar una rifa que ya fue sorteada.");
+      throw new Error("No puedes modificar una actividad que ya fue sorteada.");
     }
     activity.status = data.status as ActivityStatus;
   } else if (activity.status === ActivityStatus.DRAWN) {
-    throw new Error("No puedes modificar una rifa que ya fue sorteada.");
+    throw new Error("No puedes modificar una actividad que ya fue sorteada.");
   }
 
   if (data.name !== undefined) {
@@ -279,7 +279,7 @@ export async function updateActivityService(id: string, data: UpdateActivityPara
 
   if (data.ticketPrice !== undefined) {
     if (activity.soldTickets > 0) {
-      throw new Error("No puedes cambiar el precio de una rifa con boletos vendidos.");
+      throw new Error("No puedes cambiar el precio de una actividad con boletos vendidos.");
     }
     const nextPrice = getTicketPriceValue(data.ticketPrice);
     activity.ticketPrice = nextPrice;
@@ -309,25 +309,25 @@ export async function deleteActivityService(id: string) {
 
   const activity = await Activity.findById(activityId).select("_id name status imageUrl prizeImageUrl").lean();
   if (!activity) {
-    throw new Error("Rifa no encontrada.");
+    throw new Error("Actividad no encontrada.");
   }
 
   if (activity.status === ActivityStatus.DRAWN) {
-    throw new Error("No se puede eliminar una rifa que ya fue sorteada.");
+    throw new Error("No se puede eliminar una actividad que ya fue sorteada.");
   }
 
   const blockingTicket = await ActivityTicket.findOne({
-    raffle: activityId,
+    activity: activityId,
     status: { $in: [TicketStatus.RESERVED, TicketStatus.PAID, TicketStatus.WINNER] },
   })
     .select("_id status")
     .lean();
 
   if (blockingTicket) {
-    throw new Error("No se puede eliminar una rifa con boletos activos o confirmados.");
+    throw new Error("No se puede eliminar una actividad con boletos activos o confirmados.");
   }
 
-  const activityTickets = await ActivityTicket.find({ raffle: activityId }).select("_id").lean();
+  const activityTickets = await ActivityTicket.find({ activity: activityId }).select("_id").lean();
   const ticketIds = activityTickets.map((ticket) => ticket._id);
 
   const blockingPayment = ticketIds.length > 0
@@ -341,12 +341,12 @@ export async function deleteActivityService(id: string) {
     : null;
 
   if (blockingPayment) {
-    throw new Error("No se puede eliminar una rifa con transacciones de pago activas o aprobadas.");
+    throw new Error("No se puede eliminar una actividad con transacciones de pago activas o aprobadas.");
   }
 
   const [deletedNumbers, deletedTickets, deletedPayments] = await Promise.all([
-    ActivityNumber.deleteMany({ raffle: activityId }),
-    ActivityTicket.deleteMany({ raffle: activityId }),
+    ActivityNumber.deleteMany({ activity: activityId }),
+    ActivityTicket.deleteMany({ activity: activityId }),
     ticketIds.length > 0
       ? PaymentTransaction.deleteMany({
         payableType: PaymentPayableType.ACTIVITY_TICKET,
@@ -404,7 +404,7 @@ export async function getActivityByIdService(id: string) {
   } else {
     const bySlug = await Activity.findOne({ slug: id.trim().toLowerCase() }).select("_id").lean();
     if (!bySlug) {
-      throw new Error("Rifa no encontrada.");
+      throw new Error("Actividad no encontrada.");
     }
     activityId = bySlug._id as mongoose.Types.ObjectId;
   }
@@ -416,14 +416,14 @@ export async function getActivityByIdService(id: string) {
     .lean({ virtuals: true });
 
   if (!activity) {
-    throw new Error("Rifa no encontrada.");
+    throw new Error("Actividad no encontrada.");
   }
 
   const [availableCount, reservedCount, paidCount, winnerCount] = await Promise.all([
-    ActivityNumber.countDocuments({ raffle: activityId, status: ActivityNumberStatus.AVAILABLE }),
-    ActivityNumber.countDocuments({ raffle: activityId, status: ActivityNumberStatus.RESERVED }),
-    ActivityNumber.countDocuments({ raffle: activityId, status: ActivityNumberStatus.PAID }),
-    ActivityNumber.countDocuments({ raffle: activityId, status: ActivityNumberStatus.WINNER }),
+    ActivityNumber.countDocuments({ activity: activityId, status: ActivityNumberStatus.AVAILABLE }),
+    ActivityNumber.countDocuments({ activity: activityId, status: ActivityNumberStatus.RESERVED }),
+    ActivityNumber.countDocuments({ activity: activityId, status: ActivityNumberStatus.PAID }),
+    ActivityNumber.countDocuments({ activity: activityId, status: ActivityNumberStatus.WINNER }),
   ]);
 
   return {
@@ -446,10 +446,10 @@ export async function getActivityNumbersService(
   const activity = await Activity.findById(activityId).select("_id totalTickets drawDate").lean();
 
   if (!activity) {
-    throw new Error("Rifa no encontrada.");
+    throw new Error("Actividad no encontrada.");
   }
 
-  const filter: Record<string, unknown> = { raffle: activityId };
+  const filter: Record<string, unknown> = { activity: activityId };
   if (options.status) {
     filter.status = options.status;
   }
@@ -489,12 +489,12 @@ export async function getActivityNumberOwnersService(
     .lean({ virtuals: true });
 
   if (!activity) {
-    throw new Error("Rifa no encontrada.");
+    throw new Error("Actividad no encontrada.");
   }
 
   const ownerStatuses = [ActivityNumberStatus.RESERVED, ActivityNumberStatus.PAID, ActivityNumberStatus.WINNER];
   const filter: Record<string, unknown> = {
-    raffle: activityId,
+    activity: activityId,
     status: options.status ?? { $in: ownerStatuses },
   };
 
@@ -526,7 +526,7 @@ export async function getAvailableActivityNumbersService(id: string) {
   const activity = await Activity.findById(activityId).select("_id totalTickets drawDate").lean();
 
   if (!activity) {
-    throw new Error("Rifa no encontrada.");
+    throw new Error("Actividad no encontrada.");
   }
 
   const activityMetadata = withActivitySaleClosesAt(activity);
@@ -550,11 +550,11 @@ export async function getMyActivityNumbersService(activityId: string, userId: st
 
   const activity = await Activity.findById(activityObjectId).select("_id totalTickets").lean();
   if (!activity) {
-    throw new Error("Rifa no encontrada.");
+    throw new Error("Actividad no encontrada.");
   }
 
   const numbers = await ActivityNumber.find({
-    raffle: activityObjectId,
+    activity: activityObjectId,
     user: userObjectId,
     status: { $in: [ActivityNumberStatus.RESERVED, ActivityNumberStatus.PAID, ActivityNumberStatus.WINNER] },
   })
@@ -581,11 +581,11 @@ export async function releaseMyActivityReservationsService(
 
   const activity = await Activity.findById(activityObjectId).select("_id totalTickets").lean();
   if (!activity) {
-    throw new Error("Rifa no encontrada.");
+    throw new Error("Actividad no encontrada.");
   }
 
   const numberFilter: Record<string, unknown> = {
-    raffle: activityObjectId,
+    activity: activityObjectId,
     user: userObjectId,
     status: ActivityNumberStatus.RESERVED,
   };
@@ -658,11 +658,11 @@ export async function purchaseActivityTicketsService(
   const activity = await Activity.findById(activityObjectId);
 
   if (!activity) {
-    throw new Error("Rifa no encontrada.");
+    throw new Error("Actividad no encontrada.");
   }
 
   if (activity.status !== ActivityStatus.ACTIVE) {
-    throw new Error("La rifa no está activa para venta de boletos.");
+    throw new Error("La actividad no está activa para venta de boletos.");
   }
 
   assertActivitySalesOpen(activity.drawDate);
@@ -693,20 +693,20 @@ export async function purchaseActivityTicketsService(
   const paymentMethod = getPaymentMethod(params.paymentMethod);
 
   if (activityIsFree && params.numbers?.length) {
-    throw new Error("En rifas gratuitas el número se asigna automáticamente y no debes enviarlo.");
+    throw new Error("En actividades gratuitas el número se asigna automáticamente y no debes enviarlo.");
   }
 
   if (activityIsFree && params.status && requestedStatus !== TicketStatus.PAID) {
-    throw new Error("Las rifas gratuitas se confirman automáticamente y no admiten estado RESERVED.");
+    throw new Error("Las actividades gratuitas se confirman automáticamente y no admiten estado RESERVED.");
   }
 
   if (activityIsFree && (paymentMethod || params.paymentReference)) {
-    throw new Error("La rifa es gratuita y no requiere datos de pago.");
+    throw new Error("La actividad es gratuita y no requiere datos de pago.");
   }
 
   if (activityIsFree) {
     if (!user.identityDocument) {
-      throw new Error("El usuario debe tener documento de identidad registrado para participar en rifas gratuitas.");
+      throw new Error("El usuario debe tener documento de identidad registrado para participar en actividades gratuitas.");
     }
 
     const matchingUsers = await User.find({
@@ -717,13 +717,13 @@ export async function purchaseActivityTicketsService(
       .lean();
 
     const existingFreeTicket = await ActivityTicket.exists({
-      raffle: activityObjectId,
+      activity: activityObjectId,
       user: { $in: matchingUsers.map((entry) => entry._id) },
       status: { $ne: TicketStatus.CANCELLED },
     });
 
     if (existingFreeTicket) {
-      throw new Error("Ya existe una participación para este documento de identidad en esta rifa gratuita.");
+      throw new Error("Ya existe una participación para este documento de identidad en esta actividad gratuita.");
     }
   }
 
@@ -732,7 +732,7 @@ export async function purchaseActivityTicketsService(
   }
 
   const ticketData: Record<string, unknown> = {
-    raffle: activityObjectId,
+    activity: activityObjectId,
     user: userObjectId,
     numbers: requestedNumbers,
     status,
@@ -753,7 +753,7 @@ export async function purchaseActivityTicketsService(
     ticket = await ActivityTicket.create(ticketData);
   } catch (error) {
     if (isFreeActivityIdentityDuplicateError(error)) {
-      throw new Error("Ya existe una participación para este documento de identidad en esta rifa gratuita.");
+      throw new Error("Ya existe una participación para este documento de identidad en esta actividad gratuita.");
     }
 
     throw error;
@@ -761,7 +761,7 @@ export async function purchaseActivityTicketsService(
 
   const createdTicket = await ActivityTicket.findById(ticket._id)
     .populate("user", "name avatarUrl")
-    .populate("raffle", "name prize ticketPrice status drawDate")
+    .populate("activity", "name prize ticketPrice status drawDate")
     .lean();
 
   if (!createdTicket) {
@@ -770,7 +770,7 @@ export async function purchaseActivityTicketsService(
 
   return {
     ...createdTicket,
-    activity: hasActivityDrawDate(createdTicket.raffle) ? withActivitySaleClosesAt(createdTicket.raffle) : createdTicket.raffle,
+    activity: hasActivityDrawDate(createdTicket.activity) ? withActivitySaleClosesAt(createdTicket.activity) : createdTicket.activity,
   };
 }
 
@@ -780,15 +780,15 @@ export async function drawActivityService(id: string, winningNumberInput: string
   const activity = await Activity.findById(activityId);
 
   if (!activity) {
-    throw new Error("Rifa no encontrada.");
+    throw new Error("Actividad no encontrada.");
   }
 
   if (activity.status === ActivityStatus.DRAWN) {
-    throw new Error("La rifa ya fue sorteada.");
+    throw new Error("La actividad ya fue sorteada.");
   }
 
   if (activity.status === ActivityStatus.CANCELLED || activity.status === ActivityStatus.DRAFT) {
-    throw new Error("La rifa no está en un estado válido para sorteo.");
+    throw new Error("La actividad no está en un estado válido para sorteo.");
   }
 
   const normalizedWinningNumber = normalizeWinningNumberInput(winningNumberInput, activity.totalTickets);
@@ -800,18 +800,18 @@ export async function drawActivityService(id: string, winningNumberInput: string
   const formattedWinningNumber = normalizeActivityNumberInput(normalizedWinningNumber, activity.totalTickets);
 
   const winnerNumber = await ActivityNumber.findOne({
-    raffle: activityId,
+    activity: activityId,
     number: formattedWinningNumber,
   }).lean();
 
   if (!winnerNumber) {
-    throw new Error("El número ganador indicado no existe en esta rifa.");
+    throw new Error("El número ganador indicado no existe en esta actividad.");
   }
 
   const hasPaidOwner = winnerNumber.status === ActivityNumberStatus.PAID && !!winnerNumber.ticket && !!winnerNumber.user;
 
   const ticketResetOperation = ActivityTicket.updateMany(
-    { raffle: activityId, isWinner: true },
+    { activity: activityId, isWinner: true },
     { $set: { isWinner: false, status: TicketStatus.PAID } },
   );
 

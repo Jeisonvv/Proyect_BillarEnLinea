@@ -42,17 +42,17 @@ test('GET /health expone el estado actual de MongoDB', async () => {
 	assert.ok(response.headers['x-request-id']);
 });
 
-test('la ventana de venta de rifas expone saleClosesAt y recorta reservas al limite', () => {
+test('la ventana de venta de actividades expone saleClosesAt y recorta reservas al limite', () => {
 	const drawDate = new Date('2026-05-03T03:40:00.000Z');
 	const now = new Date('2026-05-03T02:55:00.000Z');
 
 	const deadline = getActivitySalesDeadline(drawDate);
-	const raffle = withActivitySaleClosesAt({ drawDate, name: 'Rifa Mayo' });
+	const activity = withActivitySaleClosesAt({ drawDate, name: 'Actividad Mayo' });
 	const reservationExpiration = getActivityReservationExpiration(drawDate, 15, now);
 
 	assert.equal(deadline.toISOString(), '2026-05-03T03:00:00.000Z');
-	assert.equal(raffle.saleClosesAt, '2026-05-03T03:00:00.000Z');
-	assert.equal(raffle.saleStatus, 'OPEN');
+	assert.equal(activity.saleClosesAt, '2026-05-03T03:00:00.000Z');
+	assert.equal(activity.saleStatus, 'OPEN');
 	assert.equal(reservationExpiration.toISOString(), '2026-05-03T03:00:00.000Z');
 });
 
@@ -77,7 +77,7 @@ test('el cierre de venta lanza un error estructurado con la hora limite', () => 
 	});
 });
 
-test('el controlador de rifas devuelve error estructurado cuando la venta ya cerro', async () => {
+test('el controlador de actividades devuelve error estructurado cuando la venta ya cerro', async () => {
 	const drawDate = new Date('2026-05-03T03:40:00.000Z');
 	const closedError = new ActivitySalesClosedError(getActivitySalesDeadline(drawDate));
 	const controller = new ActivitiesNestController({

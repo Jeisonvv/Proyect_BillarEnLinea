@@ -65,8 +65,8 @@ async function verifyData() {
       { name: "Pedidos", model: Order, minExpected: 3 },
       { name: "Torneos", model: Tournament, minExpected: 2 },
       { name: "Inscripciones", model: TournamentRegistration, minExpected: 2 },
-      { name: "Rifas", model: Activity, minExpected: 2 },
-      { name: "Boletos de Rifa", model: ActivityTicket, minExpected: 5 },
+      { name: "Actividades", model: Activity, minExpected: 2 },
+      { name: "Boletos de Actividad", model: ActivityTicket, minExpected: 5 },
       { name: "Solicitudes de Transmisión", model: TransmissionRequest, minExpected: 1 },
     ];
 
@@ -144,10 +144,10 @@ async function verifyData() {
         );
       }
 
-      const exampleRaffle = await Activity.findOne();
-      if (exampleRaffle) {
+      const exampleActivity = await Activity.findOne();
+      if (exampleActivity) {
         log(
-          `  Rifa: ${exampleRaffle.name} - ${exampleRaffle.soldTickets}/${exampleRaffle.totalTickets} boletos vendidos`,
+          `  Actividad: ${exampleActivity.name} - ${exampleActivity.soldTickets}/${exampleActivity.totalTickets} boletos vendidos`,
           colors.yellow
         );
       }

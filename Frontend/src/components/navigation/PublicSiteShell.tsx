@@ -96,7 +96,7 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
         Saltar al contenido
       </a>
 
-      <header className="sticky top-0 z-50 border-b border-white/8 bg-[rgba(7,9,12,0.82)] backdrop-blur-xl">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/8 bg-[rgba(7,9,12,0.82)] backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-10">
           <Link href="/" className="flex items-center gap-3">
             <Image
@@ -163,7 +163,7 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <div id="contenido-principal" className="flex-1">
+      <div id="contenido-principal" className="flex-1 pt-[70px]">
         {children}
       </div>
 
