@@ -12,7 +12,7 @@ export default async function AdminEventsPage() {
       kicker="Admin eventos"
       title="Centraliza el calendario del club"
       description="Controla los eventos visibles, detecta programación pendiente y entra rápido a la vista pública para revisar cómo se está mostrando el calendario al usuario."
-      primaryAction={{ label: "Dashboard", href: "/admin" }}
+      primaryAction={{ label: "Crear evento", href: "/admin/eventos/crear" }}
       secondaryAction={{ label: "Home user", href: "/home" }}
       metrics={[
         { label: "Total", value: String(snapshot.totals.events), helper: snapshot.events.error ?? "Eventos visibles en el snapshot actual." },

@@ -3,6 +3,7 @@ import {
   createProductService,
   deleteProductService,
   getProductByIdService,
+  getProductBySlugService,
   listAdminProductsService,
   listProductsService,
   updateProductService,
@@ -43,6 +44,10 @@ export class ProductsNestService {
 
   getProductById(id: string) {
     return getProductByIdService(id);
+  }
+
+  getProductBySlug(slug: string) {
+    return getProductBySlugService(slug);
   }
 
   updateProduct(id: string, data: UpdateProductDto) {

@@ -14,6 +14,7 @@ const navItems = [
   { label: "Eventos", href: "/home/eventos" },
   { label: "Actividades", href: "/home/activities" },
   { label: "Tienda", href: "/home/tienda" },
+  { label: "Noticias", href: "/home/noticias" },
 ] as const;
 
 const socialLinks = [

@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { AdminSectionScaffold, formatAdminDate } from "@/components/content/admin/shared";
+import {
+  AdminDeleteItemButton,
+  AdminManageLink,
+  AdminSectionScaffold,
+  formatAdminDate,
+} from "@/components/content/admin/shared";
 import { getLandingSnapshot } from "@/lib/api/public-content";
 
 export default async function AdminNewsPage() {
@@ -12,7 +17,7 @@ export default async function AdminNewsPage() {
       kicker="Admin noticias"
       title="Ordena lo que sale en contenido"
       description="Revisa las noticias o posts visibles, detecta piezas sin etiquetas y utiliza esta sección como entrada rápida para controlar el pulso editorial del sitio."
-      primaryAction={{ label: "Dashboard", href: "/admin" }}
+      primaryAction={{ label: "Crear noticia", href: "/admin/noticias/crear" }}
       secondaryAction={{ label: "Home user", href: "/home" }}
       metrics={[
         { label: "Total", value: String(snapshot.totals.posts), helper: snapshot.posts.error ?? "Posts visibles en el snapshot actual." },
@@ -48,6 +53,24 @@ export default async function AdminNewsPage() {
                 )) : (
                   <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/78">Sin etiquetas</span>
                 )}
+              </div>
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <AdminManageLink href={`/admin/noticias/${post.slug ?? post.id}`} />
+                <AdminDeleteItemButton
+                  deletePath={`/api/posts/${post.id}`}
+                  itemLabel="noticia"
+                  itemName={post.title}
+                  consequences={[
+                    "La noticia desaparecerá de la sección pública.",
+                    "El slug quedará disponible para otra publicación.",
+                  ]}
+                  description={
+                    <>
+                      Vas a eliminar <span className="font-semibold text-white">{post.title}</span>. Esta acción es permanente.
+                    </>
+                  }
+                  successMessage="Noticia eliminada correctamente."
+                />
               </div>
             </div>
           </article>

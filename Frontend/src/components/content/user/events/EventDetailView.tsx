@@ -41,7 +41,7 @@ export function EventDetailView({ event }: { event: EventDetail }) {
   return (
     <main className="grid w-full gap-6 py-6">
       <section className="overflow-hidden rounded-[2.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,13,18,0.98),rgba(13,17,24,0.96))] shadow-[0_28px_100px_rgba(0,0,0,0.36)]">
-        <div className="relative h-80 overflow-hidden border-b border-white/10 bg-black/30 sm:h-96 lg:h-[32rem]">
+        <div className="relative h-80 overflow-hidden border-b border-white/10 bg-black/30 sm:h-96 lg:h-128">
           {event.image ? (
             <Image
               src={event.image}

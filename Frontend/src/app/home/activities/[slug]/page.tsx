@@ -6,12 +6,12 @@ import { getMyActivityNumbers } from "@/lib/api/public-content/activities";
 import { siteConfig } from "@/lib/site";
 
 type ActivityPageProps = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 };
 
 export async function generateMetadata({ params }: ActivityPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const activity = await getActivityDetailById(id);
+  const { slug } = await params;
+  const activity = await getActivityDetailById(slug);
 
   if (!activity) {
     return {
@@ -60,8 +60,8 @@ export async function generateMetadata({ params }: ActivityPageProps): Promise<M
 }
 
 export default async function HomeActivityDetailPage({ params }: ActivityPageProps) {
-  const { id } = await params;
-  const activity = await getActivityDetailById(id);
+  const { slug } = await params;
+  const activity = await getActivityDetailById(slug);
 
   if (!activity) {
     notFound();
@@ -69,8 +69,8 @@ export default async function HomeActivityDetailPage({ params }: ActivityPagePro
 
   const isFreeActivity = activity.isFree === true || activity.ticketPrice === 0;
   const [numbersResponse, myNumbers] = await Promise.all([
-    isFreeActivity ? Promise.resolve(null) : getActivityNumbers(id, 1000),
-    getMyActivityNumbers(id),
+    isFreeActivity ? Promise.resolve(null) : getActivityNumbers(activity.id, 1000),
+    getMyActivityNumbers(activity.id),
   ]);
 
   return (

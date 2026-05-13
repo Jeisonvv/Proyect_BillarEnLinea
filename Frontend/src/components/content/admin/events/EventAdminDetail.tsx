@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState, useTransition } from "react";
 import { AdminDeleteItemButton, AdminSectionScaffold, formatAdminDate, formatAdminMoney, getErrorMessage, humanizeAdminToken } from "@/components/content/admin/shared";
-import { EVENT_STATUSES, updateEventAdmin, type EventStatus } from "@/lib/api/admin-events";
+import { EVENT_STATUSES, updateEventAdmin, type EventStatus, type EventTier, type EventType } from "@/lib/api/admin-events";
 import type { EventDetail } from "@/lib/api/public-content";
 
 type FeedbackState = {
@@ -76,8 +76,8 @@ export function EventAdminDetail({ initialEvent }: { initialEvent: EventDetail }
       try {
         const response = await updateEventAdmin(event.id, {
           name: toOptionalString(formData.get("name")),
-          type: toOptionalString(formData.get("type")),
-          tier: toOptionalString(formData.get("tier")),
+          type: toOptionalString(formData.get("type")) as EventType | undefined,
+          tier: toOptionalString(formData.get("tier")) as EventTier | undefined,
           status: toOptionalString(formData.get("status")) as EventStatus | undefined,
           startDate: toOptionalDate(formData.get("startDate")),
           endDate: toOptionalDate(formData.get("endDate")),

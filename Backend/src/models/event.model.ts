@@ -40,6 +40,7 @@ export interface IEvent {
   resultsUrl?: string;
   seoTitle?: string;
   seoDescription?: string;
+  tags?: string[];
   featured: boolean;
   prizes: IEventPrize[];
   createdBy: mongoose.Types.ObjectId;
@@ -212,6 +213,10 @@ const eventSchema = new Schema<IEventDocument>(
     seoDescription: {
       type: String,
       trim: true,
+    },
+    tags: {
+      type: [String],
+      default: [],
     },
     featured: {
       type: Boolean,

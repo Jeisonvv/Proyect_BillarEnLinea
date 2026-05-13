@@ -175,12 +175,32 @@ export type LandingPost = {
 export type LandingProduct = {
   id: string;
   name: string;
+  slug: string | null;
+  brand: string | null;
   description: string | null;
   category: string | null;
   basePrice: number | null;
   image: string | null;
   tags: string[];
   stock: number | null;
+};
+
+export type PostDetail = LandingPost & {
+  content: string | null;
+  category: string | null;
+  coverImageUrl: string | null;
+  status: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  canonicalUrl: string | null;
+  ogImageUrl: string | null;
+  noIndex: boolean;
+  readingTime: number | null;
+};
+
+export type ProductDetail = LandingProduct & {
+  images: string[];
+  isActive: boolean;
 };
 
 export type LandingSnapshot = {

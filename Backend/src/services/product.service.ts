@@ -119,6 +119,10 @@ function buildProductPersistencePayload(data: Record<string, unknown>, partial =
     payload.description = normalizeOptionalString(data.description);
   }
 
+  if (data.brand !== undefined) {
+    payload.brand = normalizeOptionalString(data.brand);
+  }
+
   if (!partial || data.category !== undefined) {
     payload.category = normalizeCategory(data.category);
   }
@@ -149,6 +153,13 @@ function buildProductPersistencePayload(data: Record<string, unknown>, partial =
     }
 
     payload.isActive = data.isActive;
+  }
+
+  if (data.slug !== undefined) {
+    const slug = normalizeOptionalString(data.slug);
+    if (slug) {
+      payload.slug = slug;
+    }
   }
 
   return payload;
@@ -214,15 +225,26 @@ export async function listAdminProductsService(params: ListAdminProductsParams) 
 }
 
 export async function getProductByIdService(id: string) {
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new Error("Producto no encontrado.");
+  // Acepta ObjectId o slug. Si el id no es ObjectId válido, intenta resolver por slug.
+  let product;
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    product = await Product.findById(id).lean();
+  } else {
+    product = await Product.findOne({ slug: id.trim().toLowerCase() }).lean();
   }
 
-  const product = await Product.findById(id).lean();
   if (!product) {
     throw new Error("Producto no encontrado.");
   }
 
+  return product;
+}
+
+export async function getProductBySlugService(slug: string) {
+  const product = await Product.findOne({ slug: slug.trim().toLowerCase() }).lean();
+  if (!product) {
+    throw new Error("Producto no encontrado.");
+  }
   return product;
 }
 

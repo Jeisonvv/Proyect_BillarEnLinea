@@ -12,13 +12,13 @@ export const dynamic = "force-dynamic";
 export default async function AdminActivityDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
+  const { slug } = await params;
 
   let activity;
   try {
-    const response = await getActivityByIdAdmin(id);
+    const response = await getActivityByIdAdmin(slug);
     activity = response.data;
   } catch {
     notFound();
@@ -29,7 +29,7 @@ export default async function AdminActivityDetailPage({
   let initialOwners: ActivityNumberOwner[] = [];
   let ownersError: string | null = null;
   try {
-    const ownersResponse = await getActivityNumberOwnersAdmin(id, { limit: 200 });
+    const ownersResponse = await getActivityNumberOwnersAdmin(activity._id, { limit: 200 });
     initialOwners = ownersResponse.data?.numbers ?? [];
   } catch (error) {
     ownersError = error instanceof Error ? error.message : "No se pudieron cargar los compradores.";

@@ -31,6 +31,14 @@ export class CreateProductDto {
 
 	@IsOptional()
 	@IsString()
+	slug?: string;
+
+	@IsOptional()
+	@IsString()
+	brand?: string;
+
+	@IsOptional()
+	@IsString()
 	description?: string;
 
 	@IsIn(Object.values(ProductCategory))
@@ -70,6 +78,14 @@ export class UpdateProductDto {
 	@IsOptional()
 	@IsString()
 	name?: string;
+
+	@IsOptional()
+	@IsString()
+	slug?: string;
+
+	@IsOptional()
+	@IsString()
+	brand?: string;
 
 	@IsOptional()
 	@IsString()

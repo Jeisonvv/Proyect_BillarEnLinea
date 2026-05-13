@@ -137,13 +137,15 @@ export function ActivityCreateLab() {
       try {
         const result = await createActivityAdmin(payload);
         const id = result.data?._id;
+        const slug = result.data?.slug;
         setState({
           kind: "success",
           message: "Actividad creada correctamente.",
           activityId: id,
         });
-        if (id) {
-          router.push(`/admin/activities/${id}`);
+        const target = slug ?? id;
+        if (target) {
+          router.push(`/admin/activities/${target}`);
           router.refresh();
         }
       } catch (error) {

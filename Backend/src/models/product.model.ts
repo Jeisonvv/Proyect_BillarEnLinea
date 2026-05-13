@@ -1,6 +1,39 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { ProductCategory } from "./enums.js";
 
+// ─────────────────────────────────────────────────────────────────────────
+// HELPERS DE SLUG
+// ─────────────────────────────────────────────────────────────────────────
+
+function slugifyProductValue(value: string) {
+  return (
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "producto"
+  );
+}
+
+async function ensureUniqueProductSlug(product: IProductDocument) {
+  const ProductModel = product.constructor as mongoose.Model<IProductDocument>;
+  const rawValue = product.slug && product.slug.trim() ? product.slug : product.name;
+  const baseSlug = slugifyProductValue(rawValue);
+
+  let candidate = baseSlug;
+  let suffix = 2;
+  while (await ProductModel.exists({ slug: candidate, _id: { $ne: product._id } })) {
+    candidate = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+  product.slug = candidate;
+}
+
+export { slugifyProductValue };
+
+
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERFACES
 // ─────────────────────────────────────────────────────────────────────────────
@@ -31,6 +64,8 @@ export interface IProductVariant {
  */
 export interface IProduct {
   name: string;
+  slug: string;
+  brand?: string;
   description?: string;
   category: ProductCategory;
   basePrice: number;           // Precio base del producto (sin variantes) o precio de referencia
@@ -85,7 +120,19 @@ const productSchema = new Schema<IProductDocument>(
       required: true,
       trim: true, // Elimina espacios al inicio y al final
     },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
+    },
     description: String,
+    brand: {
+      type: String,
+      trim: true,
+    },
     category: {
       type: String,
       enum: Object.values(ProductCategory),
@@ -136,8 +183,17 @@ productSchema.index({ tags: 1 });
 // MongoDB buscará en los campos name y description simultáneamente.
 productSchema.index({ name: "text", description: "text" });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EXPORTACIÓN
+// ─────────────────────────────────────────────────────────────────────────────// HOOKS
+// ─────────────────────────────────────────────────────────────────────────
+
+productSchema.pre("validate", async function () {
+  const product = this as IProductDocument;
+  if (product.isNew || product.isModified("name") || product.isModified("slug")) {
+    await ensureUniqueProductSlug(product);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────// EXPORTACIÓN
 // ─────────────────────────────────────────────────────────────────────────────
 
 const Product = mongoose.model<IProductDocument>("Product", productSchema);

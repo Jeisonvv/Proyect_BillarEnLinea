@@ -12,6 +12,7 @@ const userNavItems = [
   { label: "Eventos", href: "/home/eventos" },
   { label: "Actividades", href: "/home/activities" },
   { label: "Tienda", href: "/home/tienda" },
+  { label: "Noticias", href: "/home/noticias" },
   { label: "Perfil", href: "/home/perfil" },
 ] as const;
 

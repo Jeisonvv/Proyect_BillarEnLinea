@@ -428,7 +428,7 @@ export function ActivityNumberGrid({ activity, initialNumbers, myNumbers = [] }:
       title="Necesitas una cuenta para participar"
       description="Para reservar o comprar números de esta actividad debes iniciar sesión o crear una cuenta. Así podemos guardar tu reserva, tu pago y avisarte si ganas."
       dismissLabel="Seguir viendo la actividad"
-      redirectTo={`/home/activities/${activity.id}`}
+      redirectTo={`/home/activities/${activity.slug ?? activity.id}`}
     />
     <ConfirmModal
       open={pendingRelease !== null}

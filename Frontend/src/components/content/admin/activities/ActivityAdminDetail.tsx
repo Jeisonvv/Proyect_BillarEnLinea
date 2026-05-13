@@ -321,7 +321,7 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
                 ← Volver
               </Link>
               <Link
-                href={`/home/activities/${activity._id}`}
+                href={`/home/activities/${activity.slug ?? activity._id}`}
                 className="rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/10"
               >
                 Ver vista pública

@@ -1,4 +1,4 @@
-import { IsBoolean, IsDateString, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateEventDto {
   @IsOptional()
@@ -42,6 +42,11 @@ export class CreateEventDto {
   @IsOptional()
   @IsString()
   seoDescription?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
 
   [key: string]: unknown;
 }
@@ -87,6 +92,11 @@ export class UpdateEventDto {
   @IsOptional()
   @IsString()
   seoDescription?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
 
   [key: string]: unknown;
 }

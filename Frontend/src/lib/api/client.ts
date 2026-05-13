@@ -112,6 +112,24 @@ export async function patchJson<TResponse, TBody>(
   });
 }
 
+export async function putJson<TResponse, TBody>(
+  path: string,
+  body: TBody,
+  init?: RequestInit,
+): Promise<TResponse> {
+  const headers = new Headers(init?.headers);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  return requestJson<TResponse>(path, {
+    ...init,
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+  });
+}
+
 export async function deleteJson<TResponse>(
   path: string,
   init?: RequestInit,

@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { AdminSectionScaffold, formatAdminMoney } from "@/components/content/admin/shared";
+import {
+  AdminDeleteItemButton,
+  AdminManageLink,
+  AdminSectionScaffold,
+  formatAdminMoney,
+} from "@/components/content/admin/shared";
 import { getLandingSnapshot } from "@/lib/api/public-content";
 
 export default async function AdminStorePage() {
@@ -12,7 +17,7 @@ export default async function AdminStorePage() {
       kicker="Admin tienda"
       title="Supervisa el catálogo y el stock"
       description="Consulta rápido el inventario público, detecta referencias con existencias bajas y usa la vista de usuario para validar cómo se presenta la tienda en producción."
-      primaryAction={{ label: "Dashboard", href: "/admin" }}
+      primaryAction={{ label: "Crear producto", href: "/admin/tienda/crear" }}
       secondaryAction={{ label: "Home user", href: "/home" }}
       metrics={[
         { label: "Total", value: String(snapshot.totals.products), helper: snapshot.products.error ?? "Productos visibles en el snapshot actual." },
@@ -53,6 +58,27 @@ export default async function AdminStorePage() {
                 <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Etiquetas</p>
                 <p className="mt-2 text-base font-semibold text-white">{product.tags.length > 0 ? product.tags.join(", ") : "Sin etiquetas"}</p>
               </div>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <AdminManageLink href={`/admin/tienda/${product.slug ?? product.id}`} />
+              <AdminDeleteItemButton
+                deletePath={`/api/products/${product.id}`}
+                itemLabel="producto"
+                itemName={product.name}
+                openLabel="Ocultar producto"
+                confirmLabel="Sí, ocultar producto"
+                pendingConfirmLabel="Ocultando producto..."
+                consequences={[
+                  "El producto se ocultará del catálogo público (soft delete).",
+                  "Podrás reactivarlo editando isActive más tarde.",
+                ]}
+                description={
+                  <>
+                    Vas a ocultar <span className="font-semibold text-white">{product.name}</span> del catálogo público.
+                  </>
+                }
+                successMessage="Producto ocultado correctamente."
+              />
             </div>
           </article>
         )) : (

@@ -53,6 +53,17 @@ export class ProductsNestController {
     }
   }
 
+  @Get('slug/:slug')
+  async getProductBySlug(@Param('slug') slug: string) {
+    try {
+      const product = await this.productsService.getProductBySlug(slug);
+      return { ok: true, data: product };
+    } catch (error: any) {
+      const status = error.message === 'Producto no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
   @Get(':id')
   async getProductById(@Param('id') id: string) {
     try {

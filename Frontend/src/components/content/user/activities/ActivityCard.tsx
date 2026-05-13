@@ -24,7 +24,7 @@ export function ActivityCard({ item }: { item: LandingActivity }) {
 
   return (
     <ShowcaseCard
-      href={`/home/activities/${item.id}`}
+      href={`/home/activities/${item.slug ?? item.id}`}
       badge={{ label: humanizeToken(item.status), tone: getActivityBadgeTone(item.status) }}
       ctaLabel="Ver actividad"
       description={item.prize ?? "Premios pensados para mantener activa a la comunidad y premiar su participación."}

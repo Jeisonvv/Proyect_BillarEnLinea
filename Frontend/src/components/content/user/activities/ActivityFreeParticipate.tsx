@@ -262,7 +262,7 @@ export function ActivityFreeParticipate({ activity, myNumbers = [] }: ActivityFr
       title="Necesitas una cuenta para participar"
       description="Para participar en esta actividad gratuita debes iniciar sesión o crear una cuenta. Así guardamos tu número asignado y podemos avisarte si resultas ganador."
       dismissLabel="Seguir viendo la actividad"
-      redirectTo={`/home/activities/${activity.id}`}
+      redirectTo={`/home/activities/${activity.slug ?? activity.id}`}
     />
     </>
   );
@@ -288,8 +288,8 @@ function ShareActivity({ activity, myNumber }: ShareActivityProps) {
     () => "",
   );
   const shareUrl = origin
-    ? `${origin}/home/activities/${activity.id}`
-    : `/home/activities/${activity.id}`;
+    ? `${origin}/home/activities/${activity.slug ?? activity.id}`
+    : `/home/activities/${activity.slug ?? activity.id}`;
 
   const shareText = useMemo(() => {
     const prize = activity.prize ? ` Puedes ganar: ${activity.prize}.` : "";
@@ -362,7 +362,7 @@ function ShareActivity({ activity, myNumber }: ShareActivityProps) {
         <button
           type="button"
           onClick={handleInstagramShare}
-          className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-pink-400/30 bg-gradient-to-br from-fuchsia-500/15 via-pink-500/15 to-amber-500/15 px-3 py-3 text-xs font-semibold text-pink-50 transition hover:brightness-110"
+          className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-pink-400/30 bg-linear-to-br from-fuchsia-500/15 via-pink-500/15 to-amber-500/15 px-3 py-3 text-xs font-semibold text-pink-50 transition hover:brightness-110"
           aria-label="Compartir en Instagram"
         >
           <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current" aria-hidden>

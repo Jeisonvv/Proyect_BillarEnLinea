@@ -122,7 +122,7 @@ export default async function AdminActivitiesPage() {
                       <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
                         <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Acción</p>
                         <div className="mt-2 flex flex-wrap gap-3">
-                          <AdminManageLink href={`/admin/activities/${activity._id}`} />
+                          <AdminManageLink href={`/admin/activities/${activity.slug ?? activity._id}`} />
                           <AdminDeleteItemButton
                             deletePath={`/api/activities/${activity._id}`}
                             itemLabel="actividad"
