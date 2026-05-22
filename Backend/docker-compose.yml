@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:6
+    container_name: mongo_billar
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_DATABASE: billar_en_linea
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: .
+    container_name: backend_billar
+    restart: always
+    ports:
+      - 3001:3001
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/billar_en_linea
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:

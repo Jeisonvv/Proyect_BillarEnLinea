@@ -163,7 +163,7 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <div id="contenido-principal" className="flex-1 pt-[70px]">
+      <div id="contenido-principal" className="flex-1 pt-17">
         {children}
       </div>
 

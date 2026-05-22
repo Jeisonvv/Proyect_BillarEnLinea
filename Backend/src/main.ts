@@ -12,6 +12,19 @@ import { connectDB } from './db/connection.js';
 import { validateRuntimeEnv } from './utils/runtime-env.js';
 
 async function bootstrap() {
+
+  // Log de configuración SMTP para depuración
+
+  const { isMailConfigured } = await import('./services/mail.service.js');
+  function logVar(name: string, value: unknown) {
+    let length = 0;
+    if (typeof value === 'string' || Array.isArray(value)) {
+      length = value.length;
+    }
+    console.log(`${name}: [${value}] (length: ${length})`);
+  }
+
+
   validateRuntimeEnv();
   await connectDB();
 
@@ -35,10 +48,8 @@ async function bootstrap() {
     },
   }));
 
-  const port = Number(process.env.PORT ?? 3000);
-  await app.listen(port);
-
-  console.log(`Servidor Nest escuchando en puerto ${port}`);
+  await app.listen(Number(process.env.PORT ?? 3000), '0.0.0.0');
+  console.log(`Servidor escuchando en puerto ${process.env.PORT ?? 3000}`);
 }
 
 void bootstrap();

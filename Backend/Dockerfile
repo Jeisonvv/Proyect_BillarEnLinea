@@ -22,9 +22,12 @@ COPY --from=production-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY package.json package-lock.json ./
 
-EXPOSE 3000
+# Copiar el archivo .env al contenedor final
+COPY .env .env
+
+EXPOSE 3001
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:${PORT:-3000}/health >/dev/null || exit 1
+  CMD wget -qO- http://127.0.0.1:${PORT:-3001}/health >/dev/null || exit 1
 
 CMD ["npm", "start"]

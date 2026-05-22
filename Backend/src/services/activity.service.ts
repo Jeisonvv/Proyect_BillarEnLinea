@@ -669,6 +669,11 @@ export async function purchaseActivityTicketsService(
 
   const activityIsFree = activity.ticketPrice === 0;
 
+  // Garantiza que los números existan aunque el hook post-save haya fallado
+  // al crear la actividad (p.ej. por un índice obsoleto). generateForActivity
+  // es idempotente: no hace nada si los números ya fueron generados.
+  await ActivityNumber.generateForActivity(activityObjectId, activity.totalTickets);
+
   if (!activityIsFree && (!params.numbers || params.numbers.length === 0)) {
     throw new Error("Debes enviar al menos un número.");
   }

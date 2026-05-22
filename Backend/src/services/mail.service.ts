@@ -1,28 +1,34 @@
 import nodemailer from "nodemailer";
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = Number(process.env.SMTP_PORT ?? 587);
-const SMTP_SECURE = process.env.SMTP_SECURE === "true";
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const MAIL_FROM = process.env.MAIL_FROM;
+
+function getSMTP_HOST() { return process.env.SMTP_HOST; }
+function getSMTP_PORT() { return Number(process.env.SMTP_PORT ?? 587); }
+function getSMTP_SECURE() { return process.env.SMTP_SECURE === "true"; }
+function getSMTP_USER() { return process.env.SMTP_USER; }
+function getSMTP_PASS() { return process.env.SMTP_PASS; }
+function getMAIL_FROM() { return process.env.MAIL_FROM; }
 
 export function isMailConfigured() {
-  return Boolean(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && MAIL_FROM);
+  return Boolean(
+    getSMTP_HOST() &&
+    getSMTP_PORT() &&
+    getSMTP_USER() &&
+    getSMTP_PASS() &&
+    getMAIL_FROM()
+  );
 }
 
 function getTransporter() {
   if (!isMailConfigured()) {
     throw new Error("El servicio de correo no está configurado.");
   }
-
   return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_SECURE,
+    host: getSMTP_HOST(),
+    port: getSMTP_PORT(),
+    secure: getSMTP_SECURE(),
     auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS,
+      user: getSMTP_USER(),
+      pass: getSMTP_PASS(),
     },
   });
 }
@@ -50,34 +56,39 @@ export async function sendPasswordResetEmail(params: SendPasswordResetEmailParam
 
   const recipientName = params.name?.trim() || "Hola";
 
-  await transporter.sendMail({
-    from: MAIL_FROM,
-    to: params.to,
-    subject: "Recupera tu contraseña",
-    text:
-      `${recipientName},\n\n` +
-      "Recibimos una solicitud para restablecer tu contraseña.\n" +
-      `Abre este enlace para continuar: ${params.resetUrl}\n\n` +
-      `Este enlace vence el ${expirationText}.\n\n` +
-      "Si no solicitaste este cambio, puedes ignorar este correo.",
-    html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 560px; margin: 0 auto;">
-        <h2 style="margin-bottom: 16px; color: #111827;">Recupera tu contraseña</h2>
-        <p>${recipientName},</p>
-        <p>Recibimos una solicitud para restablecer tu contraseña en Billar en Línea.</p>
-        <p style="margin: 24px 0;">
-          <a
-            href="${params.resetUrl}"
-            style="display: inline-block; padding: 12px 20px; background: #111827; color: #ffffff; text-decoration: none; border-radius: 8px;"
-          >Restablecer contraseña</a>
-        </p>
-        <p>Si el botón no abre, copia y pega este enlace en tu navegador:</p>
-        <p><a href="${params.resetUrl}">${params.resetUrl}</a></p>
-        <p>Este enlace vence el ${expirationText}.</p>
-        <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
-      </div>
-    `,
-  });
+  try {
+    await transporter.sendMail({
+      from: getMAIL_FROM(),
+      to: params.to,
+      subject: "Recupera tu contraseña",
+      text:
+        `${recipientName},\n\n` +
+        "Recibimos una solicitud para restablecer tu contraseña.\n" +
+        `Abre este enlace para continuar: ${params.resetUrl}\n\n` +
+        `Este enlace vence el ${expirationText}.\n\n` +
+        "Si no solicitaste este cambio, puedes ignorar este correo.",
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 560px; margin: 0 auto;">
+          <h2 style="margin-bottom: 16px; color: #111827;">Recupera tu contraseña</h2>
+          <p>${recipientName},</p>
+          <p>Recibimos una solicitud para restablecer tu contraseña en Billar en Línea.</p>
+          <p style="margin: 24px 0;">
+            <a
+              href="${params.resetUrl}"
+              style="display: inline-block; padding: 12px 20px; background: #111827; color: #ffffff; text-decoration: none; border-radius: 8px;"
+            >Restablecer contraseña</a>
+          </p>
+          <p>Si el botón no abre, copia y pega este enlace en tu navegador:</p>
+          <p><a href="${params.resetUrl}">${params.resetUrl}</a></p>
+          <p>Este enlace vence el ${expirationText}.</p>
+          <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
+        </div>
+      `,
+    });
+    console.log("Correo de recuperación enviado a:", params.to);
+  } catch (err) {
+    console.error("Error enviando correo de recuperación:", err);
+  }
 }
 
 export async function sendAccountSetupEmail(params: SendAccountSetupEmailParams) {
@@ -90,7 +101,7 @@ export async function sendAccountSetupEmail(params: SendAccountSetupEmailParams)
   const recipientName = params.name?.trim() || "Hola";
 
   await transporter.sendMail({
-    from: MAIL_FROM,
+    from: getMAIL_FROM(),
     to: params.to,
     subject: "Activa tu cuenta",
     text:
