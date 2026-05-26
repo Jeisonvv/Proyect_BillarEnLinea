@@ -62,6 +62,8 @@ export interface CreateWebUserParams {
   identityDocumentType?: string;
   identityDocument?: string;
   playerCategory?: string;
+  ciudad?: string;
+  direccion?: string;
 }
 
 export interface CreateAdminUserResult {
