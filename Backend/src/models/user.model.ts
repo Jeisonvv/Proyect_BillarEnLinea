@@ -131,6 +131,10 @@ export interface IUser {
   identityDocument?: string; // Documento de identidad normalizado para evitar cuentas duplicadas
   avatarUrl?: string; // URL de la foto de perfil
 
+  // Nuevos campos
+  ciudad: string;      // Ciudad de residencia (obligatorio)
+  direccion?: string;  // Dirección de residencia (opcional)
+
   // CRM: datos para seguimiento comercial
   source: UserSource;           // De dónde vino por primera vez
   status: UserStatus;           // En qué etapa del embudo de ventas está
@@ -353,6 +357,9 @@ const userSchema = new Schema<IUserDocument, IUserModel>(
       },
     },
     avatarUrl: String,
+
+    ciudad: { type: String, required: true, trim: true },
+    direccion: { type: String, required: false, trim: true },
 
     source: {
       type: String,

@@ -47,6 +47,10 @@ export function RegisterForm() {
       2: ["phone", "playerCategory", "password", "confirmPassword"],
     };
 
+     // Agregar ciudad (obligatorio) y direccion (opcional) al paso 2
+     fieldsByStep[2].unshift("ciudad");
+     fieldsByStep[2].push("direccion");
+
     for (const fieldName of fieldsByStep[step]) {
       const field = form.elements.namedItem(fieldName);
       if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement)) {
@@ -105,6 +109,10 @@ export function RegisterForm() {
     const password = String(formData.get("password") ?? "");
     const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
+     // Nuevos campos
+     const ciudad = String(formData.get("ciudad") ?? "").trim();
+     const direccion = String(formData.get("direccion") ?? "").trim();
+
     if (password !== confirmPassword) {
       setState({ kind: "error", message: "Las contraseñas no coinciden." });
       return;
@@ -120,6 +128,8 @@ export function RegisterForm() {
           identityDocument,
           playerCategory,
           password,
+           ciudad,
+           direccion,
         });
 
         await loginWeb({ email, password });
@@ -228,6 +238,26 @@ export function RegisterForm() {
       </div>
 
       <div className={currentStep === 2 ? "grid gap-4 xl:gap-5" : "hidden"}>
+          <label className="grid min-w-0 gap-2">
+            <span className="text-sm font-medium text-stone-200">Ciudad</span>
+            <input
+              className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-base text-white outline-none placeholder:text-stone-500 focus:border-accent"
+              type="text"
+              name="ciudad"
+              placeholder="Ciudad de residencia"
+              required
+            />
+          </label>
+
+          <label className="grid min-w-0 gap-2">
+            <span className="text-sm font-medium text-stone-200">Dirección</span>
+            <input
+              className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-base text-white outline-none placeholder:text-stone-500 focus:border-accent"
+              type="text"
+              name="direccion"
+              placeholder="Dirección de residencia (opcional)"
+            />
+          </label>
         <label className="grid min-w-0 gap-2">
           <span className="text-sm font-medium text-stone-200">Telefono</span>
           <input

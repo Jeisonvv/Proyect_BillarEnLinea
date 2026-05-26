@@ -35,9 +35,14 @@ export class AuthNestController {
   }
 
   @Post('register')
-  async register(@Body() body: RegisterDto) {
+  async register(@Body() body: RegisterDto, @Res({ passthrough: true }) res: Response) {
     try {
       const user = await this.authService.register(body);
+
+      // Generar token y setear cookie igual que en login
+      const loginResult = await this.authService.login({ email: body.email, password: body.password });
+      setAuthCookie(res, loginResult.token);
+
       return {
         ok: true,
         data: {

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[1500px] px-5 py-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-20">
+    <main className="mx-auto flex min-h-screen w-full max-w-375 px-5 py-6 sm:px-8 lg:px-10 xl:px-14 2xl:px-20">
       <section className="grid flex-1 gap-6 lg:grid-cols-[0.98fr_1.02fr] xl:grid-cols-[1.04fr_0.96fr] xl:gap-10 2xl:gap-14">
         <div className="relative overflow-hidden rounded-[2.2rem] border border-[rgba(246,196,79,0.14)] bg-[linear-gradient(145deg,rgba(32,24,21,0.98),rgba(27,19,17,0.96),rgba(20,14,12,0.98))] text-stone-100 shadow-[0_28px_90px_rgba(24,16,13,0.28)] backdrop-blur">
           <Image
@@ -28,7 +28,7 @@ export default function RegisterPage() {
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,8,7,0.1),rgba(10,8,7,0.38)_42%,rgba(10,8,7,0.82)_100%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(246,196,79,0.18),transparent_24%),radial-gradient(circle_at_82%_18%,rgba(13,110,174,0.16),transparent_26%)]" />
 
-          <div className="relative flex h-full min-h-[28rem] flex-col justify-end px-7 pb-7 pt-24 md:min-h-[34rem] md:px-10 md:pb-10 md:pt-28 xl:min-h-full xl:px-12 xl:pb-12 xl:pt-24 2xl:px-14 2xl:pb-16 2xl:pt-28">
+          <div className="relative flex h-full min-h-112 flex-col justify-end px-7 pb-7 pt-24 md:min-h-136 md:px-10 md:pb-10 md:pt-28 xl:min-h-full xl:px-12 xl:pb-12 xl:pt-24 2xl:px-14 2xl:pb-16 2xl:pt-28">
             <div className="max-w-xl space-y-4 rounded-[1.7rem] border border-white/10 bg-[rgba(15,11,10,0.4)] p-5 shadow-[0_16px_50px_rgba(0,0,0,0.22)] backdrop-blur-md sm:p-6 xl:ml-6 xl:p-7 2xl:ml-8">
               <h1 className="font-display text-3xl leading-[0.95] text-white sm:text-5xl xl:text-6xl">
                 Crea tu cuenta y entra a la comunidad del billar.

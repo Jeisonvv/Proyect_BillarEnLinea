@@ -26,6 +26,13 @@ export class RegisterDto {
 
   @IsEnum(PlayerCategory)
   playerCategory!: PlayerCategory;
+
+  @IsString()
+  @IsNotEmpty()
+  ciudad!: string;
+
+  @IsString()
+  direccion?: string;
 }
 
 export class LoginDto {

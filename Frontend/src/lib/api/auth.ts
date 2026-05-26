@@ -13,6 +13,8 @@ export type RegisterInput = {
   identityDocumentType: "CEDULA_CIUDADANIA" | "CEDULA_EXTRANJERIA" | "PASAPORTE" | "NIT";
   identityDocument: string;
   playerCategory: "TERCERA" | "SEGUNDA" | "PRIMERA" | "ELITE";
+  ciudad: string;
+  direccion?: string;
 };
 
 export type AuthenticatedUser = {

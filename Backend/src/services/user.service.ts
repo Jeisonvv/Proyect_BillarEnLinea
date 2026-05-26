@@ -200,6 +200,8 @@ export async function createWebUserService(params: CreateWebUserParams) {
     identityDocumentType,
     identityDocument,
     playerCategory,
+   ciudad,
+   direccion,
   } = params;
 
   if (!name || !email || !password || !phone || !identityDocumentType || !identityDocument) {
@@ -219,6 +221,8 @@ export async function createWebUserService(params: CreateWebUserParams) {
     identityDocumentType,
     identityDocument,
     ...(playerCategory ? { playerCategory } : {}),
+   ciudad,
+   ...(direccion ? { direccion } : {}),
     status: UserStatus.NEW,
     role: UserRole.CUSTOMER,
     identities: [{ provider: Channel.WEB, providerId: normalizedEmail }],
