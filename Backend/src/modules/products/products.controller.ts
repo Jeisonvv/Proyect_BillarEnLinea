@@ -64,11 +64,37 @@ export class ProductsNestController {
     }
   }
 
+  @Get('admin/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  async getAdminProductById(@Param('id') id: string) {
+    try {
+      const product = await this.productsService.getAdminProductById(id);
+      return { ok: true, data: product };
+    } catch (error: any) {
+      const status = error.message === 'Producto no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
   @Get(':id')
   async getProductById(@Param('id') id: string) {
     try {
       const product = await this.productsService.getProductById(id);
       return { ok: true, data: product };
+    } catch (error: any) {
+      const status = error.message === 'Producto no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
+  @Delete(':id/permanent')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  async permanentlyDeleteProduct(@Param('id') id: string) {
+    try {
+      await this.productsService.permanentlyDeleteProduct(id);
+      return { ok: true, message: 'Producto eliminado definitivamente.' };
     } catch (error: any) {
       const status = error.message === 'Producto no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);

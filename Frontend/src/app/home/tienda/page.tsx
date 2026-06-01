@@ -59,6 +59,8 @@ export default async function HomeTiendaPage() {
     }
   }
 
+  const categoriesWithProducts = PRODUCT_CATEGORIES.filter((category) => featuredByCategory.has(category));
+
   return (
     <main className="grid gap-6">
       <section className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6">
@@ -72,11 +74,11 @@ export default async function HomeTiendaPage() {
       <section className="grid gap-4">
         <div className="flex items-end justify-between gap-3">
           <h2 className="text-2xl font-semibold text-white sm:text-3xl">Por categoría</h2>
-          <span className="text-sm text-white/56">{featuredByCategory.size} de {PRODUCT_CATEGORIES.length} con referencia</span>
+          <span className="text-sm text-white/56">{categoriesWithProducts.length} categorías disponibles</span>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {PRODUCT_CATEGORIES.map((category) => {
+          {categoriesWithProducts.map((category) => {
             const featured = featuredByCategory.get(category);
             const label = PRODUCT_CATEGORY_LABELS[category];
             const description = CATEGORY_DESCRIPTIONS[category];

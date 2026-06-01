@@ -203,6 +203,17 @@ export type PostDetail = LandingPost & {
 export type ProductDetail = LandingProduct & {
   images: string[];
   isActive: boolean;
+  variants: Array<{
+    name: string;
+    sku: string;
+    price: number;
+    stock: number;
+    imageUrl?: string | null;
+    color?: string | null;
+    size?: string | null;
+    hardness?: string | null;
+    hand?: string | null;
+  }>;
 };
 
 export type LandingSnapshot = {

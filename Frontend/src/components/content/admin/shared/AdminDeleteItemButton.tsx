@@ -19,6 +19,7 @@ type AdminDeleteItemButtonProps = {
   pendingConfirmLabel?: string;
   redirectTo?: string;
   variant?: "pill" | "text";
+  tone?: "warning" | "danger";
 };
 
 export function AdminDeleteItemButton({
@@ -35,6 +36,7 @@ export function AdminDeleteItemButton({
   pendingConfirmLabel = `Eliminando ${itemLabel}...`,
   redirectTo,
   variant = "pill",
+  tone = "danger",
 }: AdminDeleteItemButtonProps) {
   const router = useRouter();
 
@@ -68,6 +70,7 @@ export function AdminDeleteItemButton({
       successMessage={successMessage}
       title={title}
       variant={variant}
+      tone={tone}
     />
   );
 }

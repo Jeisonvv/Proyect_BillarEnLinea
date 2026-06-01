@@ -40,11 +40,7 @@ export function resolveProductSelection(
     throw new Error("La cantidad debe ser un entero mayor o igual a 0.");
   }
 
-  if (product.variants.length > 0) {
-    if (!selection.variantSku) {
-      throw new Error(`El producto ${product.name} requiere variantSku.`);
-    }
-
+  if (product.variants.length > 0 && selection.variantSku) {
     const variant = product.variants.find((entry) => entry.sku === selection.variantSku);
     if (!variant) {
       throw new Error(`La variante ${selection.variantSku} no existe para ${product.name}.`);

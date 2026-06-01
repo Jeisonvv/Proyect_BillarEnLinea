@@ -4,6 +4,7 @@ import {
   formatError,
   isRecord,
   pickNumber,
+  pickRecordArray,
   pickString,
   pickStringArray,
   resolveApiAssetUrl,
@@ -38,21 +39,36 @@ function normalizeProduct(record: JsonRecord): LandingProduct | null {
 function normalizeProductDetail(record: JsonRecord): ProductDetail | null {
   const base = normalizeProduct(record);
   if (!base) return null;
+
   const images = pickStringArray(record, ["images"])
     .map((value) => resolveApiAssetUrl(value))
     .filter((value): value is string => value !== null);
+
+  const variants = pickRecordArray(record, ["variants"]).map((variant) => ({
+    name: pickString(variant, ["name"]) ?? "Variante",
+    sku: pickString(variant, ["sku"]) ?? "",
+    price: pickNumber(variant, ["price"]) ?? 0,
+    stock: pickNumber(variant, ["stock"]) ?? 0,
+    imageUrl: resolveApiAssetUrl(pickString(variant, ["imageUrl"])),
+    color: pickString(variant, ["color"]),
+    size: pickString(variant, ["size"]),
+    hardness: pickString(variant, ["hardness"]),
+    hand: pickString(variant, ["hand"]),
+  })).filter((variant) => variant.sku.length > 0);
+
   const isActive = typeof record.isActive === "boolean" ? record.isActive : true;
-  return { ...base, images, isActive };
+  return { ...base, images, isActive, variants };
 }
 
 export async function getLandingProducts(limit = 3) {
-  return fetchCollection(`/api/products?limit=${limit}`, normalizeProduct);
+  return fetchCollection(`/api/products?limit=${limit}`, normalizeProduct, { cache: "no-store" });
 }
 
 export async function getProductsByCategory(category: string, limit = 60) {
   return fetchCollection(
     `/api/products?category=${encodeURIComponent(category)}&limit=${limit}`,
     normalizeProduct,
+    { cache: "no-store" },
   );
 }
 

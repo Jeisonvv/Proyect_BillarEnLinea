@@ -68,7 +68,87 @@ function normalizeStock(value: unknown) {
   return numericValue;
 }
 
-function normalizeVariants(value: unknown) {
+type VariantSkuSeed = {
+  category?: string | undefined;
+  brand?: string | undefined;
+  productName?: string | undefined;
+  hand?: string | undefined;
+  color?: string | undefined;
+  size?: string | undefined;
+  hardness?: string | undefined;
+};
+
+function normalizeSkuToken(value: string, maxLength: number) {
+  const normalized = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+
+  if (!normalized) {
+    return "";
+  }
+
+  return normalized.slice(0, maxLength);
+}
+
+function normalizeHandToken(hand?: string) {
+  const normalized = (hand ?? "").trim().toLowerCase();
+
+  if (!normalized) {
+    return "";
+  }
+
+  if (normalized.startsWith("der")) {
+    return "DER";
+  }
+
+  if (normalized.startsWith("izq")) {
+    return "IZQ";
+  }
+
+  return normalizeSkuToken(hand ?? "", 3);
+}
+
+function buildVariantSku(seed: VariantSkuSeed) {
+  const categoryToken = normalizeSkuToken(seed.category ?? "", 3);
+  const brandToken = normalizeSkuToken(seed.brand ?? "", 4);
+  const productToken = normalizeSkuToken(seed.productName ?? "", 3);
+  const handToken = normalizeHandToken(seed.hand);
+  const colorToken = normalizeSkuToken(seed.color ?? "", 2);
+  const sizeToken = normalizeSkuToken(seed.size ?? "", 2);
+  const hardnessToken = normalizeSkuToken(seed.hardness ?? "", 2);
+
+  const parts = [categoryToken, brandToken, productToken, handToken, colorToken, sizeToken, hardnessToken].filter(Boolean);
+
+  if (parts.length === 0) {
+    return "VAR";
+  }
+
+  return parts.join("");
+}
+
+function ensureUniqueSku(baseSku: string, usedSkus: Set<string>) {
+  let candidate = baseSku;
+  let suffix = 2;
+
+  while (usedSkus.has(candidate)) {
+    candidate = `${baseSku}${suffix}`;
+    suffix += 1;
+  }
+
+  usedSkus.add(candidate);
+  return candidate;
+}
+
+function normalizeVariants(
+  value: unknown,
+  context?: {
+    category?: string | undefined;
+    brand?: string | undefined;
+    name?: string | undefined;
+  },
+) {
   if (value === undefined) {
     return undefined;
   }
@@ -77,7 +157,9 @@ function normalizeVariants(value: unknown) {
     throw new Error("variants debe ser un arreglo.");
   }
 
-  return value.map((item, index) => {
+  const usedSkus = new Set<string>();
+
+  const variants = value.map((item, index) => {
     if (!item || typeof item !== "object") {
       throw new Error(`La variante en la posición ${index + 1} es inválida.`);
     }
@@ -85,26 +167,54 @@ function normalizeVariants(value: unknown) {
     const variant = item as Record<string, unknown>;
     const name = normalizeOptionalString(variant.name);
     const sku = normalizeOptionalString(variant.sku);
+    const color = normalizeOptionalString(variant.color);
+    const size = normalizeOptionalString(variant.size);
+    const hardness = normalizeOptionalString(variant.hardness);
+    const hand = normalizeOptionalString(variant.hand);
+    const imageUrl = normalizeOptionalString(variant.imageUrl);
 
-    if (!name) {
+    const computedName = name || [color, size, hardness, hand].filter(Boolean).join(" · ");
+    if (!computedName) {
       throw new Error(`La variante en la posición ${index + 1} requiere name.`);
     }
 
-    if (!sku) {
-      throw new Error(`La variante en la posición ${index + 1} requiere sku.`);
-    }
+    const generatedSku = buildVariantSku({
+      category: context?.category,
+      brand: context?.brand,
+      productName: context?.name ?? computedName,
+      hand,
+      color,
+      size,
+      hardness,
+    });
+
+    const finalSku = ensureUniqueSku((sku ?? generatedSku).toUpperCase(), usedSkus);
 
     return {
-      name,
-      sku,
+      name: computedName,
+      sku: finalSku,
       price: normalizePrice(variant.price, "El precio de la variante"),
       stock: normalizeStock(variant.stock),
-      ...(normalizeOptionalString(variant.imageUrl) ? { imageUrl: normalizeOptionalString(variant.imageUrl) } : {}),
+      ...(imageUrl ? { imageUrl } : {}),
+      ...(color ? { color } : {}),
+      ...(size ? { size } : {}),
+      ...(hardness ? { hardness } : {}),
+      ...(hand ? { hand } : {}),
     };
   });
+
+  return variants;
 }
 
-function buildProductPersistencePayload(data: Record<string, unknown>, partial = false) {
+function buildProductPersistencePayload(
+  data: Record<string, unknown>,
+  partial = false,
+  context?: {
+    name?: string | undefined;
+    brand?: string | undefined;
+    category?: string | undefined;
+  },
+) {
   const payload: Record<string, unknown> = {};
 
   if (!partial || data.name !== undefined) {
@@ -140,7 +250,14 @@ function buildProductPersistencePayload(data: Record<string, unknown>, partial =
   }
 
   if (data.variants !== undefined) {
-    payload.variants = normalizeVariants(data.variants);
+    payload.variants = normalizeVariants(data.variants, {
+      name: normalizeOptionalString(data.name) ?? context?.name,
+      brand: normalizeOptionalString(data.brand) ?? context?.brand,
+      category:
+        data.category !== undefined
+          ? normalizeCategory(data.category)
+          : context?.category,
+    });
   }
 
   if (data.tags !== undefined) {
@@ -228,9 +345,9 @@ export async function getProductByIdService(id: string) {
   // Acepta ObjectId o slug. Si el id no es ObjectId válido, intenta resolver por slug.
   let product;
   if (mongoose.Types.ObjectId.isValid(id)) {
-    product = await Product.findById(id).lean();
+    product = await Product.findOne({ _id: id, isActive: true }).lean();
   } else {
-    product = await Product.findOne({ slug: id.trim().toLowerCase() }).lean();
+    product = await Product.findOne({ slug: id.trim().toLowerCase(), isActive: true }).lean();
   }
 
   if (!product) {
@@ -241,10 +358,25 @@ export async function getProductByIdService(id: string) {
 }
 
 export async function getProductBySlugService(slug: string) {
-  const product = await Product.findOne({ slug: slug.trim().toLowerCase() }).lean();
+  const product = await Product.findOne({ slug: slug.trim().toLowerCase(), isActive: true }).lean();
   if (!product) {
     throw new Error("Producto no encontrado.");
   }
+  return product;
+}
+
+export async function getAdminProductByIdService(id: string) {
+  let product;
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    product = await Product.findById(id).lean();
+  } else {
+    product = await Product.findOne({ slug: id.trim().toLowerCase() }).lean();
+  }
+
+  if (!product) {
+    throw new Error("Producto no encontrado.");
+  }
+
   return product;
 }
 
@@ -258,7 +390,11 @@ export async function updateProductService(id: string, data: Record<string, unkn
     throw new Error("Producto no encontrado.");
   }
 
-  const payload = buildProductPersistencePayload(data, true);
+  const payload = buildProductPersistencePayload(data, true, {
+    name: existing.name,
+    brand: existing.brand,
+    category: existing.category,
+  });
 
   return Product.findByIdAndUpdate(id, { $set: payload }, { new: true, runValidators: true }).lean();
 }
@@ -273,6 +409,20 @@ export async function deleteProductService(id: string) {
     { $set: { isActive: false } },
     { new: true, runValidators: true },
   ).lean();
+
+  if (!product) {
+    throw new Error("Producto no encontrado.");
+  }
+
+  return product;
+}
+
+export async function permanentlyDeleteProductService(id: string) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error("Producto no encontrado.");
+  }
+
+  const product = await Product.findByIdAndDelete(id).lean();
 
   if (!product) {
     throw new Error("Producto no encontrado.");

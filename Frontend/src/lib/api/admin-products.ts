@@ -1,4 +1,8 @@
 import { deleteJson, patchJson, postFormData, postJson } from "@/lib/api/client";
+import { getJson } from "@/lib/api/client";
+import type { CollectionState, LandingProduct } from "./public-content/types";
+import { normalizeProduct } from "./public-content/products";
+import type { JsonRecord } from "./public-content/shared";
 
 export const PRODUCT_CATEGORIES = ["CUE", "BALL", "TABLE", "ACCESSORY", "CLOTHING", "OTHER"] as const;
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
@@ -12,6 +16,18 @@ export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
   OTHER: "Otros",
 };
 
+export type AdminProductVariantInput = {
+  name: string;
+  sku: string;
+  price: number;
+  stock: number;
+  imageUrl?: string;
+  color?: string;
+  size?: string;
+  hardness?: string;
+  hand?: string;
+};
+
 export type CreateAdminProductInput = {
   name: string;
   category: ProductCategory;
@@ -23,6 +39,7 @@ export type CreateAdminProductInput = {
   images?: string[];
   tags?: string[];
   isActive?: boolean;
+  variants?: AdminProductVariantInput[];
 };
 
 export type UpdateAdminProductInput = Partial<CreateAdminProductInput>;
@@ -41,10 +58,19 @@ export type AdminProductResponse = {
     images?: string[];
     tags?: string[];
     isActive?: boolean;
+    variants?: AdminProductVariantInput[];
   };
 };
 
+export type AdminProductSummary = LandingProduct & { isActive: boolean };
+
 export type DeleteAdminProductResponse = { ok: boolean };
+
+export type AdminProductDetailResponse = AdminProductResponse;
+
+export type AdminProductDetail = AdminProductResponse["data"] & {
+  id: string;
+};
 
 export type UploadProductImageResponse = {
   ok: boolean;
@@ -87,4 +113,80 @@ export async function deleteProductAdmin(productId: string) {
   return deleteJson<DeleteAdminProductResponse>(`/api/products/${productId}`, {
     credentials: "include",
   });
+}
+
+function normalizeAdminProduct(record: JsonRecord): AdminProductSummary | null {
+  const base = normalizeProduct(record);
+  if (!base) {
+    return null;
+  }
+
+  return {
+    ...base,
+    isActive: typeof record.isActive === "boolean" ? record.isActive : true,
+  };
+}
+
+export async function getAdminProducts(
+  limit = 100,
+  cookieHeader?: string,
+): Promise<CollectionState<AdminProductSummary>> {
+  const headers = new Headers();
+
+  if (cookieHeader && cookieHeader.trim().length > 0) {
+    headers.set("cookie", cookieHeader);
+  }
+
+  try {
+    const payload = await getJson<{ data?: unknown; pagination?: { total?: unknown } }>(
+      `/api/products/admin/all?page=1&limit=${limit}`,
+      { headers, cache: "no-store" },
+    );
+
+    const items = Array.isArray(payload.data)
+      ? payload.data.map((item) => (item && typeof item === "object" ? normalizeAdminProduct(item as JsonRecord) : null)).filter(
+        (item): item is AdminProductSummary => item !== null,
+      )
+      : [];
+
+    const total = typeof payload.pagination?.total === "number" ? payload.pagination.total : items.length;
+
+    return {
+      items,
+      total,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      items: [],
+      total: 0,
+      error: error instanceof Error ? error.message : "No fue posible cargar los productos del panel.",
+    };
+  }
+}
+
+export async function getAdminProductById(
+  productId: string,
+  cookieHeader?: string,
+): Promise<{ ok: boolean; data: AdminProductDetail | null }> {
+  const headers = new Headers();
+
+  if (cookieHeader && cookieHeader.trim().length > 0) {
+    headers.set("cookie", cookieHeader);
+  }
+
+  const response = await getJson<AdminProductDetailResponse>(`/api/products/admin/${encodeURIComponent(productId)}`, {
+    headers,
+    cache: "no-store",
+  });
+
+  const data = response.data;
+  const normalized = data && (data._id || data.slug)
+    ? {
+        ...data,
+        id: data._id ?? data.slug ?? productId,
+      }
+    : null;
+
+  return { ok: response.ok, data: normalized };
 }

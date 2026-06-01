@@ -20,6 +20,7 @@ type AdminDeleteConfirmationButtonProps = {
   pendingConfirmLabel?: string;
   cancelLabel?: string;
   variant?: "pill" | "text";
+  tone?: "warning" | "danger";
 };
 
 export function AdminDeleteConfirmationButton({
@@ -34,6 +35,7 @@ export function AdminDeleteConfirmationButton({
   pendingConfirmLabel = "Eliminando...",
   cancelLabel = "Cancelar",
   variant = "pill",
+  tone = "danger",
 }: AdminDeleteConfirmationButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState>({ kind: "idle" });
@@ -69,14 +71,24 @@ export function AdminDeleteConfirmationButton({
     });
   }
 
+  const isWarning = tone === "warning";
+  const openButtonClass = isWarning
+    ? variant === "text"
+      ? "inline-flex items-center justify-center rounded-full border border-[rgba(246,196,79,0.34)] bg-[rgba(246,196,79,0.12)] px-4 py-2 text-sm font-semibold text-[rgba(255,238,193,0.98)] transition hover:border-[rgba(246,196,79,0.48)] hover:bg-[rgba(246,196,79,0.18)] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+      : "inline-flex items-center justify-center rounded-full border border-[rgba(246,196,79,0.34)] bg-[rgba(246,196,79,0.12)] px-5 py-3 text-sm font-semibold text-[rgba(255,238,193,0.98)] transition hover:bg-[rgba(246,196,79,0.18)] disabled:cursor-not-allowed disabled:opacity-70"
+    : variant === "text"
+      ? "inline-flex items-center justify-center rounded-full border border-rose-400/28 bg-rose-500/12 px-4 py-2 text-sm font-semibold text-rose-100 transition hover:border-rose-300/40 hover:bg-rose-500/18 hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+      : "inline-flex items-center justify-center rounded-full border border-rose-400/28 bg-rose-500/12 px-5 py-3 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/18 disabled:cursor-not-allowed disabled:opacity-70";
+
+  const confirmButtonClass = isWarning
+    ? "inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,#f6c44f,#e0a936)] px-5 py-3 text-sm font-semibold text-[#1c160a] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+    : "inline-flex items-center justify-center rounded-full bg-rose-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-70";
+
   return (
     <>
       <div className="grid gap-2">
         <button
-          className={variant === "text"
-            ? "inline-flex items-center justify-center rounded-full border border-rose-400/28 bg-rose-500/12 px-4 py-2 text-sm font-semibold text-rose-100 transition hover:border-rose-300/40 hover:bg-rose-500/18 hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
-            : "inline-flex items-center justify-center rounded-full border border-rose-400/28 bg-rose-500/12 px-5 py-3 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/18 disabled:cursor-not-allowed disabled:opacity-70"
-          }
+          className={openButtonClass}
           disabled={isPending}
           onClick={handleOpen}
           type="button"
@@ -126,7 +138,7 @@ export function AdminDeleteConfirmationButton({
                   {cancelLabel}
                 </button>
                 <button
-                  className="inline-flex items-center justify-center rounded-full bg-rose-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-70"
+                  className={confirmButtonClass}
                   disabled={isPending}
                   onClick={handleDelete}
                   type="button"

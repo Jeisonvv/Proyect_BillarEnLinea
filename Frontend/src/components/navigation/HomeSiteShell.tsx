@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { StoreFloatingCart } from "@/components/content/user/products";
 import { HomeSiteShellHeader } from "@/components/navigation/HomeSiteShellHeader";
 import { siteConfig } from "@/lib/site";
 
@@ -114,6 +115,8 @@ export function HomeSiteShell({
           </div>
         </div>
       </footer>
+
+      <StoreFloatingCart />
     </>
   );
 }

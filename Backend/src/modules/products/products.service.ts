@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import {
+  getAdminProductByIdService,
   createProductService,
   deleteProductService,
   getProductByIdService,
   getProductBySlugService,
   listAdminProductsService,
   listProductsService,
+  permanentlyDeleteProductService,
   updateProductService,
 } from '../../services/product.service.js';
 import type {
@@ -50,11 +52,19 @@ export class ProductsNestService {
     return getProductBySlugService(slug);
   }
 
+  getAdminProductById(id: string) {
+    return getAdminProductByIdService(id);
+  }
+
   updateProduct(id: string, data: UpdateProductDto) {
     return updateProductService(id, data);
   }
 
   deleteProduct(id: string) {
     return deleteProductService(id);
+  }
+
+  permanentlyDeleteProduct(id: string) {
+    return permanentlyDeleteProductService(id);
   }
 }

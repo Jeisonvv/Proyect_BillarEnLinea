@@ -8,8 +8,9 @@ export class ProductVariantDto {
 	name!: string;
 
 	@IsString()
+	@IsOptional()
 	@IsNotEmpty()
-	sku!: string;
+	sku?: string;
 
 	@IsNumber()
 	@Min(0)
@@ -22,6 +23,22 @@ export class ProductVariantDto {
 	@IsOptional()
 	@IsString()
 	imageUrl?: string;
+
+	@IsOptional()
+	@IsString()
+	color?: string;
+
+	@IsOptional()
+	@IsString()
+	size?: string;
+
+	@IsOptional()
+	@IsString()
+	hardness?: string;
+
+	@IsOptional()
+	@IsString()
+	hand?: string;
 }
 
 export class CreateProductDto {

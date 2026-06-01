@@ -293,7 +293,6 @@ export async function checkoutCartService(actor: CartActorContext, data: Checkou
 
   const order = await createOrderService(actor, checkoutPayload as any);
 
-  cart.items = [] as any;
   cart.channel = normalizeChannel(data.channel ?? cart.channel);
   await cart.save();
 

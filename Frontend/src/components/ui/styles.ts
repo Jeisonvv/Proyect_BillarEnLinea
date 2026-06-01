@@ -18,17 +18,9 @@
 export const BUTTON_PRIMARY =
   "inline-flex items-center justify-center rounded-full bg-accent px-5 py-3 text-sm font-semibold text-[#0b0b0d] transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60";
 
-/** Variante compacta del botón primario (para barras y headers). */
-export const BUTTON_PRIMARY_COMPACT =
-  "inline-flex items-center justify-center rounded-full bg-accent px-4 py-2 text-sm font-semibold text-[#0b0b0d] transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60";
-
 /** Botón secundario / outline sobre fondo oscuro. */
 export const BUTTON_GHOST =
   "inline-flex items-center justify-center rounded-full border border-white/14 bg-white/4 px-5 py-3 text-sm font-medium text-white/82 transition hover:border-white/25 hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-60";
-
-/** Botón destructivo (eliminar / liberar). */
-export const BUTTON_DANGER =
-  "inline-flex items-center justify-center rounded-full border border-rose-400/28 bg-rose-500/12 px-5 py-3 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/18 disabled:cursor-not-allowed disabled:opacity-70";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INPUTS

@@ -1,16 +1,19 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import {
   AdminDeleteItemButton,
   AdminManageLink,
   AdminSectionScaffold,
   formatAdminMoney,
 } from "@/components/content/admin/shared";
-import { getLandingSnapshot } from "@/lib/api/public-content";
+import { getAdminProducts } from "@/lib/api/admin-products";
 
 export default async function AdminStorePage() {
-  const snapshot = await getLandingSnapshot();
-  const products = snapshot.products.items;
+  const cookieHeader = (await cookies()).toString();
+  const productsState = await getAdminProducts(100, cookieHeader);
+  const products = productsState.items;
   const lowStockCount = products.filter((item) => (item.stock ?? 0) <= 5).length;
+  const hiddenCount = products.filter((item) => !item.isActive).length;
 
   return (
     <AdminSectionScaffold
@@ -20,8 +23,9 @@ export default async function AdminStorePage() {
       primaryAction={{ label: "Crear producto", href: "/admin/tienda/crear" }}
       secondaryAction={{ label: "Home user", href: "/home" }}
       metrics={[
-        { label: "Total", value: String(snapshot.totals.products), helper: snapshot.products.error ?? "Productos visibles en el snapshot actual." },
+        { label: "Total", value: String(productsState.total), helper: productsState.error ?? "Productos del catálogo, visibles y ocultos." },
         { label: "Stock bajo", value: String(lowStockCount), helper: "Referencias que requieren atención rápida." },
+        { label: "Ocultos", value: String(hiddenCount), helper: "Productos desactivados para usuarios." },
         { label: "Muestra", value: String(products.length), helper: "Productos listados en esta sección administrativa." },
       ]}
     >
@@ -54,10 +58,7 @@ export default async function AdminStorePage() {
                 <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Stock</p>
                 <p className="mt-2 text-base font-semibold text-white">{product.stock ?? "Sin dato"}</p>
               </div>
-              <div className="rounded-[1.2rem] border border-white/8 bg-black/18 p-4">
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/46">Etiquetas</p>
-                <p className="mt-2 text-base font-semibold text-white">{product.tags.length > 0 ? product.tags.join(", ") : "Sin etiquetas"}</p>
-              </div>
+             
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <AdminManageLink href={`/admin/tienda/${product.slug ?? product.id}`} />
@@ -78,6 +79,28 @@ export default async function AdminStorePage() {
                   </>
                 }
                 successMessage="Producto ocultado correctamente."
+                tone="warning"
+              />
+              <AdminDeleteItemButton
+                deletePath={`/api/products/${product.id}/permanent`}
+                itemLabel="producto"
+                itemName={product.name}
+                openLabel="Eliminar producto"
+                confirmLabel="Sí, eliminar producto"
+                pendingOpenLabel="Eliminando..."
+                pendingConfirmLabel="Eliminando producto..."
+                consequences={[
+                  "El producto se borrará de forma permanente de la base de datos.",
+                  "Esta acción no se puede deshacer.",
+                ]}
+                description={
+                  <>
+                    Vas a eliminar <span className="font-semibold text-white">{product.name}</span> de forma permanente.
+                  </>
+                }
+                successMessage="Producto eliminado definitivamente."
+                redirectTo="/admin/tienda"
+                variant="text"
               />
             </div>
           </article>

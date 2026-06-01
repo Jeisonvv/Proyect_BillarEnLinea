@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import mongoose from "mongoose";
 import PaymentTransaction from "../models/payment-transaction.model.js";
 import Order from "../models/order.model.js";
+import Cart from "../models/cart.model.js";
 import Activity from "../models/activity.model.js";
 import ActivityNumber, { normalizeActivityNumberInput } from "../models/activity-number.model.js";
 import ActivityTicket from "../models/activity-ticket.model.js";
@@ -1849,6 +1850,54 @@ async function handleOrderPaymentStatus(
   }
 
   if (transition === "mark-paid") {
+    const clearPurchasedItemsFromCart = async () => {
+      const userId = typeof order.user === "object" && order.user !== null
+        ? String((order.user as { _id?: unknown; id?: unknown })._id ?? (order.user as { id?: unknown }).id ?? "")
+        : String(order.user ?? "");
+
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return;
+      }
+
+      const cart = await Cart.findOne({ user: new mongoose.Types.ObjectId(userId) });
+      if (!cart || !cart.items.length) {
+        return;
+      }
+
+      for (const orderItem of order.items) {
+        const productId = typeof orderItem.product === "object" && orderItem.product !== null
+          ? String((orderItem.product as { _id?: unknown; id?: unknown })._id ?? (orderItem.product as { id?: unknown }).id ?? "")
+          : String(orderItem.product ?? "");
+
+        if (!productId) {
+          continue;
+        }
+
+        const orderVariantSku = orderItem.variantSku ?? "";
+        const cartIndex = cart.items.findIndex((cartItem) => (
+          String(cartItem.product) === productId
+          && (cartItem.variantSku ?? "") === orderVariantSku
+        ));
+
+        if (cartIndex < 0) {
+          continue;
+        }
+
+        const cartItem = cart.items[cartIndex];
+        if (!cartItem) {
+          continue;
+        }
+
+        if (cartItem.quantity <= orderItem.quantity) {
+          cart.items.splice(cartIndex, 1);
+        } else {
+          cartItem.quantity -= orderItem.quantity;
+        }
+      }
+
+      await cart.save();
+    };
+
     const paymentMethod = mapWompiProviderMethodToPaymentMethod(transaction.payment_method_type);
     const paidAt = new Date();
 
@@ -1867,6 +1916,8 @@ async function handleOrderPaymentStatus(
         },
       },
     );
+
+    await clearPurchasedItemsFromCart();
 
     return Order.findById(order._id)
       .populate("user", "name phone avatarUrl")

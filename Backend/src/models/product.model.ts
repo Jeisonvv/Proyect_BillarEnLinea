@@ -54,6 +54,10 @@ export interface IProductVariant {
   price: number;      // Precio de esta variante (puede diferir del precio base)
   stock: number;      // Cuántas unidades hay disponibles en inventario
   imageUrl?: string;  // Foto específica de esta variante (opcional)
+  color?: string;
+  size?: string;
+  hardness?: string;
+  hand?: string;
 }
 
 /**
@@ -105,6 +109,10 @@ const productVariantSchema = new Schema<IProductVariant>(
       min: 0, // El stock no puede ser negativo
     },
     imageUrl: String,
+    color: String,
+    size: String,
+    hardness: String,
+    hand: String,
   },
   { _id: false }, // Sin _id propio para cada variante
 );
