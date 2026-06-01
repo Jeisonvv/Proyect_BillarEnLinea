@@ -148,8 +148,13 @@ export function TournamentRegistrationPanel({
     || registrationStatus === "PENDING"
     || registrationStatus === "WAITLIST";
 
-  const discountMessage = activeDiscount && registrationStatus === "PENDING"
-    ? `Termina de hacer tu pago con el ${activeDiscount.percentage}% de descuento y paga ${discountedAmount !== null ? formatMoney(discountedAmount) : "la tarifa preferencial"}. Esta tarifa vence el ${formatUrgencyDeadline(activeDiscount.deadline)}.`
+  const discountMessage = activeDiscount
+    && registrationStatus !== "CONFIRMED"
+    && registrationStatus !== "WAITLIST"
+    && isOpen
+    ? registrationStatus === "PENDING"
+      ? `Termina de hacer tu pago con el ${activeDiscount.percentage}% de descuento y paga ${discountedAmount !== null ? formatMoney(discountedAmount) : "la tarifa preferencial"}. Esta tarifa vence el ${formatUrgencyDeadline(activeDiscount.deadline)}.`
+      : `Este torneo tiene ${activeDiscount.percentage}% de descuento activo. Inscribete ahora y paga ${discountedAmount !== null ? formatMoney(discountedAmount) : "la tarifa preferencial"} hasta el ${formatUrgencyDeadline(activeDiscount.deadline)}.`
     : null;
 
   return (

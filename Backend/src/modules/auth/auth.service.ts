@@ -3,18 +3,22 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import type { Request } from 'express';
 import RevokedToken from '../../models/revoked-token.model.js';
+import { Channel } from '../../models/enums.js';
 import User from '../../models/user.model.js';
+import { UploadsNestService } from '../uploads/uploads.service.js';
 import { isMailConfigured, sendPasswordResetEmail } from '../../services/mail.service.js';
 import { createWebUserService } from '../../services/user.service.js';
 import { buildPasswordResetUrl, createResetToken, hashResetToken, normalizeEmail } from '../../utils/account-auth.js';
 import { extractAuthToken } from '../../utils/auth-token.js';
-import type { ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto } from './dto/auth.dto.js';
+import type { ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto, UpdateProfileDto } from './dto/auth.dto.js';
 
 const SALT_ROUNDS = 12;
 const TOKEN_EXPIRY = '30d';
 
 @Injectable()
 export class AuthNestService {
+  constructor(private readonly uploadsService: UploadsNestService) {}
+
   async register(data: RegisterDto) {
     return createWebUserService(data);
   }
@@ -29,6 +33,117 @@ export class AuthNestService {
       const error = new Error('Usuario autenticado no encontrado.') as Error & { status?: number };
       error.status = 404;
       throw error;
+    }
+
+    return this.buildAuthenticatedUserPayload(user);
+  }
+
+  async updateCurrentUser(userId: string, data: UpdateProfileDto) {
+    const user = await User.findOne({
+      _id: userId,
+      deletedAt: { $exists: false },
+    });
+
+    if (!user) {
+      const error = new Error('Usuario autenticado no encontrado.') as Error & { status?: number };
+      error.status = 404;
+      throw error;
+    }
+
+    const nextName = typeof data.name === 'string' ? data.name.trim() : undefined;
+    const nextPhone = typeof data.phone === 'string' ? data.phone.trim() : undefined;
+    const nextCity = typeof data.ciudad === 'string' ? data.ciudad.trim() : undefined;
+    const nextAddress = typeof data.direccion === 'string' ? data.direccion.trim() : undefined;
+    if (nextName !== undefined) {
+      user.name = nextName;
+    }
+
+    if (nextPhone !== undefined) {
+      if (!nextPhone) {
+        throw new Error('El teléfono no puede estar vacío.');
+      }
+
+      const existingUser = await User.findOne({
+        _id: { $ne: userId },
+        phone: nextPhone,
+        deletedAt: { $exists: false },
+      }).lean();
+
+      if (existingUser) {
+        throw new Error('Este teléfono ya está registrado.');
+      }
+
+      user.phone = nextPhone;
+    }
+
+    if (nextCity !== undefined) {
+      user.ciudad = nextCity;
+    }
+
+    if (nextAddress !== undefined) {
+      if (nextAddress) {
+        user.direccion = nextAddress;
+      } else {
+        user.set('direccion', undefined);
+      }
+    }
+
+    if (typeof data.email === 'string') {
+      const normalizedEmail = normalizeEmail(data.email);
+      const existingUser = await User.findOne({
+        _id: { $ne: userId },
+        'webAuth.email': normalizedEmail,
+        deletedAt: { $exists: false },
+      }).lean();
+
+      if (existingUser) {
+        throw new Error('Este email ya está registrado.');
+      }
+
+      if (!user.webAuth) {
+        user.webAuth = { emailVerified: false };
+      }
+
+      user.webAuth.email = normalizedEmail;
+
+      const webIdentity = user.identities.find((identity) => identity.provider === 'WEB');
+      if (webIdentity) {
+        webIdentity.providerId = normalizedEmail;
+      } else {
+        user.identities.push({ provider: Channel.WEB, providerId: normalizedEmail });
+      }
+    }
+
+    await user.save();
+
+    return this.buildAuthenticatedUserPayload(user);
+  }
+
+  async uploadCurrentUserAvatar(userId: string, file: Express.Multer.File) {
+    const user = await User.findOne({
+      _id: userId,
+      deletedAt: { $exists: false },
+    });
+
+    if (!user) {
+      const error = new Error('Usuario autenticado no encontrado.') as Error & { status?: number };
+      error.status = 404;
+      throw error;
+    }
+
+    const previousAvatarUrl = user.avatarUrl;
+    const upload = await this.uploadsService.uploadImage(file, {
+      folder: 'billar-en-linea/usuarios/avatares',
+      publicId: `user-${String(user._id)}`,
+      overwrite: true,
+      tags: 'usuarios,perfil,avatar',
+    });
+
+    user.avatarUrl = upload.url;
+    await user.save();
+
+    if (previousAvatarUrl && previousAvatarUrl !== upload.url) {
+      await this.uploadsService.deleteImageByUrl(previousAvatarUrl);
     }
 
     return this.buildAuthenticatedUserPayload(user);
@@ -232,7 +347,15 @@ export class AuthNestService {
     _id?: unknown;
     name?: string;
     webAuth?: { email?: string | undefined } | undefined;
+    phone?: string;
+    identityDocumentType?: unknown;
+    identityDocument?: string;
+    ciudad?: string;
+    direccion?: string;
+    avatarUrl?: string;
+    playerCategory?: unknown;
     role?: unknown;
+    status?: unknown;
   }) {
     return {
       ok: true,
@@ -240,7 +363,15 @@ export class AuthNestService {
         id: user._id,
         name: user.name,
         email: user.webAuth?.email,
+        phone: user.phone,
+        identityDocumentType: user.identityDocumentType,
+        identityDocument: user.identityDocument,
+        ciudad: user.ciudad,
+        direccion: user.direccion,
+        avatarUrl: user.avatarUrl,
+        playerCategory: user.playerCategory,
         role: user.role,
+        status: user.status,
       },
     };
   }

@@ -4,16 +4,29 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request, Response } from 'express';
+import { memoryStorage } from 'multer';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { clearAuthCookie, setAuthCookie } from '../../utils/auth-token.js';
-import { ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto } from './dto/auth.dto.js';
+import { ForgotPasswordDto, LoginDto, RegisterDto, ResetPasswordDto, UpdateProfileDto } from './dto/auth.dto.js';
 import { AuthNestService } from './auth.service.js';
+
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+]);
 
 @Controller('api/auth')
 export class AuthNestController {
@@ -30,6 +43,57 @@ export class AuthNestController {
       return await this.authService.getCurrentUser(req.user.id);
     } catch (error: any) {
       const status = error.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
+  @Patch('me')
+  @UseGuards(AuthGuard)
+  async updateMe(@Req() req: Request, @Body() body: UpdateProfileDto) {
+    if (!req.user?.id) {
+      throw new HttpException({ ok: false, message: 'Token de autenticación requerido.' }, HttpStatus.UNAUTHORIZED);
+    }
+
+    try {
+      return await this.authService.updateCurrentUser(req.user.id, body);
+    } catch (error: any) {
+      const status = error.message === 'Usuario autenticado no encontrado.'
+        ? HttpStatus.NOT_FOUND
+        : error.message === 'Este email ya está registrado.' || error.message === 'Este teléfono ya está registrado.'
+          ? HttpStatus.CONFLICT
+          : error.status ?? HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
+  @Post('me/avatar')
+  @UseGuards(AuthGuard)
+  @UseInterceptors(FileInterceptor('file', {
+    storage: memoryStorage(),
+    limits: {
+      fileSize: 5 * 1024 * 1024,
+      files: 1,
+    },
+  }))
+  async uploadMyAvatar(@Req() req: Request, @UploadedFile() file: Express.Multer.File | undefined) {
+    if (!req.user?.id) {
+      throw new HttpException({ ok: false, message: 'Token de autenticación requerido.' }, HttpStatus.UNAUTHORIZED);
+    }
+
+    if (!file) {
+      throw new HttpException({ ok: false, message: 'Debes adjuntar un archivo en el campo file.' }, HttpStatus.BAD_REQUEST);
+    }
+
+    if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
+      throw new HttpException({ ok: false, message: 'Tipo de archivo no permitido. Usa JPG, PNG, WEBP, GIF o AVIF.' }, HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      return await this.authService.uploadCurrentUserAvatar(req.user.id, file);
+    } catch (error: any) {
+      const status = error.message === 'Usuario autenticado no encontrado.'
+        ? HttpStatus.NOT_FOUND
+        : error.status ?? HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
     }
   }

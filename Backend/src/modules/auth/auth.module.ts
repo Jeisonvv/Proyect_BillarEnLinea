@@ -1,10 +1,12 @@
 import { Module, RequestMethod } from '@nestjs/common';
 import type { MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { UploadsModule } from '../uploads/uploads.module.js';
 import { AuthNestController } from './auth.controller.js';
 import { authLimiter } from '../../middlewares/rateLimiter.middleware.js';
 import { AuthNestService } from './auth.service.js';
 
 @Module({
+  imports: [UploadsModule],
   controllers: [AuthNestController],
   providers: [AuthNestService],
 })

@@ -58,7 +58,15 @@ export async function getServerSession(): Promise<ServerSession | null> {
         id: session.user?.id,
         name: session.user?.name,
         email: session.user?.email,
+        phone: session.user?.phone,
+        identityDocumentType: session.user?.identityDocumentType,
+        identityDocument: session.user?.identityDocument,
+        ciudad: session.user?.ciudad,
+        direccion: session.user?.direccion,
+        avatarUrl: session.user?.avatarUrl,
+        playerCategory: session.user?.playerCategory,
         role: session.user?.role,
+        status: session.user?.status,
       },
     };
   } catch {

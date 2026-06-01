@@ -75,6 +75,44 @@ function normalizeTags(tags?: string) {
   return parsed.length > 0 ? parsed : undefined;
 }
 
+function stripFileExtension(value: string) {
+  return value.replace(/\.[a-z0-9]+$/i, '');
+}
+
+function extractCloudinaryPublicIdFromUrl(url: string) {
+  const trimmedUrl = url.trim();
+  if (!trimmedUrl) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(trimmedUrl);
+    const uploadMarker = '/upload/';
+    const uploadIndex = parsedUrl.pathname.indexOf(uploadMarker);
+
+    if (uploadIndex === -1) {
+      return null;
+    }
+
+    const rawAssetPath = parsedUrl.pathname.slice(uploadIndex + uploadMarker.length);
+    const segments = rawAssetPath.split('/').filter(Boolean);
+    if (segments.length === 0) {
+      return null;
+    }
+
+    const versionIndex = segments.findIndex((segment) => /^v\d+$/.test(segment));
+    const publicIdSegments = versionIndex >= 0 ? segments.slice(versionIndex + 1) : segments;
+
+    if (publicIdSegments.length === 0) {
+      return null;
+    }
+
+    return stripFileExtension(publicIdSegments.join('/'));
+  } catch {
+    return null;
+  }
+}
+
 @Injectable()
 export class UploadsNestService {
   async uploadImage(
@@ -137,5 +175,32 @@ export class UploadsNestService {
       folder: result.folder,
       resourceType: result.resource_type,
     };
+  }
+
+  async deleteImageByPublicId(publicId: string) {
+    ensureCloudinaryConfigured();
+
+    const sanitizedPublicId = sanitizePublicId(publicId);
+    if (!sanitizedPublicId) {
+      return { result: 'not-found' };
+    }
+
+    return cloudinary.uploader.destroy(sanitizedPublicId, {
+      invalidate: true,
+      resource_type: 'image',
+    });
+  }
+
+  async deleteImageByUrl(url?: string | null) {
+    if (!url?.trim()) {
+      return { result: 'not-found' };
+    }
+
+    const publicId = extractCloudinaryPublicIdFromUrl(url);
+    if (!publicId) {
+      return { result: 'not-found' };
+    }
+
+    return this.deleteImageByPublicId(publicId);
   }
 }

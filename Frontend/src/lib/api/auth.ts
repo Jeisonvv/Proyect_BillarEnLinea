@@ -1,4 +1,4 @@
-import { getJson, postJson } from "@/lib/api/client";
+import { getJson, patchJson, postFormData, postJson } from "@/lib/api/client";
 
 export type LoginInput = {
   email: string;
@@ -21,7 +21,15 @@ export type AuthenticatedUser = {
   id?: string;
   name?: string;
   email?: string;
+  phone?: string;
+  identityDocumentType?: string;
+  identityDocument?: string;
+  ciudad?: string;
+  direccion?: string;
+  avatarUrl?: string;
+  playerCategory?: string;
   role?: string;
+  status?: string;
 };
 
 export type LoginResponse = {
@@ -30,6 +38,14 @@ export type LoginResponse = {
 };
 
 export type CurrentSessionResponse = LoginResponse;
+
+export type UpdateProfileInput = {
+  name?: string;
+  phone?: string;
+  email?: string;
+  ciudad?: string;
+  direccion?: string;
+};
 
 export type LogoutResponse = {
   ok: boolean;
@@ -73,8 +89,26 @@ export type RegisterResponse = {
   };
 };
 
+export type UpdateProfileResponse = LoginResponse;
+export type UploadProfileAvatarResponse = LoginResponse;
+
 export async function getCurrentSession() {
   return getJson<CurrentSessionResponse>("/api/auth/me", {
+    credentials: "include",
+  });
+}
+
+export async function updateCurrentProfile(input: UpdateProfileInput) {
+  return patchJson<UpdateProfileResponse, UpdateProfileInput>("/api/auth/me", input, {
+    credentials: "include",
+  });
+}
+
+export async function uploadProfileAvatar(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return postFormData<UploadProfileAvatarResponse>("/api/auth/me/avatar", formData, {
     credentials: "include",
   });
 }

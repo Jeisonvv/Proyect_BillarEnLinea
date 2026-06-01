@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { IdentityDocumentType, PlayerCategory } from '../../../models/enums.js';
 
 export class RegisterDto {
@@ -57,4 +57,29 @@ export class ResetPasswordDto {
   @IsString()
   @MinLength(8)
   password!: string;
+}
+
+export class UpdateProfileDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(7)
+  phone?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  ciudad?: string;
+
+  @IsOptional()
+  @IsString()
+  direccion?: string;
 }

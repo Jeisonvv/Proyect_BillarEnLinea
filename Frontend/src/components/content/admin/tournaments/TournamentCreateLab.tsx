@@ -162,6 +162,41 @@ function parseGroupStageSlotsInput(value: string) {
   return slots.length > 0 ? slots : undefined;
 }
 
+function parsePrizesInput(value: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const prizes = trimmed
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, index) => {
+      const parts = line.split(",").map((part) => part.trim()).filter(Boolean);
+
+      if (parts.length < 2) {
+        throw new Error(`El premio ${index + 1} debe tener al menos título y descripción. Ejemplo: Campeón,50% de lo recaudado`);
+      }
+
+      const maybeAmount = parts[parts.length - 1].replace(/\./g, "");
+      const parsedAmount = Number(maybeAmount);
+      const hasNumericAmount = Number.isFinite(parsedAmount) && parsedAmount >= 0 && /^\d+$/.test(maybeAmount);
+
+      const descriptionParts = hasNumericAmount ? parts.slice(0, -1) : parts;
+      const description = descriptionParts.join(", ");
+
+      return {
+        position: index + 1,
+        description,
+        ...(hasNumericAmount ? { amount: parsedAmount } : {}),
+      };
+    });
+
+  return prizes.length > 0 ? prizes : undefined;
+}
+
 function isPlayerCategory(value: string): value is PlayerCategory {
   return PLAYER_CATEGORIES.includes(value as PlayerCategory);
 }
@@ -248,10 +283,7 @@ function getStepControlNames(step: number) {
     case 3:
       return [
         "allowedCategories",
-        "firstPrizeDescription",
-        "firstPrizeAmount",
-        "secondPrizeDescription",
-        "secondPrizeAmount",
+        "prizesText",
         "withHandicap",
       ];
     default:
@@ -321,6 +353,14 @@ export function TournamentCreateLab() {
         parseGroupStageSlotsInput(String(new FormData(form).get("groupStageSlotsText") ?? ""));
       } catch (error) {
         nextFieldErrors.groupStageSlotsText = error instanceof Error ? error.message : "Revisa los horarios de grupos.";
+      }
+    }
+
+    if (step === 3) {
+      try {
+        parsePrizesInput(String(new FormData(form).get("prizesText") ?? ""));
+      } catch (error) {
+        nextFieldErrors.prizesText = error instanceof Error ? error.message : "Revisa el formato de premios.";
       }
     }
 
@@ -404,11 +444,7 @@ export function TournamentCreateLab() {
       .getAll("allowedCategories")
       .filter((value): value is string => typeof value === "string")
       .filter(isPlayerCategory);
-    const firstPrizeDescription = toOptionalString(formData.get("firstPrizeDescription"));
-    const secondPrizeDescription = toOptionalString(formData.get("secondPrizeDescription"));
-
-    const firstPrizeAmount = toOptionalNumber(formData.get("firstPrizeAmount"));
-    const secondPrizeAmount = toOptionalNumber(formData.get("secondPrizeAmount"));
+    const prizes = parsePrizesInput(String(formData.get("prizesText") ?? ""));
     const groupStageSlots = parseGroupStageSlotsInput(String(formData.get("groupStageSlotsText") ?? ""));
     const tags = parseTagsInput(String(formData.get("tags") ?? ""));
 
@@ -427,10 +463,7 @@ export function TournamentCreateLab() {
       discount10Deadline: toIsoDate(String(formData.get("discount10Deadline") ?? "")),
       entryFee: Number(formData.get("entryFee") ?? 0),
       maxParticipants: Number(formData.get("maxParticipants") ?? 2),
-      prizes: [
-        ...(firstPrizeDescription ? [{ position: 1, description: firstPrizeDescription, ...(firstPrizeAmount !== undefined ? { amount: firstPrizeAmount } : {}) }] : []),
-        ...(secondPrizeDescription ? [{ position: 2, description: secondPrizeDescription, ...(secondPrizeAmount !== undefined ? { amount: secondPrizeAmount } : {}) }] : []),
-      ],
+      prizes,
       venueName: toOptionalString(formData.get("venueName")),
       location: toOptionalString(formData.get("location")),
       address: toOptionalString(formData.get("address")),
@@ -881,15 +914,16 @@ export function TournamentCreateLab() {
 
               <fieldset className="rounded-3xl border border-white/10 bg-white/5 p-4">
                 <legend className="px-2 text-sm font-semibold text-stone-100">Premios base</legend>
-                <div className="mt-3 grid gap-4 md:grid-cols-2">
-                  <div className="grid gap-3">
-                    <input className="rounded-3xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="firstPrizeDescription" placeholder="Primer puesto: Taco Predator + $500.000" />
-                    <input className="rounded-3xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" type="number" min={0} name="firstPrizeAmount" placeholder="500000" />
-                  </div>
-                  <div className="grid gap-3">
-                    <input className="rounded-3xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" name="secondPrizeDescription" placeholder="Segundo puesto: Juego de bolas Diamond" />
-                    <input className="rounded-3xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-accent" type="number" min={0} name="secondPrizeAmount" placeholder="0" />
-                  </div>
+                <div className="mt-3 grid gap-2">
+                  <textarea
+                    className={getControlClass(fieldErrors, "prizesText", "textarea")}
+                    name="prizesText"
+                    placeholder={"Campeón,50% de lo recaudado\nSubcampeón,Taco profesional\nTercer puesto,Kit de accesorios,150000"}
+                  />
+                  <span className="text-xs leading-6 text-white/48">
+                    Escribe un premio por línea usando: título,descripción,monto opcional. El orden de las líneas define la posición (1, 2, 3...).
+                  </span>
+                  {renderFieldError("prizesText")}
                 </div>
               </fieldset>
 
