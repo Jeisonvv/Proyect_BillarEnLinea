@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { getTournamentWompiReturnByReference, handleWompiWebhook } from '../../services/payment.service.js';
+import { getTournamentWompiReturnByReference, getActivityWompiReturnByReference, getOrderWompiReturnByReference, handleWompiWebhook } from '../../services/payment.service.js';
 
 @Injectable()
 export class PaymentsNestService {
@@ -9,5 +9,13 @@ export class PaymentsNestService {
 
   getTournamentWompiReturn(reference: string) {
     return getTournamentWompiReturnByReference(reference);
+  }
+
+  getActivityWompiReturn(reference: string) {
+    return getActivityWompiReturnByReference(reference);
+  }
+
+  getOrderWompiReturn(reference: string) {
+    return getOrderWompiReturnByReference(reference);
   }
 }

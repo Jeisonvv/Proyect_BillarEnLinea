@@ -1339,6 +1339,122 @@ export async function createWompiCheckoutForOrder(
   };
 }
 
+export async function getActivityWompiReturnByReference(reference: string) {
+  const normalizedReference = reference.trim();
+
+  if (!normalizedReference) {
+    throw new Error("La referencia del pago es obligatoria.");
+  }
+
+  const payment = await PaymentTransaction.findOne({
+    provider: PaymentProvider.WOMPI,
+    payableType: PaymentPayableType.ACTIVITY_TICKET,
+    reference: normalizedReference,
+  }).lean();
+
+  if (!payment) {
+    throw new Error("Pago no encontrado.");
+  }
+
+  const ticket = await ActivityTicket.findById(payment.payableId)
+    .select("_id activity numbers total status paidAt paymentReference")
+    .lean();
+
+  if (!ticket) {
+    throw new Error("Ticket no encontrado.");
+  }
+
+  const activity = await Activity.findById(ticket.activity)
+    .select("_id name slug drawDate prize ticketPrice imageUrl status")
+    .lean();
+
+  if (!activity) {
+    throw new Error("Actividad no encontrada.");
+  }
+
+  return {
+    payment: {
+      reference: payment.reference,
+      status: payment.status,
+      amountInCents: payment.amountInCents,
+      currency: payment.currency,
+      ...buildWompiMethodSummary(payment.providerMethod),
+      ...(payment.expiresAt ? { expiresAt: payment.expiresAt } : {}),
+      ...(payment.externalTransactionId ? { transactionId: payment.externalTransactionId } : {}),
+    },
+    ticket: {
+      id: ticket._id,
+      status: ticket.status,
+      numbers: ticket.numbers,
+      total: ticket.total,
+      ...(ticket.paidAt ? { paidAt: ticket.paidAt } : {}),
+      ...(ticket.paymentReference ? { paymentReference: ticket.paymentReference } : {}),
+    },
+    activity: {
+      id: activity._id,
+      name: activity.name,
+      slug: activity.slug,
+      status: activity.status,
+      prize: activity.prize,
+      ticketPrice: activity.ticketPrice,
+      ...(activity.drawDate ? { drawDate: activity.drawDate } : {}),
+      ...(activity.imageUrl ? { imageUrl: activity.imageUrl } : {}),
+    },
+  };
+}
+
+export async function getOrderWompiReturnByReference(reference: string) {
+  const normalizedReference = reference.trim();
+
+  if (!normalizedReference) {
+    throw new Error("La referencia del pago es obligatoria.");
+  }
+
+  const payment = await PaymentTransaction.findOne({
+    provider: PaymentProvider.WOMPI,
+    payableType: PaymentPayableType.ORDER,
+    reference: normalizedReference,
+  }).lean();
+
+  if (!payment) {
+    throw new Error("Pago no encontrado.");
+  }
+
+  const order = await Order.findById(payment.payableId)
+    .select("_id user total status items paymentMethod paidAt cancelledAt")
+    .lean();
+
+  if (!order) {
+    throw new Error("Pedido no encontrado.");
+  }
+
+  return {
+    payment: {
+      reference: payment.reference,
+      status: payment.status,
+      amountInCents: payment.amountInCents,
+      currency: payment.currency,
+      ...buildWompiMethodSummary(payment.providerMethod),
+      ...(payment.expiresAt ? { expiresAt: payment.expiresAt } : {}),
+      ...(payment.externalTransactionId ? { transactionId: payment.externalTransactionId } : {}),
+    },
+    order: {
+      id: order._id,
+      status: order.status,
+      total: order.total,
+      items: order.items.map((item) => ({
+        productName: item.productName,
+        variantName: item.variantName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        subtotal: item.subtotal,
+      })),
+      ...(order.paidAt ? { paidAt: order.paidAt } : {}),
+      ...(order.cancelledAt ? { cancelledAt: order.cancelledAt } : {}),
+    },
+  };
+}
+
 export async function getTournamentWompiReturnByReference(reference: string) {
   const normalizedReference = reference.trim();
 
