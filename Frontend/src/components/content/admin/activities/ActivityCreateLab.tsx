@@ -79,7 +79,6 @@ export function ActivityCreateLab() {
 
     const formData = new FormData(event.currentTarget);
     const errors: FieldErrors = {};
-
     const name = String(formData.get("name") ?? "").trim();
     const slug = String(formData.get("slug") ?? "").trim();
     const seoTitle = String(formData.get("seoTitle") ?? "").trim();
@@ -91,6 +90,7 @@ export function ActivityCreateLab() {
     const ticketPriceRaw = String(formData.get("ticketPrice") ?? "").trim();
     const totalTicketsRaw = String(formData.get("totalTickets") ?? "").trim();
     const drawDateRaw = String(formData.get("drawDate") ?? "").trim();
+    const promoVideoUrl = String(formData.get("promoVideoUrl") ?? "").trim();
 
     if (!name) errors.name = "El nombre es obligatorio.";
     if (!prize) errors.prize = "El premio es obligatorio.";
@@ -123,6 +123,7 @@ export function ActivityCreateLab() {
       totalTickets,
       drawDate: drawDate!,
       status,
+      promoVideoUrl,
     };
 
     if (description) payload.description = description;
@@ -331,6 +332,19 @@ export function ActivityCreateLab() {
             </div>
           ) : null}
         </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2">
+        <label className="grid gap-2 md:col-span-2">
+          <span className="text-[0.72rem] uppercase tracking-[0.18em] text-white/56">Video promocional (URL)</span>
+          <input
+            name="promoVideoUrl"
+            type="url"
+            placeholder="https://www.youtube.com/watch?v=..."
+            className={inputClass}
+          />
+          <span className="text-[0.7rem] text-white/45">Opcional. Puedes poner un video de YouTube, Vimeo o enlace directo a MP4.</span>
+        </label>
       </section>
 
       {state.kind === "error" ? (

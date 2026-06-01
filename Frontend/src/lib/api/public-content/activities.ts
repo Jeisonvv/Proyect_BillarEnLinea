@@ -42,6 +42,7 @@ function normalizeActivity(record: JsonRecord): LandingActivity | null {
     soldTickets: pickNumber(record, ["soldTickets"]),
     saleClosesAt: pickString(record, ["saleClosesAt"]),
     isFree: pickBoolean(record, ["isFree"]),
+    promoVideoUrl: pickString(record, ["promoVideoUrl"]),
   };
 }
 
@@ -69,6 +70,7 @@ function normalizeActivityDetail(record: JsonRecord): ActivityDetail | null {
         winner: pickNumber(summaryRecord, ["winner"]) ?? 0,
       }
       : null,
+    promoVideoUrl: pickString(record, ["promoVideoUrl"]),
   };
 }
 

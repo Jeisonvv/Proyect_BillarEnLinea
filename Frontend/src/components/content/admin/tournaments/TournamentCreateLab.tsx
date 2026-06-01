@@ -692,6 +692,12 @@ export function TournamentCreateLab() {
                 </label>
 
                 <label className="grid min-w-0 gap-2">
+                  <span className="text-sm font-medium text-stone-200">Fin del torneo (opcional)</span>
+                  <input className={`${getControlClass(fieldErrors, "endDate")} scheme:dark text-sm`} type="datetime-local" name="endDate" />
+                  {renderFieldError("endDate")}
+                </label>
+
+                <label className="grid min-w-0 gap-2">
                   <span className="text-sm font-medium text-stone-200">Cierre inscripción</span>
                   <input className={`${getControlClass(fieldErrors, "registrationDeadline")} scheme:dark text-sm`} type="datetime-local" name="registrationDeadline" required />
                   {renderFieldError("registrationDeadline")}

@@ -20,6 +20,7 @@ export type CreateActivityInput = {
   drawDate: string;
   imageUrl?: string;
   status?: ActivityStatus;
+  promoVideoUrl?: string;
 };
 
 export type UpdateActivityInput = {

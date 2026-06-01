@@ -74,7 +74,7 @@ export function HomeSiteShell({
 
       <HomeSiteShellHeader canAccessAdmin={canAccessAdmin} isAuthenticated={isAuthenticated} mode={mode} />
 
-      <div id="contenido-principal" className="flex-1 pt-[70px]">
+      <div id="contenido-principal" className="flex-1 pt-6">
         <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10">
           {children}
         </main>

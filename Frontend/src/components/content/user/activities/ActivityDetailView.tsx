@@ -54,6 +54,7 @@ export function ActivityDetailView({ activity, initialNumbers = [], myNumbers = 
   const statusBadgeClass = getStatusBadgeClass(activity.status);
   const heroImage = activity.image ?? activity.prizeImage ?? null;
 
+
   return (
     <main className="grid w-full gap-6 py-6">
       {/* Hero */}
@@ -95,6 +96,43 @@ export function ActivityDetailView({ activity, initialNumbers = [], myNumbers = 
             </div>
           </div>
         </div>
+
+        {/* Video promocional */}
+        {activity.promoVideoUrl && (
+          <div className="flex w-full justify-center bg-black/60 py-6">
+            <div className="w-full max-w-2xl aspect-video rounded-xl overflow-hidden border border-white/10 shadow-lg">
+              {(() => {
+                const url = activity.promoVideoUrl;
+                // Soporte para YouTube Shorts y otros formatos
+                let embedUrl = url;
+                if (url.includes("youtube.com/shorts/")) {
+                  // Extraer el ID del short
+                  const match = url.match(/youtube.com\/shorts\/([a-zA-Z0-9_-]+)/);
+                  if (match && match[1]) {
+                    embedUrl = `https://www.youtube.com/embed/${match[1]}`;
+                  }
+                } else if (url.includes("youtube.com/watch?v=")) {
+                  embedUrl = url.replace("watch?v=", "embed/");
+                } else if (url.includes("youtu.be/")) {
+                  const id = url.split("youtu.be/")[1]?.split("?")[0];
+                  if (id) embedUrl = `https://www.youtube.com/embed/${id}`;
+                }
+                if (embedUrl.includes("youtube.com/embed/")) {
+                  return (
+                    <iframe
+                      src={embedUrl}
+                      title="Video promocional"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full"
+                    />
+                  );
+                }
+                return <video src={url} controls className="w-full h-full bg-black" />;
+              })()}
+            </div>
+          </div>
+        )}
 
         {/* Metrics */}
         <div className="grid gap-3 p-5 sm:p-7 md:grid-cols-2 xl:grid-cols-4 xl:p-8">

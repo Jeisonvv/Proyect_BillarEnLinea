@@ -86,13 +86,7 @@ export default async function PublicProductDetailPage({ params }: PageProps) {
           {product.description ? (
             <p className="text-sm leading-7 text-white/78">{product.description}</p>
           ) : null}
-          {product.tags.length > 0 ? (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {product.tags.map((tag) => (
-                <span key={tag} className="rounded-full border border-[rgba(129,181,255,0.2)] bg-[rgba(129,181,255,0.12)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[rgba(217,232,255,0.96)]">{tag}</span>
-              ))}
-            </div>
-          ) : null}
+          
         </section>
       </div>
     </main>

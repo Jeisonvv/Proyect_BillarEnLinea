@@ -54,6 +54,10 @@ export class CreateActivityDto {
   @IsEnum(ActivityStatus)
   status?: ActivityStatus;
 
+  @IsOptional()
+  @IsString()
+  promoVideoUrl?: string;
+
   [key: string]: unknown;
 }
 

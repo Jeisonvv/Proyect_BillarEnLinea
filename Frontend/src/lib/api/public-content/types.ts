@@ -145,6 +145,7 @@ export type LandingActivity = {
   soldTickets: number | null;
   saleClosesAt: string | null;
   isFree: boolean | null;
+  promoVideoUrl?: string | null;
 };
 
 export type ActivityDetail = LandingActivity & {
@@ -161,6 +162,7 @@ export type ActivityDetail = LandingActivity & {
     paid: number;
     winner: number;
   } | null;
+  promoVideoUrl?: string | null;
 };
 
 export type LandingPost = {
