@@ -171,6 +171,9 @@ export type LandingPost = {
   excerpt: string | null;
   slug: string | null;
   publishedAt: string | null;
+  category: string | null;
+  coverImageUrl: string | null;
+  readingTime: number | null;
   tags: string[];
 };
 

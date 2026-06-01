@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreatePostDto {
   @IsOptional()
@@ -15,6 +15,10 @@ export class CreatePostDto {
   content?: string;
 
   @IsOptional()
+  @IsArray()
+  contentBlocks?: unknown[];
+
+  @IsOptional()
   @IsString()
   slug?: string;
 
@@ -23,12 +27,56 @@ export class CreatePostDto {
   status?: string;
 
   @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
   @IsArray()
   tags?: string[];
 
   @IsOptional()
+  @IsString()
+  coverImageUrl?: string;
+
+  @IsOptional()
+  @IsArray()
+  galleryImages?: string[];
+
+  @IsOptional()
+  @IsArray()
+  videoUrls?: string[];
+
+  @IsOptional()
+  @IsString()
+  seoTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  seoDescription?: string;
+
+  @IsOptional()
+  @IsString()
+  canonicalUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  ogImageUrl?: string;
+
+  @IsOptional()
   @IsBoolean()
   noIndex?: boolean;
+
+  @IsOptional()
+  @IsString()
+  relatedTournament?: string;
+
+  @IsOptional()
+  @IsString()
+  relatedEvent?: string;
+
+  @IsOptional()
+  @IsDateString()
+  publishedAt?: string;
 
   [key: string]: unknown;
 }
@@ -47,6 +95,10 @@ export class UpdatePostDto {
   content?: string;
 
   @IsOptional()
+  @IsArray()
+  contentBlocks?: unknown[];
+
+  @IsOptional()
   @IsString()
   slug?: string;
 
@@ -55,12 +107,56 @@ export class UpdatePostDto {
   status?: string;
 
   @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
   @IsArray()
   tags?: string[];
 
   @IsOptional()
+  @IsString()
+  coverImageUrl?: string;
+
+  @IsOptional()
+  @IsArray()
+  galleryImages?: string[];
+
+  @IsOptional()
+  @IsArray()
+  videoUrls?: string[];
+
+  @IsOptional()
+  @IsString()
+  seoTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  seoDescription?: string;
+
+  @IsOptional()
+  @IsString()
+  canonicalUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  ogImageUrl?: string;
+
+  @IsOptional()
   @IsBoolean()
   noIndex?: boolean;
+
+  @IsOptional()
+  @IsString()
+  relatedTournament?: string;
+
+  @IsOptional()
+  @IsString()
+  relatedEvent?: string;
+
+  @IsOptional()
+  @IsDateString()
+  publishedAt?: string;
 
   [key: string]: unknown;
 }

@@ -78,6 +78,19 @@ export class PostsNestController {
     }
   }
 
+  @Get('admin/slug/:slug')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  async getPostBySlugAdmin(@Param('slug') slug: string) {
+    try {
+      const post = await this.postsService.getPostBySlugAdmin(slug);
+      return { ok: true, data: post, meta: this.postsService.getMetadata() };
+    } catch (error: any) {
+      const status = error.message === 'Post no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
   @Get(':slug')
   async getPostBySlug(@Param('slug') slug: string) {
     try {

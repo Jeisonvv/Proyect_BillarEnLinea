@@ -3,6 +3,7 @@ import {
   createPostService,
   deletePostService,
   getPostByIdService,
+  getPostBySlugAdminService,
   getPostBySlugService,
   getPostSiteMetadata,
   listAdminPostsService,
@@ -45,6 +46,10 @@ export class PostsNestService {
 
   getPostBySlug(slug: string) {
     return getPostBySlugService(slug);
+  }
+
+  getPostBySlugAdmin(slug: string) {
+    return getPostBySlugAdminService(slug);
   }
 
   getPostById(id: string) {

@@ -419,6 +419,20 @@ export async function getPostBySlugService(slug: string) {
   return post;
 }
 
+export async function getPostBySlugAdminService(slug: string) {
+  const post = await Post.findOne({ slug })
+    .populate("author", "name avatarUrl role")
+    .populate("relatedTournament", "name status startDate")
+    .populate("relatedEvent", "name status startDate")
+    .lean();
+
+  if (!post) {
+    throw new Error("Post no encontrado.");
+  }
+
+  return post;
+}
+
 export async function getPostByIdService(id: string) {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new Error("Post no encontrado.");

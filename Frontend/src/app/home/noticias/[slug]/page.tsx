@@ -1,10 +1,39 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
+import remarkGfm from "remark-gfm";
+import { defaultSchema } from "hast-util-sanitize";
 import { getPostDetailBySlug } from "@/lib/api/public-content";
 import { siteConfig } from "@/lib/site";
 
 type PageProps = { params: Promise<{ slug: string }> };
+
+const markdownSchema = {
+  ...defaultSchema,
+  tagNames: [...(defaultSchema.tagNames ?? []), "iframe"],
+  attributes: {
+    ...defaultSchema.attributes,
+    iframe: [
+      "src",
+      "title",
+      "width",
+      "height",
+      "allow",
+      "allowFullScreen",
+      "frameBorder",
+      "loading",
+      "referrerPolicy",
+      "className",
+    ],
+  },
+  protocols: {
+    ...defaultSchema.protocols,
+    src: ["http", "https"],
+  },
+};
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -38,6 +67,29 @@ function formatDate(value: string | null) {
   return parsed.toLocaleDateString("es-CO", { day: "2-digit", month: "long", year: "numeric" });
 }
 
+function normalizeEmbedSrc(value?: string) {
+  if (!value) return undefined;
+
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    const isYoutubeEmbed = host.includes("youtube.com") && url.pathname.includes("/embed/");
+
+    if (isYoutubeEmbed) {
+      if (!url.searchParams.has("controls")) {
+        url.searchParams.set("controls", "1");
+      }
+      if (!url.searchParams.has("rel")) {
+        url.searchParams.set("rel", "0");
+      }
+    }
+
+    return url.toString();
+  } catch {
+    return value;
+  }
+}
+
 export default async function PublicPostDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const post = await getPostDetailBySlug(slug);
@@ -67,18 +119,72 @@ export default async function PublicPostDetailPage({ params }: PageProps) {
       ) : null}
 
       {post.content ? (
-        <article className="prose prose-invert mt-8 max-w-none whitespace-pre-line text-[1rem] leading-8 text-white/82">
-          {post.content}
+        <article className="mt-8 overflow-hidden rounded-3xl border border-white/8 bg-white/4 p-5 text-[1rem] leading-8 text-white/82 md:p-7">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw, [rehypeSanitize, markdownSchema]]}
+            components={{
+              p: ({ children }) => <p className="mb-5 leading-8 text-white/82 last:mb-0">{children}</p>,
+              h1: ({ children }) => <h2 className="mb-4 mt-8 text-2xl font-semibold text-white first:mt-0">{children}</h2>,
+              h2: ({ children }) => <h3 className="mb-3 mt-7 text-xl font-semibold text-white first:mt-0">{children}</h3>,
+              h3: ({ children }) => <h4 className="mb-3 mt-6 text-lg font-semibold text-white first:mt-0">{children}</h4>,
+              ul: ({ children }) => <ul className="mb-5 ml-5 list-disc space-y-2 text-white/82">{children}</ul>,
+              ol: ({ children }) => <ol className="mb-5 ml-5 list-decimal space-y-2 text-white/82">{children}</ol>,
+              li: ({ children }) => <li className="pl-1">{children}</li>,
+              blockquote: ({ children }) => (
+                <blockquote className="mb-5 border-l-2 border-[rgba(246,196,79,0.45)] bg-[rgba(246,196,79,0.08)] px-4 py-3 text-white/76">
+                  {children}
+                </blockquote>
+              ),
+              img: ({ src, alt }) =>
+                src ? (
+                  <figure className="my-6 overflow-hidden rounded-3xl border border-white/8 bg-black/30">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={src} alt={alt ?? "Imagen de la noticia"} className="h-auto w-full object-cover" />
+                  </figure>
+                ) : null,
+              a: ({ href, children }) => (
+                <a href={href} className="text-[#f6c44f] underline decoration-[#f6c44f]/40 underline-offset-4 transition hover:text-white">
+                  {children}
+                </a>
+              ),
+              code: ({ children }) => (
+                <code className="rounded-md bg-white/8 px-1.5 py-0.5 text-[0.92em] text-white/92">{children}</code>
+              ),
+              iframe: ({ src, title }) => {
+                const safeSrc = normalizeEmbedSrc(typeof src === "string" ? src : undefined);
+                if (!safeSrc) return null;
+
+                return (
+                  <div className="my-6 overflow-hidden rounded-3xl border border-white/8 bg-black/30">
+                    <div className="relative w-full pt-[56.25%]">
+                      <iframe
+                        src={safeSrc}
+                        title={typeof title === "string" && title.trim().length > 0 ? title : "Video embebido"}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        className="absolute inset-0 h-full w-full"
+                      />
+                    </div>
+                  </div>
+                );
+              },
+            }}
+          >
+            {post.content}
+          </ReactMarkdown>
         </article>
       ) : null}
 
-      {post.tags.length > 0 ? (
+      {/* {post.tags.length > 0 ? (
         <div className="mt-8 flex flex-wrap gap-2">
           {post.tags.map((tag) => (
             <span key={tag} className="rounded-full border border-[rgba(246,196,79,0.2)] bg-[rgba(246,196,79,0.12)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[rgba(255,233,174,0.96)]">{tag}</span>
           ))}
         </div>
-      ) : null}
+      ) : null} */}
     </main>
   );
 }

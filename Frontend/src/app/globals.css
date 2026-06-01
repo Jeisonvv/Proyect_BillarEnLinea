@@ -3,6 +3,8 @@
 :root {
   --background: #0b0b0d;
   --foreground: #ffffff;
+  --font-poppins: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-bebas-neue: "Arial Narrow", "Franklin Gothic Medium", "Helvetica Neue", Arial, sans-serif;
   --surface: rgba(22, 24, 28, 0.9);
   --surface-strong: #16181c;
   --muted: rgba(255, 255, 255, 0.7);

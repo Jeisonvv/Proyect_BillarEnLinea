@@ -25,6 +25,9 @@ function normalizePost(record: JsonRecord): LandingPost | null {
     excerpt: pickString(record, ["excerpt", "summary"]),
     slug: pickString(record, ["slug"]),
     publishedAt: pickString(record, ["publishedAt", "createdAt", "updatedAt"]),
+    category: pickString(record, ["category"]),
+    coverImageUrl: resolveApiAssetUrl(pickString(record, ["coverImageUrl"])),
+    readingTime: pickNumber(record, ["readingTime"]),
     tags: pickStringArray(record, ["tags"]),
   };
 }

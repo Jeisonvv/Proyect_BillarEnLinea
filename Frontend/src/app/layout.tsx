@@ -1,20 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Bebas_Neue, Poppins } from "next/font/google";
 import { PublicSiteShell } from "@/components/navigation/PublicSiteShell";
 import { absoluteUrl, siteConfig } from "@/lib/site";
 import "./globals.css";
-
-const bodyFont = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-const displayFont = Bebas_Neue({
-  variable: "--font-bebas-neue",
-  subsets: ["latin"],
-  weight: "400",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -84,10 +71,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="es"
-      className={`${bodyFont.variable} ${displayFont.variable} h-full antialiased`}
-    >
+    <html lang="es" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <PublicSiteShell>{children}</PublicSiteShell>
       </body>

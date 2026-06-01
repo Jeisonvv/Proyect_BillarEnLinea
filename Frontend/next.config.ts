@@ -73,6 +73,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: getAllowedDevOrigins(),
   images: {
     formats: ["image/avif", "image/webp"],
+    qualities: [62, 68, 75],
     minimumCacheTTL: 60 * 60 * 24 * 7,
     remotePatterns: [getApiRemotePattern(), ...getExtraRemotePatterns()],
   },
