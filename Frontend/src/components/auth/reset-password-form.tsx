@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { resetPassword } from "@/lib/api/auth";
 
@@ -19,6 +20,7 @@ type ResetPasswordFormProps = {
 export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const [state, setState] = useState<ResetPasswordState>(initialState);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,6 +45,9 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
         const response = await resetPassword({ token, password });
         setState({ kind: "success", message: response.message });
         form.reset();
+        setTimeout(() => {
+          router.push("/login");
+        }, 1200);
       } catch (error) {
         setState({
           kind: "error",
