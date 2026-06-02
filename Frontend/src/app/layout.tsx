@@ -3,6 +3,8 @@ import { PublicSiteShell } from "@/components/navigation/PublicSiteShell";
 import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 import "./globals.css";
 
+const facebookAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID?.trim();
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   applicationName: siteConfig.name,
@@ -43,6 +45,13 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: [getSocialShareImageUrl(siteConfig.socialImage)],
   },
+  ...(facebookAppId
+    ? {
+        facebook: {
+          appId: facebookAppId,
+        },
+      }
+    : {}),
   robots: {
     index: true,
     follow: true,

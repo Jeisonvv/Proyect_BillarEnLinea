@@ -20,6 +20,9 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
+    type: "website",
+    locale: siteConfig.locale,
+    siteName: siteConfig.name,
     title: landingSocialTitle,
     description: landingSocialDescription,
     url: "/",

@@ -10,7 +10,8 @@ import { getTournamentShowcaseProps } from "@/components/content/user/tournament
 import { getServerSession } from "@/lib/auth/server-session";
 import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 
-const homeShareImage = getSocialShareImageUrl(siteConfig.socialImage);
+const homeSocialImage = "/hero_portada.png";
+const homeShareImage = getSocialShareImageUrl(homeSocialImage);
 
 export const metadata: Metadata = {
   title: "Inicio",
