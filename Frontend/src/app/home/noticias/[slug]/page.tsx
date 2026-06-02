@@ -44,6 +44,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = post.seoTitle?.trim() || post.title;
   const description = post.seoDescription?.trim() || post.excerpt || `Noticia: ${post.title}`;
   const url = `/home/noticias/${post.slug ?? post.id}`;
+  const shareImage = getSocialShareImageUrl(post.ogImageUrl ?? post.coverImageUrl ?? siteConfig.socialImage);
+
   return {
     title,
     description,
@@ -55,9 +57,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url,
       title,
       description,
-      images: post.ogImageUrl || post.coverImageUrl
-        ? [{ url: getSocialShareImageUrl(post.ogImageUrl ?? post.coverImageUrl ?? ""), width: socialImageDimensions.width, height: socialImageDimensions.height }]
-        : undefined,
+      images: [{ url: shareImage, width: socialImageDimensions.width, height: socialImageDimensions.height }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [shareImage],
     },
   };
 }

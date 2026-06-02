@@ -5,7 +5,7 @@ export const siteConfig = {
     "Torneos, eventos, sorteos, noticias y tienda especializada para la comunidad del billar en un solo lugar.",
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://billarenlinea.com").replace(/\/$/, ""),
   locale: "es_CO",
-  socialImage: "/hero_portada.png",
+  socialImage: "/opengraph-image",
   keywords: [
     "billar en linea",
     "torneos de billar",

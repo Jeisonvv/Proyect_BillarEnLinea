@@ -7,7 +7,7 @@ import {
   type ProductCategory,
 } from "@/lib/api/admin-products";
 import { getProductsByCategory } from "@/lib/api/public-content";
-import { siteConfig } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 
 const CATEGORY_DESCRIPTIONS: Record<ProductCategory, string> = {
   CUE: "Tacos profesionales y de iniciación.",
@@ -39,6 +39,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const label = PRODUCT_CATEGORY_LABELS[resolved];
   const description = CATEGORY_DESCRIPTIONS[resolved];
   const url = `/home/tienda/categoria/${category.toLowerCase()}`;
+  const shareImage = getSocialShareImageUrl(siteConfig.socialImage);
+
   return {
     title: `${label} | Tienda`,
     description,
@@ -49,6 +51,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url,
       title: `${label} | Tienda ${siteConfig.name}`,
       description,
+      images: [
+        {
+          url: shareImage,
+          width: socialImageDimensions.width,
+          height: socialImageDimensions.height,
+          alt: `${label} | ${siteConfig.name}`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${label} | Tienda ${siteConfig.name}`,
+      description,
+      images: [shareImage],
     },
   };
 }

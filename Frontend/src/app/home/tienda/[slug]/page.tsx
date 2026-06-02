@@ -15,6 +15,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
   const description = product.description ?? `Producto ${product.name} disponible en la tienda Billar en Linea.`;
   const url = `/home/tienda/${product.slug ?? product.id}`;
+  const shareImage = getSocialShareImageUrl(product.image ?? siteConfig.socialImage);
+
   return {
     title: product.name,
     description,
@@ -25,9 +27,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url,
       title: product.name,
       description,
-      images: product.image
-        ? [{ url: getSocialShareImageUrl(product.image), width: socialImageDimensions.width, height: socialImageDimensions.height }]
-        : undefined,
+      images: [{ url: shareImage, width: socialImageDimensions.width, height: socialImageDimensions.height }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      images: [shareImage],
     },
   };
 }
