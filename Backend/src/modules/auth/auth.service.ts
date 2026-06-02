@@ -142,10 +142,6 @@ export class AuthNestService {
     user.avatarUrl = upload.url;
     await user.save();
 
-    if (previousAvatarUrl && previousAvatarUrl !== upload.url) {
-      await this.uploadsService.deleteImageByUrl(previousAvatarUrl);
-    }
-
     return this.buildAuthenticatedUserPayload(user);
   }
 

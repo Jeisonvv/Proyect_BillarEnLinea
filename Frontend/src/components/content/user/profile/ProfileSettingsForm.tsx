@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { ApiError } from "@/lib/api/client";
 import type { AuthenticatedUser } from "@/lib/api/auth";
-import { updateCurrentProfile, uploadProfileAvatar } from "@/lib/api/auth";
+import { getCurrentSession, updateCurrentProfile, uploadProfileAvatar } from "@/lib/api/auth";
 import { BUTTON_GHOST, BUTTON_PRIMARY, CARD_INNER, CARD_SHELL_PADDED, ADMIN_INPUT, LABEL_OVERLINE, LABEL_OVERLINE_ACCENT } from "@/components/ui/styles";
 import { humanizeToken } from "@/components/content/user/shared";
 
@@ -60,6 +60,7 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "");
   const [avatarPreviewError, setAvatarPreviewError] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const hasChanges = Object.entries(formValues).some(([key, value]) => value !== savedSnapshot[key as keyof EditableProfileState]);
 
@@ -73,6 +74,7 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
   }
 
   async function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
     const file = event.target.files?.[0];
     if (!file) {
       return;
@@ -80,13 +82,13 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
 
     if (!ALLOWED_AVATAR_MIME_TYPES.has(file.type)) {
       setStatus({ kind: "error", message: "Formato no permitido. Usa JPG, PNG, WEBP, GIF, AVIF, HEIC o HEIF." });
-      event.currentTarget.value = "";
+      input.value = "";
       return;
     }
 
     if (file.size > MAX_AVATAR_FILE_SIZE) {
       setStatus({ kind: "error", message: "La imagen supera 12MB. Elige una foto más liviana." });
-      event.currentTarget.value = "";
+      input.value = "";
       return;
     }
 
@@ -95,7 +97,8 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
 
     try {
       const response = await uploadProfileAvatar(file);
-      const nextAvatarUrl = response.user.avatarUrl ?? "";
+      const refreshedSession = await getCurrentSession();
+      const nextAvatarUrl = refreshedSession.user.avatarUrl ?? response.user.avatarUrl ?? avatarUrl;
       setAvatarPreviewError(false);
       setAvatarUrl(nextAvatarUrl);
       setStatus({ kind: "success", message: "La foto de perfil fue actualizada correctamente." });
@@ -103,8 +106,12 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
       setStatus({ kind: "error", message: getErrorMessage(error) });
     } finally {
       setIsAvatarUploading(false);
-      event.currentTarget.value = "";
+      input.value = "";
     }
+  }
+
+  function handleAvatarPickerClick() {
+    avatarInputRef.current?.click();
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -215,10 +222,17 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
                   )}
                 </div>
                 <div className="grid gap-2">
-                  <label className={`${BUTTON_GHOST} cursor-pointer`}>
-                    <input className="hidden" type="file" accept="image/*" onChange={handleAvatarChange} disabled={isAvatarUploading || isPending} />
+                  <button className={BUTTON_GHOST} type="button" onClick={handleAvatarPickerClick} disabled={isAvatarUploading || isPending}>
                     {isAvatarUploading ? "Subiendo foto..." : avatarUrl ? "Cambiar foto" : "Subir foto"}
-                  </label>
+                  </button>
+                  <input
+                    ref={avatarInputRef}
+                    className="hidden"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif"
+                    onChange={handleAvatarChange}
+                    disabled={isAvatarUploading || isPending}
+                  />
                 </div>
               </div>
             </div>
