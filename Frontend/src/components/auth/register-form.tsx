@@ -215,6 +215,7 @@ export function RegisterForm() {
             required
           >
             <option value="" disabled className="bg-[#201815] text-stone-400">
+             tipo de documento
             </option>
             {identityDocumentTypeOptions.map((option) => (
               <option key={option.value} value={option.value} className="bg-[#201815] text-white">
