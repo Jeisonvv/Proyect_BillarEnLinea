@@ -57,14 +57,15 @@ function injectCloudinaryTransformation(url: URL) {
   return url.toString();
 }
 
-function withSocialImageVersion(url: URL) {
-  if (!SOCIAL_IMAGE_VERSION) {
-    return url.toString();
+function toSocialImageNormalizerUrl(sourceUrl: URL) {
+  const normalizerUrl = new URL("/api/social-image", siteConfig.url);
+  normalizerUrl.searchParams.set("src", sourceUrl.toString());
+
+  if (SOCIAL_IMAGE_VERSION) {
+    normalizerUrl.searchParams.set("v", SOCIAL_IMAGE_VERSION);
   }
 
-  // Stable cache buster for social crawlers (Facebook, X, WhatsApp).
-  url.searchParams.set("v", SOCIAL_IMAGE_VERSION);
-  return url.toString();
+  return normalizerUrl;
 }
 
 export function getSocialShareImageUrl(imagePath?: string | null) {
@@ -75,11 +76,11 @@ export function getSocialShareImageUrl(imagePath?: string | null) {
     const parsedUrl = new URL(absoluteImage);
     if (isCloudinaryUploadUrl(parsedUrl)) {
       const transformed = new URL(injectCloudinaryTransformation(parsedUrl));
-      return withSocialImageVersion(transformed);
+      return toSocialImageNormalizerUrl(transformed).toString();
     }
-    return withSocialImageVersion(parsedUrl);
+    return toSocialImageNormalizerUrl(parsedUrl).toString();
   } catch {
-    return withSocialImageVersion(new URL(absoluteUrl(siteConfig.socialImage)));
+    return toSocialImageNormalizerUrl(new URL(absoluteUrl(siteConfig.socialImage))).toString();
   }
 }
 
