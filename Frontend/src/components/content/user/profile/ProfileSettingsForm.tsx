@@ -17,6 +17,16 @@ type FormState = {
 };
 
 const INITIAL_STATE: FormState = { kind: "idle" };
+const MAX_AVATAR_FILE_SIZE = 12 * 1024 * 1024;
+const ALLOWED_AVATAR_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+  "image/heic",
+  "image/heif",
+]);
 
 type EditableProfileState = {
   name: string;
@@ -49,6 +59,7 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
   const [isPending, startTransition] = useTransition();
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "");
+  const [avatarPreviewError, setAvatarPreviewError] = useState(false);
 
   const hasChanges = Object.entries(formValues).some(([key, value]) => value !== savedSnapshot[key as keyof EditableProfileState]);
 
@@ -67,12 +78,25 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
       return;
     }
 
+    if (!ALLOWED_AVATAR_MIME_TYPES.has(file.type)) {
+      setStatus({ kind: "error", message: "Formato no permitido. Usa JPG, PNG, WEBP, GIF, AVIF, HEIC o HEIF." });
+      event.currentTarget.value = "";
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_FILE_SIZE) {
+      setStatus({ kind: "error", message: "La imagen supera 12MB. Elige una foto más liviana." });
+      event.currentTarget.value = "";
+      return;
+    }
+
     setStatus(INITIAL_STATE);
     setIsAvatarUploading(true);
 
     try {
       const response = await uploadProfileAvatar(file);
       const nextAvatarUrl = response.user.avatarUrl ?? "";
+      setAvatarPreviewError(false);
       setAvatarUrl(nextAvatarUrl);
       setStatus({ kind: "success", message: "La foto de perfil fue actualizada correctamente." });
     } catch (error) {
@@ -178,9 +202,14 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
               <span className={LABEL_OVERLINE}>Foto de perfil</span>
               <div className="flex min-h-34 items-center gap-4 rounded-2xl border border-white/10 bg-black/24 px-4 py-4">
                 <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5">
-                  {avatarUrl ? (
+                  {avatarUrl && !avatarPreviewError ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={avatarUrl} alt="Avatar del usuario" className="h-full w-full object-cover" />
+                    <img
+                      src={avatarUrl}
+                      alt="Avatar del usuario"
+                      className="h-full w-full object-cover"
+                      onError={() => setAvatarPreviewError(true)}
+                    />
                   ) : (
                     <span className="text-xs uppercase tracking-[0.18em] text-white/42">Sin foto</span>
                   )}

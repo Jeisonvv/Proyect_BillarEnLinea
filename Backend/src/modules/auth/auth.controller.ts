@@ -26,6 +26,8 @@ const ALLOWED_IMAGE_MIME_TYPES = new Set([
   'image/webp',
   'image/gif',
   'image/avif',
+  'image/heic',
+  'image/heif',
 ]);
 
 @Controller('api/auth')
@@ -71,7 +73,8 @@ export class AuthNestController {
   @UseInterceptors(FileInterceptor('file', {
     storage: memoryStorage(),
     limits: {
-      fileSize: 5 * 1024 * 1024,
+      // Mobile photos are often larger than 5MB even before editing.
+      fileSize: 12 * 1024 * 1024,
       files: 1,
     },
   }))
@@ -85,7 +88,7 @@ export class AuthNestController {
     }
 
     if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
-      throw new HttpException({ ok: false, message: 'Tipo de archivo no permitido. Usa JPG, PNG, WEBP, GIF o AVIF.' }, HttpStatus.BAD_REQUEST);
+      throw new HttpException({ ok: false, message: 'Tipo de archivo no permitido. Usa JPG, PNG, WEBP, GIF, AVIF, HEIC o HEIF.' }, HttpStatus.BAD_REQUEST);
     }
 
     try {
