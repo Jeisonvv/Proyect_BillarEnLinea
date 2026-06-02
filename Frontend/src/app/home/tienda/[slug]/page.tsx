@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductDetailInteractiveView } from "@/components/content/user/products";
 import { getProductDetailBySlug } from "@/lib/api/public-content";
-import { siteConfig } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -25,7 +25,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url,
       title: product.name,
       description,
-      images: product.image ? [{ url: product.image }] : undefined,
+      images: product.image
+        ? [{ url: getSocialShareImageUrl(product.image), width: socialImageDimensions.width, height: socialImageDimensions.height }]
+        : undefined,
     },
   };
 }

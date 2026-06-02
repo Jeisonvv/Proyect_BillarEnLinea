@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TournamentDetailView } from "@/components/content/user/tournaments";
 import { getTournamentDetailBySlug } from "@/lib/api/public-content";
-import { absoluteUrl, siteConfig } from "@/lib/site";
+import { absoluteUrl, getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 
 type TournamentPageProps = {
   params: Promise<{
@@ -114,7 +114,7 @@ export async function generateMetadata({ params }: TournamentPageProps): Promise
   const description = tournament.seoDescription?.trim() || buildTournamentDescription(tournament);
   const keywords = buildTournamentKeywords(tournament);
   const canonicalUrl = `/home/torneos/${tournament.slug}`;
-  const imageUrl = tournament.image ?? absoluteUrl(siteConfig.socialImage);
+  const imageUrl = getSocialShareImageUrl(tournament.image ?? absoluteUrl(siteConfig.socialImage));
 
   return {
     title,
@@ -133,8 +133,8 @@ export async function generateMetadata({ params }: TournamentPageProps): Promise
       images: [
         {
           url: imageUrl,
-          width: 2000,
-          height: 800,
+          width: socialImageDimensions.width,
+          height: socialImageDimensions.height,
           alt: `Imagen oficial de ${tournament.name}`,
         },
       ],

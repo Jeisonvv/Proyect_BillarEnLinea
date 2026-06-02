@@ -7,7 +7,7 @@ import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import { defaultSchema } from "hast-util-sanitize";
 import { getPostDetailBySlug } from "@/lib/api/public-content";
-import { siteConfig } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -55,7 +55,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url,
       title,
       description,
-      images: post.ogImageUrl || post.coverImageUrl ? [{ url: post.ogImageUrl ?? post.coverImageUrl ?? "" }] : undefined,
+      images: post.ogImageUrl || post.coverImageUrl
+        ? [{ url: getSocialShareImageUrl(post.ogImageUrl ?? post.coverImageUrl ?? ""), width: socialImageDimensions.width, height: socialImageDimensions.height }]
+        : undefined,
     },
   };
 }

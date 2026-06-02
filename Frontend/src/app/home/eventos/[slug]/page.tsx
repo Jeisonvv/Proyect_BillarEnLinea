@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EventDetailView } from "@/components/content/user/events";
 import { getEventDetailBySlug } from "@/lib/api/public-content";
-import { siteConfig } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 
 type EventPageProps = {
   params: Promise<{
@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
   const description = event.seoDescription?.trim() || buildEventDescription(event);
   const keywords = buildEventKeywords(event);
   const pageUrl = `/home/eventos/${event.slug}`;
-  const imageUrl = event.image ?? siteConfig.socialImage;
+  const imageUrl = getSocialShareImageUrl(event.image ?? siteConfig.socialImage);
 
   return {
     title,
@@ -84,8 +84,8 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
       images: [
         {
           url: imageUrl,
-          width: 2000,
-          height: 800,
+          width: socialImageDimensions.width,
+          height: socialImageDimensions.height,
           alt: `Imagen oficial de ${event.name}`,
         },
       ],

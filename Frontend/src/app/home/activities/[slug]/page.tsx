@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ActivityDetailView } from "@/components/content/user/activities";
 import { getActivityDetailById, getActivityNumbers } from "@/lib/api/public-content";
 import { getMyActivityNumbers } from "@/lib/api/public-content/activities";
-import { siteConfig } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 
 type ActivityPageProps = {
   params: Promise<{ slug: string }>;
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: ActivityPageProps): Promise<M
   const title = activity.seoTitle?.trim() || activity.name;
   const pageSlug = activity.slug ?? activity.id;
   const pageUrl = `/home/activities/${pageSlug}`;
-  const imageUrl = activity.image ?? activity.prizeImage ?? siteConfig.socialImage;
+  const imageUrl = getSocialShareImageUrl(activity.image ?? activity.prizeImage ?? siteConfig.socialImage);
 
   return {
     title,
@@ -44,8 +44,8 @@ export async function generateMetadata({ params }: ActivityPageProps): Promise<M
       images: [
         {
           url: imageUrl,
-          width: 2000,
-          height: 800,
+          width: socialImageDimensions.width,
+          height: socialImageDimensions.height,
           alt: `Imagen de la actividad ${activity.name}`,
         },
       ],
