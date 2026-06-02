@@ -1,5 +1,22 @@
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+function resolveApiBaseUrl() {
+  const serverUrl = process.env.API_BASE_URL?.trim();
+  if (serverUrl) {
+    return serverUrl;
+  }
+
+  const publicUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (publicUrl) {
+    return publicUrl;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return "https://api.billarenlinea.com";
+  }
+
+  return "http://localhost:3001";
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 type JsonRecord = Record<string, unknown>;
 
