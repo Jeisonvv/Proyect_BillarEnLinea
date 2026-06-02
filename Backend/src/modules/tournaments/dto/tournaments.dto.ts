@@ -226,6 +226,14 @@ export class UpdateAdminTournamentDto {
   registrationDeadline?: string;
 
   @IsOptional()
+  @IsDateString()
+  discount20Deadline?: string;
+
+  @IsOptional()
+  @IsDateString()
+  discount10Deadline?: string;
+
+  @IsOptional()
   @IsString()
   venueName?: string;
 
@@ -269,6 +277,12 @@ export class UpdateAdminTournamentDto {
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TournamentGroupStageSlotDto)
+  groupStageSlots?: TournamentGroupStageSlotDto[];
 
   [key: string]: unknown;
 }

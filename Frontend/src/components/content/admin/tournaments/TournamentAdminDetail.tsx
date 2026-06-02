@@ -61,7 +61,7 @@ function toOptionalDate(value: FormDataEntryValue | null) {
   return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
 }
 
-function toDateInputValue(value: string | null) {
+function toDateTimeLocalValue(value: string | null) {
   if (!value) {
     return "";
   }
@@ -71,7 +71,72 @@ function toDateInputValue(value: string | null) {
     return "";
   }
 
-  return parsed.toISOString().slice(0, 10);
+  const pad = (segment: number) => String(segment).padStart(2, "0");
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
+}
+
+function formatGroupStageSlotsValue(slots: TournamentDetail["groupStageSlots"]) {
+  if (!slots.length) {
+    return "";
+  }
+
+  return slots
+    .map((slot) => {
+      const date = slot.date ? slot.date.slice(0, 10) : "";
+      const parts = [date, slot.startTime ?? ""];
+
+      if (slot.endTime) {
+        parts.push(slot.endTime);
+      }
+
+      if (slot.label) {
+        parts.push(slot.label);
+      }
+
+      return parts.filter(Boolean).join(",");
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+function parseGroupStageSlotsInput(value: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const slots = trimmed
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, index) => {
+      const [dateValue, startTime, thirdPart, ...labelParts] = line.split(",").map((part) => part.trim());
+
+      if (!dateValue || !startTime) {
+        throw new Error(`La franja ${index + 1} debe usar el formato fecha,horaInicio,horaFin opcional,etiqueta opcional.`);
+      }
+
+      const date = new Date(`${dateValue}T00:00`);
+      if (Number.isNaN(date.getTime())) {
+        throw new Error(`La fecha de la franja ${index + 1} no es válida.`);
+      }
+
+      const looksLikeTime = typeof thirdPart === "string" && /^\d{2}:\d{2}$/.test(thirdPart);
+      const endTime = looksLikeTime ? thirdPart : undefined;
+      const normalizedLabelParts = [
+        ...(looksLikeTime ? labelParts : thirdPart ? [thirdPart, ...labelParts] : labelParts),
+      ];
+
+      return {
+        date: date.toISOString(),
+        startTime,
+        ...(endTime ? { endTime } : {}),
+        ...(normalizedLabelParts.join(", ") ? { label: normalizedLabelParts.join(", ") } : {}),
+      };
+    });
+
+  return slots.length > 0 ? slots : undefined;
 }
 
 function parseTags(value: FormDataEntryValue | null) {
@@ -144,6 +209,9 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
           startDate: toOptionalDate(formData.get("startDate")),
           endDate: toOptionalDate(formData.get("endDate")),
           registrationDeadline: toOptionalDate(formData.get("registrationDeadline")),
+          discount20Deadline: toOptionalDate(formData.get("discount20Deadline")),
+          discount10Deadline: toOptionalDate(formData.get("discount10Deadline")),
+          groupStageSlots: parseGroupStageSlotsInput(String(formData.get("groupStageSlotsText") ?? "")),
           venueName: toOptionalString(formData.get("venueName")),
           location: toOptionalString(formData.get("location")),
           address: toOptionalString(formData.get("address")),
@@ -170,6 +238,9 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
           startDate: response.data.startDate ?? null,
           endDate: response.data.endDate ?? null,
           registrationDeadline: response.data.registrationDeadline ?? null,
+          discount20Deadline: response.data.discount20Deadline ?? null,
+          discount10Deadline: response.data.discount10Deadline ?? null,
+          groupStageSlots: response.data.groupStageSlots ?? current.groupStageSlots,
           venueName: response.data.venueName ?? null,
           location: response.data.location ?? null,
           address: response.data.address ?? null,
@@ -328,20 +399,57 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
               <textarea className="min-h-24 rounded-[1.4rem] border border-white/10 bg-white/8 px-4 py-3 text-white outline-none transition focus:border-accent" defaultValue={tournament.formatDetails ?? ""} name="formatDetails" />
             </label>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              <label className="grid gap-2 text-sm text-white/72">
+            <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
+              <label className="grid min-w-0 gap-2 text-sm text-white/72">
                 Inicio
-                <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none transition focus:border-accent" defaultValue={toDateInputValue(tournament.startDate)} name="startDate" type="date" />
+                <input className="min-w-0 w-full rounded-2xl border border-white/10 bg-white/8 px-3 py-2.5 text-sm text-white outline-none transition focus:border-accent" defaultValue={toDateTimeLocalValue(tournament.startDate)} name="startDate" type="datetime-local" step="60" />
+                
               </label>
-              <label className="grid gap-2 text-sm text-white/72">
+              <label className="grid min-w-0 gap-2 text-sm text-white/72">
                 Fin
-                <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none transition focus:border-accent" defaultValue={toDateInputValue(tournament.endDate)} name="endDate" type="date" />
+                <input className="min-w-0 w-full rounded-2xl border border-white/10 bg-white/8 px-3 py-2.5 text-sm text-white outline-none transition focus:border-accent" defaultValue={toDateTimeLocalValue(tournament.endDate)} name="endDate" type="datetime-local" step="60" />
+              
               </label>
-              <label className="grid gap-2 text-sm text-white/72">
+              <label className="grid min-w-0 gap-2 text-sm text-white/72 xl:col-span-2 2xl:col-span-1">
                 Cierre inscripción
-                <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none transition focus:border-accent" defaultValue={toDateInputValue(tournament.registrationDeadline)} name="registrationDeadline" type="date" />
+                <input className="min-w-0 w-full rounded-2xl border border-white/10 bg-white/8 px-3 py-2.5 text-sm text-white outline-none transition focus:border-accent" defaultValue={toDateTimeLocalValue(tournament.registrationDeadline)} name="registrationDeadline" type="datetime-local" step="60" />
+               
               </label>
             </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="grid min-w-0 gap-2 text-sm text-white/72">
+                Límite descuento 20%
+                <input
+                  className="min-w-0 w-full rounded-2xl border border-white/10 bg-white/8 px-3 py-2.5 text-sm text-white outline-none transition focus:border-accent"
+                  defaultValue={toDateTimeLocalValue(tournament.discount20Deadline)}
+                  name="discount20Deadline"
+                  type="datetime-local"
+                  step="60"
+                />
+              </label>
+              <label className="grid min-w-0 gap-2 text-sm text-white/72">
+                Límite descuento 10%
+                <input
+                  className="min-w-0 w-full rounded-2xl border border-white/10 bg-white/8 px-3 py-2.5 text-sm text-white outline-none transition focus:border-accent"
+                  defaultValue={toDateTimeLocalValue(tournament.discount10Deadline)}
+                  name="discount10Deadline"
+                  type="datetime-local"
+                  step="60"
+                />
+              </label>
+            </div>
+
+            <label className="grid gap-2 text-sm text-white/72">
+              Horarios de grupos
+              <textarea
+                className="min-h-28 rounded-[1.4rem] border border-white/10 bg-white/8 px-4 py-3 text-white outline-none transition focus:border-accent"
+                defaultValue={formatGroupStageSlotsValue(tournament.groupStageSlots)}
+                name="groupStageSlotsText"
+                placeholder={"2026-06-13,16:00,19:00,Jornada tarde\n2026-06-14,09:00,12:00,Jornada manana"}
+              />
+              <span className="text-xs leading-6 text-white/48">Una franja por línea: fecha,horaInicio,horaFin opcional,etiqueta opcional.</span>
+            </label>
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-2 text-sm text-white/72">
@@ -445,6 +553,7 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
               `Cupos máximos: ${tournament.maxParticipants ?? 0}`,
               `Mesas por grupos: ${tournament.groupStageTables ?? 0}`,
               `Jugadores por grupo: ${tournament.playersPerGroup ?? 0}`,
+              `Horarios de grupos: ${tournament.groupStageSlots.length}`,
             ].map((item) => (
               <div key={item} className="rounded-[1.2rem] border border-white/8 bg-black/18 px-4 py-3 text-sm text-white/72">{item}</div>
             ))}

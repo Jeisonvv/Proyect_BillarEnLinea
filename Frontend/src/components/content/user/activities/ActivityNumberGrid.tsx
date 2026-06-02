@@ -266,7 +266,7 @@ export function ActivityNumberGrid({ activity, initialNumbers, myNumbers = [] }:
 
   return (
     <>
-    <section className="grid gap-5 rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,18,24,0.96),rgba(9,11,16,0.98))] p-5 sm:p-7">
+    <section className="grid gap-5 rounded-4xl border border-white/10 bg-[linear-gradient(180deg,rgba(15,18,24,0.96),rgba(9,11,16,0.98))] p-5 sm:p-7">
       <header className="grid gap-3 sm:flex sm:items-end sm:justify-between">
         <div>
           <p className="font-mono text-[0.68rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.82)]">

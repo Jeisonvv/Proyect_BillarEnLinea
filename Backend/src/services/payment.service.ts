@@ -161,11 +161,11 @@ function getEarlierDate(left: Date, right: Date) {
 }
 
 function getTournamentFinalPaymentDeadline(tournament: {
-  startDate: Date;
   registrationDeadline: Date;
 }) {
-  const oneDayBeforeStart = new Date(tournament.startDate.getTime() - 24 * 60 * 60 * 1000);
-  return getEarlierDate(oneDayBeforeStart, tournament.registrationDeadline);
+  // La fecha límite de pago debe respetar exactamente el cierre de inscripción
+  // configurado en el torneo (fecha + hora).
+  return tournament.registrationDeadline;
 }
 
 function buildWompiTournamentReturnUrl(reference: string) {
@@ -1005,7 +1005,9 @@ export async function createWompiCheckoutForTournament(
         ? existingPayment.expiresAt.getTime() > now
         : false;
 
-      if (isStillValid) {
+      const hasCurrentPricing = existingPayment.amountInCents === amountInCents;
+
+      if (isStillValid && hasCurrentPricing) {
         return getExistingTournamentResponseData(existingPayment, registration, tournament);
       }
     }

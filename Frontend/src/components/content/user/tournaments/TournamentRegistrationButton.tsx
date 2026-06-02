@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, postJson } from "@/lib/api/client";
 import type { TournamentDetail } from "@/lib/api/public-content";
@@ -167,6 +167,10 @@ function getGroupStageSlotId(state: SelfTournamentRegistrationState | null | und
   return state?.registration?.groupStageSlotId ?? "";
 }
 
+function subscribeToHydration() {
+  return () => {};
+}
+
 export function TournamentRegistrationButton({
   tournamentId,
   isOpen,
@@ -177,6 +181,7 @@ export function TournamentRegistrationButton({
   registrations,
   initialSelfRegistrationState = null,
 }: TournamentRegistrationButtonProps) {
+  const hasHydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false);
   const router = useRouter();
   const [feedback, setFeedback] = useState<string>("");
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
@@ -351,6 +356,48 @@ export function TournamentRegistrationButton({
     || isCheckingStatus
     || hasBlockingRegistration
     || (requiresGroupStageSlot && !effectiveSlotId);
+
+  function getBlockingReason() {
+    if (isCheckingStatus) {
+      return "Estamos verificando el estado de tu inscripción.";
+    }
+
+    if (isPending) {
+      return "Hay una operación en curso. Espera unos segundos para continuar.";
+    }
+
+    if (!isOpen) {
+      return "Las inscripciones del torneo están cerradas en este momento.";
+    }
+
+    if (isFull) {
+      return "No hay cupos disponibles para este torneo.";
+    }
+
+    if (areAllSlotsFull) {
+      return "Todos los días y horarios de grupos están llenos.";
+    }
+
+    if (effectiveRegistrationStatus === "CONFIRMED") {
+      return "Tu inscripción ya fue confirmada. No necesitas pagar nuevamente.";
+    }
+
+    if (effectiveRegistrationStatus === "WAITLIST") {
+      return "Tu inscripción está en lista de espera. Debes esperar confirmación del cupo.";
+    }
+
+    if (pendingReason === "CATEGORY_REVIEW") {
+      return "Tu inscripción está pendiente porque tu categoría aún no ha sido aprobada por administración.";
+    }
+
+    if (requiresGroupStageSlot && !effectiveSlotId) {
+      return "Selecciona día, jornada y hora para habilitar el pago de la inscripción.";
+    }
+
+    return null;
+  }
+
+  const blockingReason = disabled ? getBlockingReason() : null;
 
   useEffect(() => {
     if (pendingReason !== "PAYMENT_UNDER_REVIEW") {
@@ -575,6 +622,12 @@ export function TournamentRegistrationButton({
       {feedback ? (
         <p className="rounded-[1.2rem] border border-white/10 bg-white/5 px-4 py-3 text-sm leading-7 text-white/76">
           {feedback}
+        </p>
+      ) : null}
+
+      {hasHydrated && !feedback && blockingReason ? (
+        <p className="rounded-[1.2rem] border border-[rgba(246,196,79,0.2)] bg-[rgba(246,196,79,0.08)] px-4 py-3 text-sm leading-7 text-[rgba(255,245,214,0.92)]">
+          {blockingReason}
         </p>
       ) : null}
 

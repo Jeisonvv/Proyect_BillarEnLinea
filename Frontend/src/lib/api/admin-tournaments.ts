@@ -71,6 +71,8 @@ export type UpdateAdminTournamentInput = {
   startDate?: string;
   endDate?: string;
   registrationDeadline?: string;
+  discount20Deadline?: string;
+  discount10Deadline?: string;
   venueName?: string;
   location?: string;
   address?: string;
@@ -82,6 +84,12 @@ export type UpdateAdminTournamentInput = {
   seoTitle?: string;
   seoDescription?: string;
   tags?: string[];
+  groupStageSlots?: Array<{
+    date: string;
+    startTime: string;
+    endTime?: string;
+    label?: string;
+  }>;
 };
 
 export type UpdateTournamentHandicapInput = {
@@ -196,6 +204,8 @@ export type UpdateAdminTournamentResponse = {
     startDate?: string;
     endDate?: string;
     registrationDeadline?: string;
+    discount20Deadline?: string;
+    discount10Deadline?: string;
     venueName?: string;
     location?: string;
     address?: string;
@@ -207,6 +217,13 @@ export type UpdateAdminTournamentResponse = {
     seoTitle?: string;
     seoDescription?: string;
     tags?: string[];
+    groupStageSlots?: Array<{
+      id: string;
+      date: string | null;
+      startTime: string | null;
+      endTime: string | null;
+      label: string | null;
+    }>;
   };
 };
 

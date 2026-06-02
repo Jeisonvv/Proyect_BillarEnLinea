@@ -174,6 +174,8 @@ export async function updateTournamentAdminService(id: string, data: Record<stri
     'startDate',
     'endDate',
     'registrationDeadline',
+    'discount20Deadline',
+    'discount10Deadline',
     'venueName',
     'location',
     'address',
@@ -185,6 +187,7 @@ export async function updateTournamentAdminService(id: string, data: Record<stri
     'seoTitle',
     'seoDescription',
     'tags',
+    'groupStageSlots',
   ] as const;
 
   let hasChanges = false;
