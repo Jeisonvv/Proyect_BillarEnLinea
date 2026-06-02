@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getLandingEvents, getLandingPosts, getLandingProducts, getLandingActivities, getLandingTournaments } from "@/lib/api/public-content";
 import { EventCard } from "@/components/content/user/events";
@@ -7,6 +8,39 @@ import { ActivityCard } from "@/components/content/user/activities";
 import { ShowcaseCard } from "@/components/content/user/shared";
 import { getTournamentShowcaseProps } from "@/components/content/user/tournaments";
 import { getServerSession } from "@/lib/auth/server-session";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
+
+const homeShareImage = getSocialShareImageUrl(siteConfig.socialImage);
+
+export const metadata: Metadata = {
+  title: "Inicio",
+  description: "Panel principal con torneos, actividades, eventos, noticias y tienda para usuarios autenticados.",
+  alternates: {
+    canonical: "/home",
+  },
+  openGraph: {
+    type: "website",
+    locale: siteConfig.locale,
+    url: "/home",
+    siteName: siteConfig.name,
+    title: `${siteConfig.name} | Inicio`,
+    description: "Panel principal con torneos, actividades, eventos, noticias y tienda para usuarios autenticados.",
+    images: [
+      {
+        url: homeShareImage,
+        width: socialImageDimensions.width,
+        height: socialImageDimensions.height,
+        alt: `${siteConfig.name} | Inicio`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${siteConfig.name} | Inicio`,
+    description: "Panel principal con torneos, actividades, eventos, noticias y tienda para usuarios autenticados.",
+    images: [homeShareImage],
+  },
+};
 
 function HomeSection({
   eyebrow,

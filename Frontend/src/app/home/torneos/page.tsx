@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { ShowcaseCard } from "@/components/content/user/shared";
 import { getTournamentShowcaseProps, ProgressiveTournamentList } from "@/components/content/user/tournaments";
 import { getLandingTournaments } from "@/lib/api/public-content";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 
 const pageTitle = "Torneos de billar disponibles en Colombia";
 const pageDescription = "Explora torneos de billar disponibles, revisa fechas, cupos e inscripción, y entra al detalle de cada competencia desde la agenda de Billar en Linea.";
 const pageUrl = "/home/torneos";
-const pageImage = "/hero_portada.png";
+const pageImage = getSocialShareImageUrl(siteConfig.socialImage);
 
 export const metadata: Metadata = {
   title: pageTitle,
@@ -16,16 +17,16 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "es_CO",
+    locale: siteConfig.locale,
     url: pageUrl,
-    siteName: "Billar en Linea",
+    siteName: siteConfig.name,
     title: pageTitle,
     description: pageDescription,
     images: [
       {
         url: pageImage,
-        width: 2000,
-        height: 800,
+        width: socialImageDimensions.width,
+        height: socialImageDimensions.height,
         alt: "Torneos de billar disponibles en Billar en Linea",
       },
     ],

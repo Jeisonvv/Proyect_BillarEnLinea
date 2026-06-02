@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { PublicSiteShell } from "@/components/navigation/PublicSiteShell";
-import { absoluteUrl, siteConfig } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,9 +30,9 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     images: [
       {
-        url: absoluteUrl(siteConfig.socialImage),
-        width: 2000,
-        height: 800,
+        url: getSocialShareImageUrl(siteConfig.socialImage),
+        width: socialImageDimensions.width,
+        height: socialImageDimensions.height,
         alt: `${siteConfig.name} | Portada oficial`,
       },
     ],
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteConfig.name,
     description: siteConfig.description,
-    images: [absoluteUrl(siteConfig.socialImage)],
+    images: [getSocialShareImageUrl(siteConfig.socialImage)],
   },
   robots: {
     index: true,

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { HomeContent } from "@/components/landing/home-content";
 import { getLandingSnapshot } from "@/lib/api/public-content";
-import { absoluteUrl, siteConfig } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 
 export const revalidate = 300;
 
@@ -10,6 +10,7 @@ const landingTitle = "Billar en Linea — Torneos, Eventos, Actividades y Tienda
 const landingDescription = "Participa en torneos de billar, sigue eventos, accede a actividades y compra accesorios. Todo en un solo lugar para la comunidad del billar en Colombia.";
 const landingSocialTitle = "Billar en Linea | Torneos, eventos, actividades y tienda de billar";
 const landingSocialDescription = "Participa en torneos de billar, sigue eventos, accede a actividades y compra accesorios. Todo en un solo lugar para la comunidad del billar en Colombia.";
+const landingShareImage = getSocialShareImageUrl(landingSocialImage);
 
 export const metadata: Metadata = {
   title: landingTitle,
@@ -24,9 +25,9 @@ export const metadata: Metadata = {
     url: "/",
     images: [
       {
-        url: absoluteUrl(landingSocialImage),
-        width: 2000,
-        height: 800,
+        url: landingShareImage,
+        width: socialImageDimensions.width,
+        height: socialImageDimensions.height,
         alt: "Billar en Linea | Portada oficial",
       },
     ],
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
   twitter: {
     title: landingSocialTitle,
     description: landingSocialDescription,
-    images: [absoluteUrl(landingSocialImage)],
+    images: [landingShareImage],
   },
 };
 

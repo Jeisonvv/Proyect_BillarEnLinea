@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { PostCard } from "@/components/content/user/posts";
 import { getLandingPosts } from "@/lib/api/public-content";
-import { siteConfig } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
+
+const newsShareImage = getSocialShareImageUrl(siteConfig.socialImage);
 
 export const metadata: Metadata = {
   title: "Noticias",
@@ -18,9 +20,9 @@ export const metadata: Metadata = {
     description: "Sigue las noticias y novedades del billar, con publicaciones recientes, anuncios y contexto editorial dentro de Billar en Linea.",
     images: [
       {
-        url: siteConfig.socialImage,
-        width: 2000,
-        height: 800,
+        url: newsShareImage,
+        width: socialImageDimensions.width,
+        height: socialImageDimensions.height,
         alt: `Noticias de billar en ${siteConfig.name}`,
       },
     ],
@@ -29,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `Noticias | ${siteConfig.name}`,
     description: "Sigue las noticias y novedades del billar, con publicaciones recientes, anuncios y contexto editorial dentro de Billar en Linea.",
-    images: [siteConfig.socialImage],
+    images: [newsShareImage],
   },
 };
 

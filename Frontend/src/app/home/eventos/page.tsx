@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { EventCard } from "@/components/content/user/events";
 import { getLandingEvents } from "@/lib/api/public-content";
-import { siteConfig } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
+
+const eventsShareImage = getSocialShareImageUrl(siteConfig.socialImage);
 
 export const metadata: Metadata = {
   title: "Eventos",
@@ -18,9 +20,9 @@ export const metadata: Metadata = {
     description: "Explora los eventos de billar visibles, revisa fechas, acceso y contexto de cada encuentro desde Billar en Linea.",
     images: [
       {
-        url: siteConfig.socialImage,
-        width: 2000,
-        height: 800,
+        url: eventsShareImage,
+        width: socialImageDimensions.width,
+        height: socialImageDimensions.height,
         alt: `Eventos disponibles en ${siteConfig.name}`,
       },
     ],
@@ -29,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `Eventos | ${siteConfig.name}`,
     description: "Explora los eventos de billar visibles, revisa fechas, acceso y contexto de cada encuentro desde Billar en Linea.",
-    images: [siteConfig.socialImage],
+    images: [eventsShareImage],
   },
 };
 

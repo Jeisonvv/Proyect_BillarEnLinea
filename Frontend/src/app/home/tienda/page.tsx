@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PRODUCT_CATEGORIES, PRODUCT_CATEGORY_LABELS, type ProductCategory } from "@/lib/api/admin-products";
 import { getLandingProducts } from "@/lib/api/public-content";
-import { siteConfig } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
+
+const storeShareImage = getSocialShareImageUrl(siteConfig.socialImage);
 
 const CATEGORY_DESCRIPTIONS: Record<ProductCategory, string> = {
   CUE: "Tacos profesionales y de iniciación.",
@@ -33,9 +35,9 @@ export const metadata: Metadata = {
     description: "Explora la tienda de billar, consulta productos visibles, precios y referencias destacadas desde Billar en Linea.",
     images: [
       {
-        url: siteConfig.socialImage,
-        width: 2000,
-        height: 800,
+        url: storeShareImage,
+        width: socialImageDimensions.width,
+        height: socialImageDimensions.height,
         alt: `Tienda de billar en ${siteConfig.name}`,
       },
     ],
@@ -44,7 +46,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `Tienda | ${siteConfig.name}`,
     description: "Explora la tienda de billar, consulta productos visibles, precios y referencias destacadas desde Billar en Linea.",
-    images: [siteConfig.socialImage],
+    images: [storeShareImage],
   },
 };
 

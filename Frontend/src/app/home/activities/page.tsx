@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { ActivityCard } from "@/components/content/user/activities";
 import { getLandingActivities } from "@/lib/api/public-content";
-import { siteConfig } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
+
+const activitiesShareImage = getSocialShareImageUrl(siteConfig.socialImage);
 
 export const metadata: Metadata = {
   title: "Actividades",
@@ -18,9 +20,9 @@ export const metadata: Metadata = {
     description: "Consulta las actividades de billar activas, revisa premios, valor por número y fechas de sorteo dentro de Billar en Linea.",
     images: [
       {
-        url: siteConfig.socialImage,
-        width: 2000,
-        height: 800,
+        url: activitiesShareImage,
+        width: socialImageDimensions.width,
+        height: socialImageDimensions.height,
         alt: `Actividades activas en ${siteConfig.name}`,
       },
     ],
@@ -29,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `Actividades | ${siteConfig.name}`,
     description: "Consulta las actividades de billar activas, revisa premios, valor por número y fechas de sorteo dentro de Billar en Linea.",
-    images: [siteConfig.socialImage],
+    images: [activitiesShareImage],
   },
 };
 

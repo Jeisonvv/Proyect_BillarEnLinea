@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TournamentDetailView } from "@/components/content/user/tournaments";
 import { getTournamentDetailBySlug } from "@/lib/api/public-content";
-import { absoluteUrl, getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
+import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
 
 type TournamentPageProps = {
   params: Promise<{
@@ -78,6 +78,7 @@ export async function generateMetadata({ params }: TournamentPageProps): Promise
     const slugLabel = buildSlugFallbackText(slug);
     const fallbackTitle = `${slugLabel} | ${siteConfig.name}`;
     const fallbackDescription = `Conoce la información del torneo ${slugLabel} en ${siteConfig.name}.`;
+    const fallbackImage = getSocialShareImageUrl(siteConfig.socialImage);
 
     return {
       title: fallbackTitle,
@@ -94,9 +95,9 @@ export async function generateMetadata({ params }: TournamentPageProps): Promise
         description: fallbackDescription,
         images: [
           {
-            url: absoluteUrl(siteConfig.socialImage),
-            width: 2000,
-            height: 800,
+            url: fallbackImage,
+            width: socialImageDimensions.width,
+            height: socialImageDimensions.height,
             alt: `Portada de ${siteConfig.name}`,
           },
         ],
@@ -105,7 +106,7 @@ export async function generateMetadata({ params }: TournamentPageProps): Promise
         card: "summary_large_image",
         title: fallbackTitle,
         description: fallbackDescription,
-        images: [absoluteUrl(siteConfig.socialImage)],
+        images: [fallbackImage],
       },
     };
   }
@@ -114,7 +115,7 @@ export async function generateMetadata({ params }: TournamentPageProps): Promise
   const description = tournament.seoDescription?.trim() || buildTournamentDescription(tournament);
   const keywords = buildTournamentKeywords(tournament);
   const canonicalUrl = `/home/torneos/${tournament.slug}`;
-  const imageUrl = getSocialShareImageUrl(tournament.image ?? absoluteUrl(siteConfig.socialImage));
+  const imageUrl = getSocialShareImageUrl(tournament.image ?? siteConfig.socialImage);
 
   return {
     title,
