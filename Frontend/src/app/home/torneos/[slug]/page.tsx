@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { TournamentDetailView } from "@/components/content/user/tournaments";
 import { getTournamentDetailBySlug } from "@/lib/api/public-content";
-import { siteConfig } from "@/lib/site";
+import { absoluteUrl, siteConfig } from "@/lib/site";
 
 type TournamentPageProps = {
   params: Promise<{
@@ -52,17 +52,60 @@ function buildTournamentKeywords(tournament: NonNullable<Awaited<ReturnType<type
   );
 }
 
+function buildSlugFallbackText(slug: string) {
+  const normalized = slug
+    .trim()
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!normalized) {
+    return "Torneo";
+  }
+
+  return normalized
+    .split(" ")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export async function generateMetadata({ params }: TournamentPageProps): Promise<Metadata> {
   const { slug } = await params;
   const tournament = await getTournamentDetailBySlug(slug);
+  const pageUrl = `/home/torneos/${slug}`;
 
   if (!tournament) {
+    const slugLabel = buildSlugFallbackText(slug);
+    const fallbackTitle = `${slugLabel} | ${siteConfig.name}`;
+    const fallbackDescription = `Conoce la información del torneo ${slugLabel} en ${siteConfig.name}.`;
+
     return {
-      title: "Torneo no encontrado",
-      description: "No encontramos el torneo solicitado en Billar en Linea.",
-      robots: {
-        index: false,
-        follow: false,
+      title: fallbackTitle,
+      description: fallbackDescription,
+      alternates: {
+        canonical: pageUrl,
+      },
+      openGraph: {
+        type: "website",
+        locale: siteConfig.locale,
+        url: pageUrl,
+        siteName: siteConfig.name,
+        title: fallbackTitle,
+        description: fallbackDescription,
+        images: [
+          {
+            url: absoluteUrl(siteConfig.socialImage),
+            width: 2000,
+            height: 800,
+            alt: `Portada de ${siteConfig.name}`,
+          },
+        ],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: fallbackTitle,
+        description: fallbackDescription,
+        images: [absoluteUrl(siteConfig.socialImage)],
       },
     };
   }
@@ -70,20 +113,20 @@ export async function generateMetadata({ params }: TournamentPageProps): Promise
   const title = tournament.seoTitle?.trim() || tournament.name;
   const description = tournament.seoDescription?.trim() || buildTournamentDescription(tournament);
   const keywords = buildTournamentKeywords(tournament);
-  const pageUrl = `/home/torneos/${tournament.slug}`;
-  const imageUrl = tournament.image ?? siteConfig.socialImage;
+  const canonicalUrl = `/home/torneos/${tournament.slug}`;
+  const imageUrl = tournament.image ?? absoluteUrl(siteConfig.socialImage);
 
   return {
     title,
     description,
     keywords,
     alternates: {
-      canonical: pageUrl,
+      canonical: canonicalUrl,
     },
     openGraph: {
       type: "website",
       locale: siteConfig.locale,
-      url: pageUrl,
+      url: canonicalUrl,
       siteName: siteConfig.name,
       title: `${title} | ${siteConfig.name}`,
       description,
