@@ -2,5 +2,17 @@
   "css.lint.unknownAtRules": "ignore",
   "files.associations": {
     "**/.dockerignore": "ignore"
-  }
+  },
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.profiles.windows": {
+    "Git Bash": {
+      "path": "C:\\Program Files\\Git\\bin\\bash.exe",
+      "args": [
+        "--login",
+        "-i"
+      ]
+    }
+  },
+  "terminal.integrated.shellIntegration.enabled": false,
+  "terminal.integrated.enablePersistentSessions": false
 }
