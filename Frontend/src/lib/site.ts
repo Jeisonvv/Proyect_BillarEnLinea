@@ -24,6 +24,7 @@ export function absoluteUrl(path = "/") {
 
 const SOCIAL_IMAGE_WIDTH = 1200;
 const SOCIAL_IMAGE_HEIGHT = 630;
+const SOCIAL_IMAGE_VERSION = (process.env.NEXT_PUBLIC_SOCIAL_IMAGE_VERSION ?? "20260602").trim();
 const CLOUDINARY_SOCIAL_TRANSFORMATION = [
   "f_auto",
   "q_auto",
@@ -56,6 +57,16 @@ function injectCloudinaryTransformation(url: URL) {
   return url.toString();
 }
 
+function withSocialImageVersion(url: URL) {
+  if (!SOCIAL_IMAGE_VERSION) {
+    return url.toString();
+  }
+
+  // Stable cache buster for social crawlers (Facebook, X, WhatsApp).
+  url.searchParams.set("v", SOCIAL_IMAGE_VERSION);
+  return url.toString();
+}
+
 export function getSocialShareImageUrl(imagePath?: string | null) {
   const source = imagePath?.trim() || siteConfig.socialImage;
   const absoluteImage = toAbsoluteImageUrl(source);
@@ -63,11 +74,12 @@ export function getSocialShareImageUrl(imagePath?: string | null) {
   try {
     const parsedUrl = new URL(absoluteImage);
     if (isCloudinaryUploadUrl(parsedUrl)) {
-      return injectCloudinaryTransformation(parsedUrl);
+      const transformed = new URL(injectCloudinaryTransformation(parsedUrl));
+      return withSocialImageVersion(transformed);
     }
-    return parsedUrl.toString();
+    return withSocialImageVersion(parsedUrl);
   } catch {
-    return absoluteUrl(siteConfig.socialImage);
+    return withSocialImageVersion(new URL(absoluteUrl(siteConfig.socialImage)));
   }
 }
 
