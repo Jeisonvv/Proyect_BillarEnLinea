@@ -131,26 +131,36 @@ export function ActivityCreateLab() {
 
         if (selectedImageFile) {
           setImageUploading(true);
-          const result = await uploadActivityImage(selectedImageFile, `${name || "rifa"}-promo`);
-          uploadedImageUrl = result.data.url;
-          setImageUrl(uploadedImageUrl);
-          setImageFile(null);
-          if (imagePreviewUrlRef.current) {
-            URL.revokeObjectURL(imagePreviewUrlRef.current);
-            imagePreviewUrlRef.current = null;
+          try {
+            const result = await uploadActivityImage(selectedImageFile, `${name || "rifa"}-promo`);
+            uploadedImageUrl = result.data.url;
+            setImageUrl(uploadedImageUrl);
+            setImageFile(null);
+            if (imagePreviewUrlRef.current) {
+              URL.revokeObjectURL(imagePreviewUrlRef.current);
+              imagePreviewUrlRef.current = null;
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Error desconocido.";
+            throw new Error(`No se pudo subir la imagen promocional. ${message}`);
           }
           setImageUploading(false);
         }
 
         if (selectedPrizeImageFile) {
           setPrizeImageUploading(true);
-          const result = await uploadActivityImage(selectedPrizeImageFile, `${name || "rifa"}-premio`);
-          uploadedPrizeImageUrl = result.data.url;
-          setPrizeImageUrl(uploadedPrizeImageUrl);
-          setPrizeImageFile(null);
-          if (prizeImagePreviewUrlRef.current) {
-            URL.revokeObjectURL(prizeImagePreviewUrlRef.current);
-            prizeImagePreviewUrlRef.current = null;
+          try {
+            const result = await uploadActivityImage(selectedPrizeImageFile, `${name || "rifa"}-premio`);
+            uploadedPrizeImageUrl = result.data.url;
+            setPrizeImageUrl(uploadedPrizeImageUrl);
+            setPrizeImageFile(null);
+            if (prizeImagePreviewUrlRef.current) {
+              URL.revokeObjectURL(prizeImagePreviewUrlRef.current);
+              prizeImagePreviewUrlRef.current = null;
+            }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "Error desconocido.";
+            throw new Error(`No se pudo subir la foto del premio. ${message}`);
           }
           setPrizeImageUploading(false);
         }
@@ -173,7 +183,13 @@ export function ActivityCreateLab() {
         if (uploadedImageUrl) payload.imageUrl = uploadedImageUrl;
         if (uploadedPrizeImageUrl) payload.prizeImageUrl = uploadedPrizeImageUrl;
 
-        const result = await createActivityAdmin(payload);
+        let result;
+        try {
+          result = await createActivityAdmin(payload);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Error desconocido.";
+          throw new Error(`No se pudo crear la actividad en /api/activities. ${message}`);
+        }
         const id = result.data?._id;
         const createdSlug = result.data?.slug;
         setState({
