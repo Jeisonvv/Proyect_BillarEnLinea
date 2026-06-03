@@ -95,7 +95,7 @@ export async function uploadEventImage(file: File, name?: string): Promise<Uploa
     );
   }
   formData.append("tags", "eventos,admin,frontend-lab");
-  return postFormData<UploadEventImageResponse>("/api/uploads/images", formData, {
+  return postFormData<UploadEventImageResponse>("/api/admin/uploads/images", formData, {
     credentials: "include",
   });
 }

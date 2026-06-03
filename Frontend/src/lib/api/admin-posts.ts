@@ -65,7 +65,7 @@ export async function uploadPostImage(file: File, name?: string): Promise<Upload
     );
   }
   formData.append("tags", "noticias,admin,frontend-lab");
-  return postFormData<UploadPostImageResponse>("/api/uploads/images", formData, {
+  return postFormData<UploadPostImageResponse>("/api/admin/uploads/images", formData, {
     credentials: "include",
   });
 }

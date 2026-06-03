@@ -183,7 +183,7 @@ async function uploadWithPayload(
   if (options?.publicId) formData.append("publicId", options.publicId);
   if (options?.tags) formData.append("tags", options.tags);
 
-  return postFormData<UploadImageResponse>("/api/uploads/images", formData, {
+  return postFormData<UploadImageResponse>("/api/admin/uploads/images", formData, {
     credentials: "include",
   });
 }

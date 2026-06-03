@@ -92,7 +92,7 @@ export async function uploadProductImage(file: File, name?: string): Promise<Upl
     );
   }
   formData.append("tags", "tienda,admin,frontend-lab");
-  return postFormData<UploadProductImageResponse>("/api/uploads/images", formData, {
+  return postFormData<UploadProductImageResponse>("/api/admin/uploads/images", formData, {
     credentials: "include",
   });
 }

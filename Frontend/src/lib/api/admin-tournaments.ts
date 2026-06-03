@@ -272,7 +272,7 @@ export async function uploadTournamentImage(file: File, name?: string) {
 
   formData.append("tags", "torneos,admin,frontend-lab");
 
-  return postFormData<UploadImageResponse>("/api/uploads/images", formData, {
+  return postFormData<UploadImageResponse>("/api/admin/uploads/images", formData, {
     credentials: "include",
   });
 }
