@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { parseTagsInput, toIsoDate } from "@/components/content/admin/shared";
@@ -41,11 +41,21 @@ export function ActivityCreateLab() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [imageUploading, setImageUploading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [prizeImageUploading, setPrizeImageUploading] = useState(false);
   const [prizeImageUrl, setPrizeImageUrl] = useState<string>("");
-  const formRef = useRef<HTMLFormElement>(null);
+  const [prizeImageFile, setPrizeImageFile] = useState<File | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const prizeImageInputRef = useRef<HTMLInputElement>(null);
+  const imagePreviewUrlRef = useRef<string | null>(null);
+  const prizeImagePreviewUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrlRef.current) URL.revokeObjectURL(imagePreviewUrlRef.current);
+      if (prizeImagePreviewUrlRef.current) URL.revokeObjectURL(prizeImagePreviewUrlRef.current);
+    };
+  }, []);
 
   async function handleImageChange(
     event: React.ChangeEvent<HTMLInputElement>,
@@ -54,23 +64,19 @@ export function ActivityCreateLab() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const setUploading = target === "image" ? setImageUploading : setPrizeImageUploading;
-    const setUrl = target === "image" ? setImageUrl : setPrizeImageUrl;
-
-    setUploading(true);
-    try {
-      const nameInput = (formRef.current?.elements.namedItem("name") as HTMLInputElement | null)?.value ?? "";
-      const suffix = target === "image" ? "promo" : "premio";
-      const result = await uploadActivityImage(file, `${nameInput || "rifa"}-${suffix}`);
-      setUrl(result.data.url);
-      setState({ kind: "idle" });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo subir la imagen.";
-      setState({ kind: "error", message });
-    } finally {
-      setUploading(false);
-      if (event.target) event.target.value = "";
+    const previewUrl = URL.createObjectURL(file);
+    if (target === "image") {
+      if (imagePreviewUrlRef.current) URL.revokeObjectURL(imagePreviewUrlRef.current);
+      imagePreviewUrlRef.current = previewUrl;
+      setImageFile(file);
+      setImageUrl(previewUrl);
+    } else {
+      if (prizeImagePreviewUrlRef.current) URL.revokeObjectURL(prizeImagePreviewUrlRef.current);
+      prizeImagePreviewUrlRef.current = previewUrl;
+      setPrizeImageFile(file);
+      setPrizeImageUrl(previewUrl);
     }
+    setState({ kind: "idle" });
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -116,40 +122,73 @@ export function ActivityCreateLab() {
       return;
     }
 
-    const payload: CreateActivityInput = {
-      name,
-      prize,
-      ticketPrice,
-      totalTickets,
-      drawDate: drawDate!,
-      status,
-      promoVideoUrl,
-    };
-
-    if (description) payload.description = description;
-    if (slug) payload.slug = slug;
-    if (seoTitle) payload.seoTitle = seoTitle;
-    if (seoDescription) payload.seoDescription = seoDescription;
-    if (tags) payload.tags = tags;
-    if (imageUrl) payload.imageUrl = imageUrl;
-    if (prizeImageUrl) payload.prizeImageUrl = prizeImageUrl;
-
     startTransition(async () => {
       try {
+        let uploadedImageUrl = "";
+        let uploadedPrizeImageUrl = "";
+        const selectedImageFile = imageFile ?? imageInputRef.current?.files?.[0] ?? null;
+        const selectedPrizeImageFile = prizeImageFile ?? prizeImageInputRef.current?.files?.[0] ?? null;
+
+        if (selectedImageFile) {
+          setImageUploading(true);
+          const result = await uploadActivityImage(selectedImageFile, `${name || "rifa"}-promo`);
+          uploadedImageUrl = result.data.url;
+          setImageUrl(uploadedImageUrl);
+          setImageFile(null);
+          if (imagePreviewUrlRef.current) {
+            URL.revokeObjectURL(imagePreviewUrlRef.current);
+            imagePreviewUrlRef.current = null;
+          }
+          setImageUploading(false);
+        }
+
+        if (selectedPrizeImageFile) {
+          setPrizeImageUploading(true);
+          const result = await uploadActivityImage(selectedPrizeImageFile, `${name || "rifa"}-premio`);
+          uploadedPrizeImageUrl = result.data.url;
+          setPrizeImageUrl(uploadedPrizeImageUrl);
+          setPrizeImageFile(null);
+          if (prizeImagePreviewUrlRef.current) {
+            URL.revokeObjectURL(prizeImagePreviewUrlRef.current);
+            prizeImagePreviewUrlRef.current = null;
+          }
+          setPrizeImageUploading(false);
+        }
+
+        const payload: CreateActivityInput = {
+          name,
+          prize,
+          ticketPrice,
+          totalTickets,
+          drawDate: drawDate!,
+          status,
+          promoVideoUrl,
+        };
+
+        if (description) payload.description = description;
+        if (slug) payload.slug = slug;
+        if (seoTitle) payload.seoTitle = seoTitle;
+        if (seoDescription) payload.seoDescription = seoDescription;
+        if (tags) payload.tags = tags;
+        if (uploadedImageUrl) payload.imageUrl = uploadedImageUrl;
+        if (uploadedPrizeImageUrl) payload.prizeImageUrl = uploadedPrizeImageUrl;
+
         const result = await createActivityAdmin(payload);
         const id = result.data?._id;
-        const slug = result.data?.slug;
+        const createdSlug = result.data?.slug;
         setState({
           kind: "success",
           message: "Actividad creada correctamente.",
           activityId: id,
         });
-        const target = slug ?? id;
+        const target = createdSlug ?? id;
         if (target) {
           router.push(`/admin/activities/${target}`);
           router.refresh();
         }
       } catch (error) {
+        setImageUploading(false);
+        setPrizeImageUploading(false);
         let message = "No se pudo crear la actividad.";
         if (error instanceof ApiError) {
           const payload = error.payload as { message?: string } | undefined;
@@ -164,7 +203,6 @@ export function ActivityCreateLab() {
 
   return (
     <form
-      ref={formRef}
       onSubmit={handleSubmit}
       className="grid gap-6 rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-6"
     >
@@ -306,6 +344,7 @@ export function ActivityCreateLab() {
             onChange={(e) => handleImageChange(e, "image")}
             className="text-sm text-white/70 file:mr-3 file:rounded-full file:border-0 file:bg-[rgba(246,196,79,0.18)] file:px-4 file:py-2 file:text-[#f6c44f] hover:file:bg-[rgba(246,196,79,0.28)]"
           />
+          <span className="text-[0.7rem] text-white/45">La imagen se sube al crear la actividad.</span>
           {imageUploading ? <span className="text-xs text-white/55">Subiendo imagen…</span> : null}
           {imageUrl ? (
             <div className="overflow-hidden rounded-2xl border border-white/8 bg-black/30">
@@ -324,6 +363,7 @@ export function ActivityCreateLab() {
             onChange={(e) => handleImageChange(e, "prizeImage")}
             className="text-sm text-white/70 file:mr-3 file:rounded-full file:border-0 file:bg-[rgba(246,196,79,0.18)] file:px-4 file:py-2 file:text-[#f6c44f] hover:file:bg-[rgba(246,196,79,0.28)]"
           />
+          <span className="text-[0.7rem] text-white/45">La imagen se sube al crear la actividad.</span>
           {prizeImageUploading ? <span className="text-xs text-white/55">Subiendo foto…</span> : null}
           {prizeImageUrl ? (
             <div className="overflow-hidden rounded-2xl border border-white/8 bg-black/30">

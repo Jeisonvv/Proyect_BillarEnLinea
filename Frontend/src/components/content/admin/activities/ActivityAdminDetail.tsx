@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState, useTransition } from "react";
+import { FormEvent, useEffect, useRef, useState, useTransition } from "react";
 import {
   AdminDeleteItemButton,
   formatAdminDate,
@@ -94,8 +94,14 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
 
   const [imageUrl, setImageUrl] = useState<string>(activity.imageUrl ?? "");
   const [prizeImageUrl, setPrizeImageUrl] = useState<string>(activity.prizeImageUrl ?? "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [prizeImageFile, setPrizeImageFile] = useState<File | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [prizeImageUploading, setPrizeImageUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const prizeImageInputRef = useRef<HTMLInputElement>(null);
+  const imagePreviewUrlRef = useRef<string | null>(null);
+  const prizeImagePreviewUrlRef = useRef<string | null>(null);
 
   const [ownersFilter, setOwnersFilter] = useState<ActivityNumberStatus | "ALL">("ALL");
   const [owners, setOwners] = useState<ActivityNumberOwner[]>(initialOwners);
@@ -110,6 +116,13 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
   const totalSold = activity.soldTickets ?? 0;
   const total = activity.totalTickets ?? 0;
   const percent = total > 0 ? Math.min(100, Math.round((totalSold / total) * 100)) : 0;
+
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrlRef.current) URL.revokeObjectURL(imagePreviewUrlRef.current);
+      if (prizeImagePreviewUrlRef.current) URL.revokeObjectURL(prizeImagePreviewUrlRef.current);
+    };
+  }, []);
 
   async function refreshOwners(nextFilter: ActivityNumberStatus | "ALL" = ownersFilter) {
     setOwnersLoading(true);
@@ -133,20 +146,20 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
   ) {
     const file = event.target.files?.[0];
     if (!file) return;
-    const setUploading = target === "image" ? setImageUploading : setPrizeImageUploading;
-    const setUrl = target === "image" ? setImageUrl : setPrizeImageUrl;
-    setUploading(true);
-    try {
-      const suffix = target === "image" ? "promo" : "premio";
-      const result = await uploadActivityImage(file, `${activity.name || "rifa"}-${suffix}`);
-      setUrl(result.data.url);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo subir la imagen.";
-      setEditFeedback({ kind: "error", message });
-    } finally {
-      setUploading(false);
-      if (event.target) event.target.value = "";
+
+    const previewUrl = URL.createObjectURL(file);
+    if (target === "image") {
+      if (imagePreviewUrlRef.current) URL.revokeObjectURL(imagePreviewUrlRef.current);
+      imagePreviewUrlRef.current = previewUrl;
+      setImageFile(file);
+      setImageUrl(previewUrl);
+    } else {
+      if (prizeImagePreviewUrlRef.current) URL.revokeObjectURL(prizeImagePreviewUrlRef.current);
+      prizeImagePreviewUrlRef.current = previewUrl;
+      setPrizeImageFile(file);
+      setPrizeImageUrl(previewUrl);
     }
+    setEditFeedback({ kind: "idle" });
   }
 
   function handleEditSubmit(event: FormEvent<HTMLFormElement>) {
@@ -166,42 +179,73 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
     const ticketPriceRaw = String(fd.get("ticketPrice") ?? "").trim();
     const drawDateRaw = String(fd.get("drawDate") ?? "").trim();
 
-    const patch: UpdateActivityInput = {};
-    if (name && name !== activity.name) patch.name = name;
-    if (slug !== (activity.slug ?? "")) patch.slug = slug;
-    if (seoTitle !== (activity.seoTitle ?? "")) patch.seoTitle = seoTitle;
-    if (seoDescription !== (activity.seoDescription ?? "")) patch.seoDescription = seoDescription;
-    if (!areTagsEqual(tags, activity.tags ?? [])) patch.tags = tags;
-    if (prize && prize !== activity.prize) patch.prize = prize;
-    if ((description || "") !== (activity.description ?? "")) patch.description = description;
-    if (status && status !== activity.status && status !== "DRAWN") patch.status = status;
-
-    if (ticketPriceRaw !== "") {
-      const value = Number(ticketPriceRaw);
-      if (Number.isFinite(value) && value !== activity.ticketPrice) {
-        patch.ticketPrice = value;
-      }
-    }
-
-    const isoDraw = toIsoFromLocal(drawDateRaw);
-    if (isoDraw && isoDraw !== new Date(activity.drawDate).toISOString()) {
-      patch.drawDate = isoDraw;
-    }
-
-    if (imageUrl !== (activity.imageUrl ?? "")) {
-      patch.imageUrl = imageUrl;
-    }
-    if (prizeImageUrl !== (activity.prizeImageUrl ?? "")) {
-      patch.prizeImageUrl = prizeImageUrl;
-    }
-
-    if (Object.keys(patch).length === 0) {
-      setEditFeedback({ kind: "success", message: "Sin cambios para guardar." });
-      return;
-    }
-
     startEditTransition(async () => {
       try {
+        let nextImageUrl = activity.imageUrl ?? "";
+        let nextPrizeImageUrl = activity.prizeImageUrl ?? "";
+        const selectedImageFile = imageFile ?? imageInputRef.current?.files?.[0] ?? null;
+        const selectedPrizeImageFile = prizeImageFile ?? prizeImageInputRef.current?.files?.[0] ?? null;
+
+        if (selectedImageFile) {
+          setImageUploading(true);
+          const result = await uploadActivityImage(selectedImageFile, `${name || activity.name || "rifa"}-promo`);
+          nextImageUrl = result.data.url;
+          setImageUrl(nextImageUrl);
+          setImageFile(null);
+          if (imagePreviewUrlRef.current) {
+            URL.revokeObjectURL(imagePreviewUrlRef.current);
+            imagePreviewUrlRef.current = null;
+          }
+          setImageUploading(false);
+        }
+
+        if (selectedPrizeImageFile) {
+          setPrizeImageUploading(true);
+          const result = await uploadActivityImage(selectedPrizeImageFile, `${name || activity.name || "rifa"}-premio`);
+          nextPrizeImageUrl = result.data.url;
+          setPrizeImageUrl(nextPrizeImageUrl);
+          setPrizeImageFile(null);
+          if (prizeImagePreviewUrlRef.current) {
+            URL.revokeObjectURL(prizeImagePreviewUrlRef.current);
+            prizeImagePreviewUrlRef.current = null;
+          }
+          setPrizeImageUploading(false);
+        }
+
+        const patch: UpdateActivityInput = {};
+        if (name && name !== activity.name) patch.name = name;
+        if (slug !== (activity.slug ?? "")) patch.slug = slug;
+        if (seoTitle !== (activity.seoTitle ?? "")) patch.seoTitle = seoTitle;
+        if (seoDescription !== (activity.seoDescription ?? "")) patch.seoDescription = seoDescription;
+        if (!areTagsEqual(tags, activity.tags ?? [])) patch.tags = tags;
+        if (prize && prize !== activity.prize) patch.prize = prize;
+        if ((description || "") !== (activity.description ?? "")) patch.description = description;
+        if (status && status !== activity.status && status !== "DRAWN") patch.status = status;
+
+        if (ticketPriceRaw !== "") {
+          const value = Number(ticketPriceRaw);
+          if (Number.isFinite(value) && value !== activity.ticketPrice) {
+            patch.ticketPrice = value;
+          }
+        }
+
+        const isoDraw = toIsoFromLocal(drawDateRaw);
+        if (isoDraw && isoDraw !== new Date(activity.drawDate).toISOString()) {
+          patch.drawDate = isoDraw;
+        }
+
+        if (nextImageUrl !== (activity.imageUrl ?? "")) {
+          patch.imageUrl = nextImageUrl;
+        }
+        if (nextPrizeImageUrl !== (activity.prizeImageUrl ?? "")) {
+          patch.prizeImageUrl = nextPrizeImageUrl;
+        }
+
+        if (Object.keys(patch).length === 0) {
+          setEditFeedback({ kind: "success", message: "Sin cambios para guardar." });
+          return;
+        }
+
         const result = await updateActivityAdmin(activity._id, patch);
         setActivity(result.data);
         setImageUrl(result.data.imageUrl ?? "");
@@ -209,6 +253,8 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
         setEditFeedback({ kind: "success", message: "Actividad actualizada correctamente." });
         router.refresh();
       } catch (error) {
+        setImageUploading(false);
+        setPrizeImageUploading(false);
         let message = "No se pudo actualizar la actividad.";
         if (error instanceof ApiError) {
           const payload = error.payload as { message?: string } | undefined;
@@ -469,12 +515,14 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
             <div className="grid gap-2">
               <span className="text-[0.72rem] uppercase tracking-[0.18em] text-white/56">Imagen promocional</span>
               <input
+                ref={imageInputRef}
                 type="file"
                 accept="image/*"
                 onChange={(e) => handleImageChange(e, "image")}
                 disabled={isDrawn}
                 className="text-sm text-white/70 file:mr-3 file:rounded-full file:border-0 file:bg-[rgba(246,196,79,0.18)] file:px-4 file:py-2 file:text-[#f6c44f] hover:file:bg-[rgba(246,196,79,0.28)]"
               />
+              <span className="text-[0.7rem] text-white/45">La imagen se sube al guardar cambios.</span>
               {imageUploading ? <span className="text-xs text-white/55">Subiendo imagen…</span> : null}
               {imageUrl ? (
                 <div className="overflow-hidden rounded-2xl border border-white/8 bg-black/30">
@@ -486,12 +534,14 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
             <div className="grid gap-2">
               <span className="text-[0.72rem] uppercase tracking-[0.18em] text-white/56">Foto del premio</span>
               <input
+                ref={prizeImageInputRef}
                 type="file"
                 accept="image/*"
                 onChange={(e) => handleImageChange(e, "prizeImage")}
                 disabled={isDrawn}
                 className="text-sm text-white/70 file:mr-3 file:rounded-full file:border-0 file:bg-[rgba(246,196,79,0.18)] file:px-4 file:py-2 file:text-[#f6c44f] hover:file:bg-[rgba(246,196,79,0.28)]"
               />
+              <span className="text-[0.7rem] text-white/45">La imagen se sube al guardar cambios.</span>
               {prizeImageUploading ? <span className="text-xs text-white/55">Subiendo foto…</span> : null}
               {prizeImageUrl ? (
                 <div className="overflow-hidden rounded-2xl border border-white/8 bg-black/30">
