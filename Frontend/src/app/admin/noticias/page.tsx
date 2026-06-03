@@ -4,25 +4,76 @@ import {
   AdminManageLink,
   AdminSectionScaffold,
   formatAdminDate,
+  humanizeAdminToken,
 } from "@/components/content/admin/shared";
-import { getLandingSnapshot } from "@/lib/api/public-content";
+import { getJson } from "@/lib/api/client";
+import { normalizePost } from "@/lib/api/public-content/posts";
+import { requireAdminServerSession } from "@/lib/auth/server-session";
+
+export const dynamic = "force-dynamic";
+
+type AdminNewsItem = NonNullable<ReturnType<typeof normalizePost>> & {
+  status?: string;
+};
 
 export default async function AdminNewsPage() {
-  const snapshot = await getLandingSnapshot();
-  const posts = snapshot.posts.items;
+  const session = await requireAdminServerSession();
+  let posts: AdminNewsItem[] = [];
+  let total = 0;
+  let errorMessage: string | null = null;
+
+  try {
+    const payload = await getJson<{ data?: unknown; pagination?: { total?: unknown } }>(
+      "/api/posts/admin/all?page=1&limit=100",
+      {
+        cache: "no-store",
+        headers: {
+          Cookie: `${session.authCookie.cookieName}=${session.authCookie.value}`,
+        },
+      },
+    );
+
+    const data = Array.isArray(payload.data) ? payload.data : [];
+
+    posts = data.reduce<AdminNewsItem[]>((acc, item) => {
+      if (!item || typeof item !== "object") {
+        return acc;
+      }
+
+      const record = item as Record<string, unknown>;
+      const normalized = normalizePost(record);
+
+      if (!normalized) {
+        return acc;
+      }
+
+      acc.push({
+        ...normalized,
+        status: typeof record.status === "string" ? record.status : undefined,
+      });
+
+      return acc;
+    }, []);
+
+    total = typeof payload.pagination?.total === "number" ? payload.pagination.total : posts.length;
+  } catch (error) {
+    errorMessage = error instanceof Error ? error.message : "No se pudieron cargar las noticias del panel.";
+  }
+
   const taggedCount = posts.filter((item) => item.tags.length > 0).length;
+  const draftCount = posts.filter((item) => item.status === "DRAFT").length;
 
   return (
     <AdminSectionScaffold
       kicker="Admin noticias"
       title="Ordena lo que sale en contenido"
-      description="Revisa las noticias o posts visibles, detecta piezas sin etiquetas y utiliza esta sección como entrada rápida para controlar el pulso editorial del sitio."
+      description="Revisa noticias publicadas y borradores, detecta piezas sin etiquetas y usa esta sección para decidir qué contenido pasa a público."
       primaryAction={{ label: "Crear noticia", href: "/admin/noticias/crear" }}
       secondaryAction={{ label: "Home user", href: "/home" }}
       metrics={[
-        { label: "Total", value: String(snapshot.totals.posts), helper: snapshot.posts.error ?? "Posts visibles en el snapshot actual." },
+        { label: "Total", value: String(total), helper: errorMessage ?? "Noticias registradas en el panel admin." },
+        { label: "Borradores", value: String(draftCount), helper: "Piezas listas para publicarse más adelante." },
         { label: "Con etiquetas", value: String(taggedCount), helper: "Publicaciones con taxonomía cargada." },
-        { label: "Muestra", value: String(posts.length), helper: "Noticias revisadas en esta vista administrativa." },
       ]}
     >
       <div className="flex items-center justify-between gap-4">
@@ -44,7 +95,10 @@ export default async function AdminNewsPage() {
                   <p className="text-xl font-semibold text-white">{post.title}</p>
                   <p className="mt-1 text-sm text-white/56">Publicación: {formatAdminDate(post.publishedAt)}</p>
                 </div>
-                <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/78">{post.slug ?? "Sin slug"}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-[rgba(246,196,79,0.2)] bg-[rgba(246,196,79,0.12)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[rgba(255,233,174,0.96)]">{humanizeAdminToken(post.status ?? "DRAFT")}</span>
+                  <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/78">{post.slug ?? "Sin slug"}</span>
+                </div>
               </div>
               <p className="text-sm leading-7 text-white/64">{post.excerpt ?? "Sin extracto disponible."}</p>
               <div className="flex flex-wrap gap-2">
@@ -75,7 +129,7 @@ export default async function AdminNewsPage() {
             </div>
           </article>
         )) : (
-          <p className="rounded-[1.3rem] border border-dashed border-white/10 bg-black/12 px-4 py-4 text-sm leading-7 text-white/62">No hay noticias cargadas todavía.</p>
+          <p className="rounded-[1.3rem] border border-dashed border-white/10 bg-black/12 px-4 py-4 text-sm leading-7 text-white/62">{errorMessage ?? "No hay noticias cargadas todavía."}</p>
         )}
       </div>
     </AdminSectionScaffold>

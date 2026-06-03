@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { PostAdminDetail } from "@/components/content/admin/posts";
-import { API_BASE_URL, getJson } from "@/lib/api/client";
+import { getJson } from "@/lib/api/client";
 import { normalizePostDetail } from "@/lib/api/public-content/posts";
 import { requireAdminServerSession } from "@/lib/auth/server-session";
 
@@ -22,7 +22,6 @@ export default async function AdminPostDetailPage({
         cache: "no-store",
         headers: {
           Cookie: `${session.authCookie.cookieName}=${session.authCookie.value}`,
-          Origin: API_BASE_URL,
         },
       },
     );
