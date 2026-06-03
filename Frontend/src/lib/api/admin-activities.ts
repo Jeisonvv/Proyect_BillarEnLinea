@@ -167,36 +167,57 @@ function isNetworkFetchError(error: unknown) {
   return /failed to fetch|networkerror|load failed/i.test(error.message);
 }
 
+function buildPublicId(name?: string) {
+  if (!name || name.trim().length === 0) return undefined;
+  return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+async function uploadWithPayload(
+  file: File,
+  options?: { folder?: string; publicId?: string; tags?: string },
+) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  if (options?.folder) formData.append("folder", options.folder);
+  if (options?.publicId) formData.append("publicId", options.publicId);
+  if (options?.tags) formData.append("tags", options.tags);
+
+  return postFormData<UploadImageResponse>("/api/uploads/images", formData, {
+    credentials: "include",
+  });
+}
+
 export async function uploadActivityImage(file: File, name?: string) {
-  const primaryFormData = new FormData();
-  primaryFormData.append("file", file);
-  primaryFormData.append("folder", "billar-en-linea/rifas");
-
-  if (name && name.trim().length > 0) {
-    primaryFormData.append(
-      "publicId",
-      name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
-    );
-  }
-
-  primaryFormData.append("tags", "rifas,admin,frontend-lab");
+  const publicId = buildPublicId(name);
 
   try {
-    return await postFormData<UploadImageResponse>("/api/uploads/images", primaryFormData, {
-      credentials: "include",
+    // Perfil primario para actividades.
+    return await uploadWithPayload(file, {
+      folder: "billar-en-linea/actividades",
+      publicId,
+      tags: "actividades,admin,frontend-lab",
     });
   } catch (error) {
     if (!isNetworkFetchError(error)) {
       throw error;
     }
 
-    // Fallback defensivo: reintenta con payload minimo.
-    const fallbackFormData = new FormData();
-    fallbackFormData.append("file", file);
+    try {
+      // Compatibilidad: replica exactamente el perfil que funciona en torneos.
+      return await uploadWithPayload(file, {
+        folder: "billar-en-linea/torneos",
+        publicId,
+        tags: "torneos,admin,frontend-lab",
+      });
+    } catch (fallbackError) {
+      if (!isNetworkFetchError(fallbackError)) {
+        throw fallbackError;
+      }
 
-    return postFormData<UploadImageResponse>("/api/uploads/images", fallbackFormData, {
-      credentials: "include",
-    });
+      // Ultimo recurso: solo archivo.
+      return uploadWithPayload(file);
+    }
   }
 }
 
