@@ -162,23 +162,42 @@ export type UploadImageResponse = {
   };
 };
 
+function isNetworkFetchError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  return /failed to fetch|networkerror|load failed/i.test(error.message);
+}
+
 export async function uploadActivityImage(file: File, name?: string) {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("folder", "billar-en-linea/rifas");
+  const primaryFormData = new FormData();
+  primaryFormData.append("file", file);
+  primaryFormData.append("folder", "billar-en-linea/rifas");
 
   if (name && name.trim().length > 0) {
-    formData.append(
+    primaryFormData.append(
       "publicId",
       name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
     );
   }
 
-  formData.append("tags", "rifas,admin,frontend-lab");
+  primaryFormData.append("tags", "rifas,admin,frontend-lab");
 
-  return postFormData<UploadImageResponse>("/api/uploads/images", formData, {
-    credentials: "include",
-  });
+  try {
+    return await postFormData<UploadImageResponse>("/api/uploads/images", primaryFormData, {
+      credentials: "include",
+    });
+  } catch (error) {
+    if (!isNetworkFetchError(error)) {
+      throw error;
+    }
+
+    // Fallback defensivo: reintenta con payload minimo.
+    const fallbackFormData = new FormData();
+    fallbackFormData.append("file", file);
+
+    return postFormData<UploadImageResponse>("/api/uploads/images", fallbackFormData, {
+      credentials: "include",
+    });
+  }
 }
 
 export async function listActivitiesAdmin(params?: { status?: string; page?: number; limit?: number }) {

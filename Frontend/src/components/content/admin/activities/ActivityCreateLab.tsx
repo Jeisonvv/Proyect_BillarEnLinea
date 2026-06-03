@@ -126,8 +126,16 @@ export function ActivityCreateLab() {
       try {
         let uploadedImageUrl = "";
         let uploadedPrizeImageUrl = "";
-        const selectedImageFile = imageFile ?? imageInputRef.current?.files?.[0] ?? null;
-        const selectedPrizeImageFile = prizeImageFile ?? prizeImageInputRef.current?.files?.[0] ?? null;
+        const imageFromForm = formData.get("image");
+        const prizeImageFromForm = formData.get("prizeImage");
+        const selectedImageFile =
+          imageFromForm instanceof File && imageFromForm.size > 0
+            ? imageFromForm
+            : imageFile ?? imageInputRef.current?.files?.[0] ?? null;
+        const selectedPrizeImageFile =
+          prizeImageFromForm instanceof File && prizeImageFromForm.size > 0
+            ? prizeImageFromForm
+            : prizeImageFile ?? prizeImageInputRef.current?.files?.[0] ?? null;
 
         if (selectedImageFile) {
           setImageUploading(true);
@@ -355,6 +363,7 @@ export function ActivityCreateLab() {
           <span className="text-[0.72rem] uppercase tracking-[0.18em] text-white/56">Imagen promocional</span>
           <input
             ref={imageInputRef}
+            name="image"
             type="file"
             accept="image/*"
             onChange={(e) => handleImageChange(e, "image")}
@@ -374,6 +383,7 @@ export function ActivityCreateLab() {
           <span className="text-[0.72rem] uppercase tracking-[0.18em] text-white/56">Foto del premio</span>
           <input
             ref={prizeImageInputRef}
+            name="prizeImage"
             type="file"
             accept="image/*"
             onChange={(e) => handleImageChange(e, "prizeImage")}
