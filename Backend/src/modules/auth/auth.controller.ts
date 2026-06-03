@@ -74,7 +74,7 @@ export class AuthNestController {
     storage: memoryStorage(),
     limits: {
       // Mobile photos are often larger than 5MB even before editing.
-      fileSize: 12 * 1024 * 1024,
+      fileSize: 20 * 1024 * 1024,
       files: 1,
     },
   }))

@@ -45,7 +45,12 @@ export function createExpressApp(): Application {
   app.use(helmet());
 
   // ── Seguridad: CORS ──────────────────────────────────────────────────────
-  const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173')
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://billarenlinea.com',
+    'https://www.billarenlinea.com',
+  ].join(','))
     .split(',')
     .map((origin) => origin.trim());
 

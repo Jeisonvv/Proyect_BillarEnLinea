@@ -70,8 +70,8 @@ async function parseResponseBody(response: Response) {
   return text.length > 0 ? text : null;
 }
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+async function requestJsonToUrl<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
     cache: "no-store",
     ...init,
   });
@@ -79,14 +79,18 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const payload = await parseResponseBody(response);
 
   if (!response.ok) {
-    throw new ApiError(getErrorMessage(path, response.status, payload), {
+    throw new ApiError(getErrorMessage(url, response.status, payload), {
       status: response.status,
-      path,
+      path: url,
       payload,
     });
   }
 
   return payload as T;
+}
+
+async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  return requestJsonToUrl<T>(`${API_BASE_URL}${path}`, init);
 }
 
 export async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
@@ -166,6 +170,22 @@ export async function postFormData<TResponse>(
   headers.delete("Content-Type");
 
   return requestJson<TResponse>(path, {
+    ...init,
+    method: "POST",
+    headers,
+    body,
+  });
+}
+
+export async function postFormDataSameOrigin<TResponse>(
+  path: string,
+  body: FormData,
+  init?: RequestInit,
+): Promise<TResponse> {
+  const headers = new Headers(init?.headers);
+  headers.delete("Content-Type");
+
+  return requestJsonToUrl<TResponse>(path, {
     ...init,
     method: "POST",
     headers,

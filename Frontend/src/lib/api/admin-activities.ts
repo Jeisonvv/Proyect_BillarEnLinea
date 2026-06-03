@@ -1,4 +1,4 @@
-import { deleteJson, getJson, patchJson, postFormData, postJson } from "@/lib/api/client";
+import { deleteJson, getJson, patchJson, postFormDataSameOrigin, postJson } from "@/lib/api/client";
 
 export const ACTIVITY_STATUSES = ["DRAFT", "ACTIVE", "CLOSED", "DRAWN"] as const;
 export type ActivityStatus = (typeof ACTIVITY_STATUSES)[number];
@@ -183,7 +183,7 @@ async function uploadWithPayload(
   if (options?.publicId) formData.append("publicId", options.publicId);
   if (options?.tags) formData.append("tags", options.tags);
 
-  return postFormData<UploadImageResponse>("/api/admin/uploads/images", formData, {
+  return postFormDataSameOrigin<UploadImageResponse>("/api/admin/uploads/images", formData, {
     credentials: "include",
   });
 }

@@ -37,7 +37,7 @@ export class UploadsNestController {
   @UseInterceptors(FileInterceptor('file', {
     storage: memoryStorage(),
     limits: {
-      fileSize: 12 * 1024 * 1024,
+      fileSize: 20 * 1024 * 1024,
       files: 1,
     },
   }))

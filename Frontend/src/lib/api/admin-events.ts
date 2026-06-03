@@ -1,4 +1,4 @@
-import { deleteJson, postFormData, postJson, putJson } from "@/lib/api/client";
+import { deleteJson, postFormDataSameOrigin, postJson, putJson } from "@/lib/api/client";
 
 export const EVENT_STATUSES = ["SCHEDULED", "LIVE", "FINISHED", "CANCELLED"] as const;
 export type EventStatus = (typeof EVENT_STATUSES)[number];
@@ -95,7 +95,7 @@ export async function uploadEventImage(file: File, name?: string): Promise<Uploa
     );
   }
   formData.append("tags", "eventos,admin,frontend-lab");
-  return postFormData<UploadEventImageResponse>("/api/admin/uploads/images", formData, {
+  return postFormDataSameOrigin<UploadEventImageResponse>("/api/admin/uploads/images", formData, {
     credentials: "include",
   });
 }

@@ -1,4 +1,4 @@
-import { deleteJson, postFormData, postJson, putJson } from "@/lib/api/client";
+import { deleteJson, postFormDataSameOrigin, postJson, putJson } from "@/lib/api/client";
 
 export const POST_STATUSES = ["DRAFT", "PUBLISHED"] as const;
 export type PostStatus = (typeof POST_STATUSES)[number];
@@ -65,7 +65,7 @@ export async function uploadPostImage(file: File, name?: string): Promise<Upload
     );
   }
   formData.append("tags", "noticias,admin,frontend-lab");
-  return postFormData<UploadPostImageResponse>("/api/admin/uploads/images", formData, {
+  return postFormDataSameOrigin<UploadPostImageResponse>("/api/admin/uploads/images", formData, {
     credentials: "include",
   });
 }

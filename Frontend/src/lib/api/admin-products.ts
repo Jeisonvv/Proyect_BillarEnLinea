@@ -1,4 +1,4 @@
-import { deleteJson, patchJson, postFormData, postJson } from "@/lib/api/client";
+import { deleteJson, patchJson, postFormDataSameOrigin, postJson } from "@/lib/api/client";
 import { getJson } from "@/lib/api/client";
 import type { CollectionState, LandingProduct } from "./public-content/types";
 import { normalizeProduct } from "./public-content/products";
@@ -92,7 +92,7 @@ export async function uploadProductImage(file: File, name?: string): Promise<Upl
     );
   }
   formData.append("tags", "tienda,admin,frontend-lab");
-  return postFormData<UploadProductImageResponse>("/api/admin/uploads/images", formData, {
+  return postFormDataSameOrigin<UploadProductImageResponse>("/api/admin/uploads/images", formData, {
     credentials: "include",
   });
 }

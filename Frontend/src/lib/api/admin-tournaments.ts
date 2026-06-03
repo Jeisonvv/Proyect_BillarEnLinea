@@ -1,4 +1,4 @@
-import { patchJson, postFormData, postJson } from "@/lib/api/client";
+import { patchJson, postFormDataSameOrigin, postJson } from "@/lib/api/client";
 
 export const TOURNAMENT_FORMATS = [
   "SINGLE_ELIMINATION",
@@ -272,7 +272,7 @@ export async function uploadTournamentImage(file: File, name?: string) {
 
   formData.append("tags", "torneos,admin,frontend-lab");
 
-  return postFormData<UploadImageResponse>("/api/admin/uploads/images", formData, {
+  return postFormDataSameOrigin<UploadImageResponse>("/api/admin/uploads/images", formData, {
     credentials: "include",
   });
 }
