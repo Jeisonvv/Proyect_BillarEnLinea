@@ -50,8 +50,8 @@ function normalizePostDetail(record: JsonRecord): PostDetail | null {
   };
 }
 
-export async function getLandingPosts(limit = 3) {
-  return fetchCollection(`/api/posts?limit=${limit}`, normalizePost);
+export async function getLandingPosts(limit = 3, init?: RequestInit) {
+  return fetchCollection(`/api/posts?limit=${limit}`, normalizePost, init);
 }
 
 export async function getPostDetailBySlug(slug: string): Promise<PostDetail | null> {

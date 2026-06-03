@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomeNoticiasPage() {
-  const posts = await getLandingPosts(12);
+  const posts = await getLandingPosts(12, { cache: "no-store" });
 
   return (
     <main className="grid gap-6">
@@ -53,6 +53,10 @@ export default async function HomeNoticiasPage() {
           {posts.items.map((post) => (
             <PostCard key={post.id} item={post} />
           ))}
+        </section>
+      ) : posts.error ? (
+        <section className="rounded-3xl border border-dashed border-white/12 bg-white/3 p-6 text-sm leading-7 text-white/64">
+          No fue posible cargar las noticias en este momento. {posts.error}
         </section>
       ) : (
         <section className="rounded-3xl border border-dashed border-white/12 bg-white/3 p-6 text-sm leading-7 text-white/64">
