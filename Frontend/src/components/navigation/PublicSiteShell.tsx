@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { getCurrentSession, logoutWeb } from "@/lib/api/auth";
 import { siteConfig } from "@/lib/site";
 
 const hiddenPrefixes = ["/home", "/admin"];
@@ -73,7 +74,10 @@ function isShellVisible(pathname: string) {
 
 export function PublicSiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const mobileMenuRef = useRef<HTMLDetailsElement>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const closeMobileMenu = () => {
     mobileMenuRef.current?.removeAttribute("open");
@@ -82,6 +86,38 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     closeMobileMenu();
   }, [pathname]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    void getCurrentSession()
+      .then((session) => {
+        if (!isActive) return;
+        setIsAuthenticated(Boolean(session.user?.id));
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setIsAuthenticated(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  function handleLogout() {
+    startTransition(async () => {
+      try {
+        await logoutWeb();
+        setIsAuthenticated(false);
+        closeMobileMenu();
+        router.replace("/");
+        router.refresh();
+      } catch {
+        // Silencioso para evitar ruido visual en landing.
+      }
+    });
+  }
 
   if (!isShellVisible(pathname)) {
     return <>{children}</>;
@@ -120,12 +156,25 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="hidden items-center gap-3 sm:flex">
-            <Link className="rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/8 hover:text-white" href="/login">
-              Entrar
-            </Link>
-            <Link className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong" href="/register">
-              Crear cuenta
-            </Link>
+            {isAuthenticated ? (
+              <button
+                className="rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                onClick={handleLogout}
+                disabled={isPending}
+              >
+                {isPending ? "Cerrando..." : "Cerrar sesion"}
+              </button>
+            ) : (
+              <>
+                <Link className="rounded-full border border-white/12 px-4 py-2 text-sm font-medium text-white/78 transition hover:bg-white/8 hover:text-white" href="/login">
+                  Entrar
+                </Link>
+                <Link className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong" href="/register">
+                  Crear cuenta
+                </Link>
+              </>
+            )}
           </div>
 
           <details ref={mobileMenuRef} className="group relative lg:hidden">
@@ -150,12 +199,25 @@ export function PublicSiteShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 ))}
                 <div className="mt-2 grid translate-y-2 gap-2 border-t border-white/8 pt-3 opacity-0 transition duration-300 ease-out group-open:translate-y-0 group-open:opacity-100" style={{ transitionDelay: "280ms" }}>
-                  <Link className="rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-medium text-white/82 transition hover:bg-white/8" href="/login" onClick={closeMobileMenu}>
-                    Entrar
-                  </Link>
-                  <Link className="rounded-2xl bg-accent px-4 py-3 text-center text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong" href="/register" onClick={closeMobileMenu}>
-                    Crear cuenta
-                  </Link>
+                  {isAuthenticated ? (
+                    <button
+                      className="rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-medium text-white/82 transition hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-60"
+                      type="button"
+                      onClick={handleLogout}
+                      disabled={isPending}
+                    >
+                      {isPending ? "Cerrando..." : "Cerrar sesion"}
+                    </button>
+                  ) : (
+                    <>
+                      <Link className="rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-medium text-white/82 transition hover:bg-white/8" href="/login" onClick={closeMobileMenu}>
+                        Entrar
+                      </Link>
+                      <Link className="rounded-2xl bg-accent px-4 py-3 text-center text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong" href="/register" onClick={closeMobileMenu}>
+                        Crear cuenta
+                      </Link>
+                    </>
+                  )}
                 </div>
               </nav>
             </div>
