@@ -28,6 +28,16 @@ type RegisterState = {
 type RegisterStep = 1 | 2;
 
 const initialState: RegisterState = { kind: "idle" };
+const PHONE_REGEX = /^[1-9]\d{9,14}$/;
+const PHONE_FORMAT_ERROR = "Formato incorrecto. Usa codigo de pais + numero (10 a 15 digitos), ejemplo 573001234567.";
+
+function sanitizePhone(value: string) {
+  return value.replace(/\D+/g, "");
+}
+
+function isValidPhone(value: string) {
+  return PHONE_REGEX.test(value);
+}
 
 export function RegisterForm() {
   const router = useRouter();
@@ -55,6 +65,16 @@ export function RegisterForm() {
       const field = form.elements.namedItem(fieldName);
       if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement)) {
         continue;
+      }
+
+      if (fieldName === "phone" && field instanceof HTMLInputElement) {
+        field.value = sanitizePhone(field.value);
+        if (!isValidPhone(field.value)) {
+          field.setCustomValidity(PHONE_FORMAT_ERROR);
+          field.reportValidity();
+          return false;
+        }
+        field.setCustomValidity("");
       }
 
       if (!field.checkValidity()) {
@@ -94,7 +114,7 @@ export function RegisterForm() {
     const lastName = String(formData.get("lastName") ?? "").trim();
     const name = `${firstName} ${lastName}`.trim();
     const email = String(formData.get("email") ?? "").trim();
-    const phone = String(formData.get("phone") ?? "").trim();
+    const phone = sanitizePhone(String(formData.get("phone") ?? "").trim());
     const identityDocumentType = String(formData.get("identityDocumentType") ?? "").trim() as
       | "CEDULA_CIUDADANIA"
       | "CEDULA_EXTRANJERIA"
@@ -112,6 +132,16 @@ export function RegisterForm() {
      // Nuevos campos
      const ciudad = String(formData.get("ciudad") ?? "").trim();
      const direccion = String(formData.get("direccion") ?? "").trim();
+
+    if (!isValidPhone(phone)) {
+      setState({ kind: "error", message: PHONE_FORMAT_ERROR });
+      const phoneField = form.elements.namedItem("phone");
+      if (phoneField instanceof HTMLInputElement) {
+        phoneField.setCustomValidity(PHONE_FORMAT_ERROR);
+        phoneField.reportValidity();
+      }
+      return;
+    }
 
     if (password !== confirmPassword) {
       setState({ kind: "error", message: "Las contraseñas no coinciden." });
@@ -264,8 +294,19 @@ export function RegisterForm() {
             className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-base text-white outline-none placeholder:text-stone-500 focus:border-accent"
             type="tel"
             name="phone"
-            placeholder="3001234567"
+            placeholder="14155552671"
             autoComplete="tel"
+            inputMode="numeric"
+            pattern="[1-9][0-9]{9,14}"
+            title={PHONE_FORMAT_ERROR}
+            onInput={(event) => {
+              const input = event.currentTarget;
+              input.value = sanitizePhone(input.value);
+              input.setCustomValidity("");
+            }}
+            onInvalid={(event) => {
+              event.currentTarget.setCustomValidity(PHONE_FORMAT_ERROR);
+            }}
             required
           />
         </label>

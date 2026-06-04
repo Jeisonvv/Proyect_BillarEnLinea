@@ -1,5 +1,8 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 import { IdentityDocumentType, PlayerCategory } from '../../../models/enums.js';
+
+const INTERNATIONAL_PHONE_REGEX = /^[1-9]\d{9,14}$/;
+const PHONE_FORMAT_ERROR = 'Formato incorrecto. Usa codigo de pais + numero (10 a 15 digitos), sin espacios ni guiones.';
 
 export class RegisterDto {
   @IsString()
@@ -15,6 +18,7 @@ export class RegisterDto {
 
   @IsString()
   @IsNotEmpty()
+  @Matches(INTERNATIONAL_PHONE_REGEX, { message: PHONE_FORMAT_ERROR })
   phone!: string;
 
   @IsString()
@@ -68,6 +72,7 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   @MinLength(7)
+  @Matches(INTERNATIONAL_PHONE_REGEX, { message: PHONE_FORMAT_ERROR })
   phone?: string;
 
   @IsOptional()
