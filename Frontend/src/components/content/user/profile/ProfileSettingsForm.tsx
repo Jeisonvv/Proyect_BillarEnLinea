@@ -18,6 +18,8 @@ type FormState = {
 
 const INITIAL_STATE: FormState = { kind: "idle" };
 const MAX_AVATAR_FILE_SIZE = 12 * 1024 * 1024;
+const PHONE_REGEX = /^[1-9]\d{9,14}$/;
+const PHONE_FORMAT_ERROR = "Formato incorrecto. Usa codigo de pais + numero (10 a 15 digitos), sin espacios ni guiones.";
 const ALLOWED_AVATAR_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -36,10 +38,18 @@ type EditableProfileState = {
   direccion: string;
 };
 
+function sanitizePhone(value: string) {
+  return value.replace(/\D+/g, "");
+}
+
+function isValidPhone(value: string) {
+  return PHONE_REGEX.test(value);
+}
+
 function getInitialFormValues(user: AuthenticatedUser): EditableProfileState {
   return {
     name: user.name ?? "",
-    phone: user.phone ?? "",
+    phone: sanitizePhone(user.phone ?? ""),
     email: user.email ?? "",
     ciudad: user.ciudad ?? "",
     direccion: user.direccion ?? "",
@@ -118,11 +128,17 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
     event.preventDefault();
     setStatus(INITIAL_STATE);
 
+    const sanitizedPhone = sanitizePhone(formValues.phone);
+    if (!isValidPhone(sanitizedPhone)) {
+      setStatus({ kind: "error", message: PHONE_FORMAT_ERROR });
+      return;
+    }
+
     startTransition(async () => {
       try {
         const payload = {
           name: formValues.name.trim(),
-          phone: formValues.phone.trim(),
+          phone: sanitizedPhone,
           email: formValues.email.trim(),
           ciudad: formValues.ciudad.trim(),
           direccion: formValues.direccion.trim(),
@@ -170,9 +186,19 @@ export function ProfileSettingsForm({ user }: ProfileSettingsFormProps) {
                 type="tel"
                 name="phone"
                 value={formValues.phone}
-                onChange={(event) => updateField("phone", event.currentTarget.value)}
-                placeholder="3001234567"
-                minLength={7}
+                onChange={(event) => updateField("phone", sanitizePhone(event.currentTarget.value))}
+                onInvalid={(event) => {
+                  event.currentTarget.setCustomValidity(PHONE_FORMAT_ERROR);
+                }}
+                onInput={(event) => {
+                  event.currentTarget.setCustomValidity("");
+                }}
+                placeholder="14155552671"
+                inputMode="numeric"
+                pattern="[1-9][0-9]{9,14}"
+                title={PHONE_FORMAT_ERROR}
+                minLength={10}
+                maxLength={15}
                 required
               />
             </label>
