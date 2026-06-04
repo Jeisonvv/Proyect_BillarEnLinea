@@ -78,11 +78,11 @@ export function AdminSectionScaffold({
   children: ReactNode;
 }) {
   return (
-    <main className="grid gap-6">
+    <main className="grid min-w-0 gap-6">
       <section className="relative overflow-hidden rounded-4xl border border-[rgba(246,196,79,0.16)] bg-[linear-gradient(135deg,rgba(11,13,18,0.98),rgba(16,21,30,0.96)_46%,rgba(10,36,57,0.92)_100%)] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.34)] sm:p-6 lg:p-8">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(246,196,79,0.22),transparent_28%),radial-gradient(circle_at_100%_10%,rgba(49,121,182,0.18),transparent_30%),linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.04)_48%,transparent_58%)]" />
-        <div className="relative grid gap-8 xl:grid-cols-[1.05fr_0.95fr] xl:items-end">
-          <div className="space-y-4">
+        <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] xl:items-end">
+          <div className="min-w-0 space-y-4">
             <p className="text-[0.72rem] uppercase tracking-[0.34em] text-[#f6c44f]">{kicker}</p>
             <div className="space-y-3">
               <h1 className="max-w-4xl text-3xl font-semibold leading-tight text-white sm:text-4xl xl:text-[3.2rem]">{title}</h1>
@@ -111,7 +111,7 @@ export function AdminSectionScaffold({
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
             {metrics.map((metric) => (
               <article key={metric.label} className="rounded-[1.6rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.04))] p-4 backdrop-blur-sm">
                 <p className="text-[0.68rem] uppercase tracking-[0.24em] text-white/48">{metric.label}</p>

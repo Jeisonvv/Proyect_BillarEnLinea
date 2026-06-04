@@ -257,12 +257,12 @@ export function UsersAdminPanel() {
         { label: "Con email web", value: String(webEmailCount), helper: "Cuentas con credencial web." },
       ]}
     >
-      <section className="rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
         <form onSubmit={handleSearchSubmit} className="flex flex-wrap items-end gap-3">
-          <label className="grid min-w-64 flex-1 gap-2">
+          <label className="grid min-w-0 flex-1 gap-2">
             <span className="text-[0.72rem] uppercase tracking-[0.18em] text-white/56">Buscar usuario</span>
             <input
-              className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none transition focus:border-accent"
+              className="min-w-0 rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none transition focus:border-accent"
               value={search}
               onChange={(event) => setSearch(event.currentTarget.value)}
               placeholder="Nombre, telefono o documento"
