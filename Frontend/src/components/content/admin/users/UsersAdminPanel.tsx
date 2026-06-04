@@ -76,6 +76,17 @@ export function UsersAdminPanel() {
   const roleCount = useMemo(() => users.filter((user) => user.role === "CUSTOMER").length, [users]);
   const webEmailCount = useMemo(() => users.filter((user) => Boolean(user.webAuth?.email)).length, [users]);
   const editingUser = useMemo(() => users.find((user) => user._id === expandedUserId) ?? null, [users, expandedUserId]);
+  const paginationWindowStart = useMemo(() => Math.floor((page - 1) / 5) * 5 + 1, [page]);
+  const paginationWindowEnd = useMemo(() => Math.min(paginationWindowStart + 4, totalPages), [paginationWindowStart, totalPages]);
+  const visiblePageNumbers = useMemo(() => {
+    const pages: number[] = [];
+
+    for (let currentPage = paginationWindowStart; currentPage <= paginationWindowEnd; currentPage += 1) {
+      pages.push(currentPage);
+    }
+
+    return pages;
+  }, [paginationWindowEnd, paginationWindowStart]);
 
   async function refreshUsers(options?: { searchTerm?: string; pageNumber?: number }) {
     const searchTerm = options?.searchTerm ?? search;
@@ -217,6 +228,11 @@ export function UsersAdminPanel() {
 
     setPage(nextPage);
     void refreshUsers({ searchTerm: search, pageNumber: nextPage });
+  }
+
+  function changePageWindow(direction: -1 | 1) {
+    const nextPage = direction === -1 ? paginationWindowStart - 5 : paginationWindowStart + 5;
+    changePage(nextPage);
   }
 
   function handleUpdateUserSubmit(event: FormEvent<HTMLFormElement>, userId: string) {
@@ -415,6 +431,35 @@ export function UsersAdminPanel() {
                 className="rounded-full border border-white/12 bg-white/5 px-3 py-1.5 font-medium text-white/82 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Anterior
+              </button>
+              <button
+                type="button"
+                onClick={() => changePageWindow(-1)}
+                disabled={loading || paginationWindowStart <= 1}
+                className="rounded-full border border-white/12 bg-white/5 px-3 py-1.5 font-medium text-white/82 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                -5
+              </button>
+              {visiblePageNumbers.map((currentPage) => (
+                <button
+                  key={currentPage}
+                  type="button"
+                  onClick={() => changePage(currentPage)}
+                  className={`min-w-10 rounded-full border px-3 py-1.5 font-semibold transition ${currentPage === page
+                    ? "border-accent bg-accent text-[#10110f]"
+                    : "border-white/12 bg-white/5 text-white/82 hover:bg-white/10"
+                  }`}
+                >
+                  {currentPage}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => changePageWindow(1)}
+                disabled={loading || paginationWindowEnd >= totalPages}
+                className="rounded-full border border-white/12 bg-white/5 px-3 py-1.5 font-medium text-white/82 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                +5
               </button>
               <button
                 type="button"
