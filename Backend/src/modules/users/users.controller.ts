@@ -65,8 +65,10 @@ export class UsersNestController {
   @Roles(UserRole.ADMIN, UserRole.STAFF)
   async getUsers(@Query() query: Record<string, unknown>) {
     try {
-      const page = Number(query.page ?? '1');
-      const limit = Number(query.limit ?? '20');
+      const parsedPage = Number(query.page ?? '1');
+      const parsedLimit = Number(query.limit ?? '20');
+      const page = Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
+      const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(Math.floor(parsedLimit), 50) : 20;
       const { users, total } = await this.usersService.listUsers({
         ...(query.status !== undefined && { status: String(query.status) }),
         ...(query.role !== undefined && { role: String(query.role) }),
@@ -75,7 +77,16 @@ export class UsersNestController {
         page,
         limit,
       });
-      return { ok: true, data: users, pagination: { total, page, limit } };
+      return {
+        ok: true,
+        data: users,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.max(1, Math.ceil(total / limit)),
+        },
+      };
     } catch (error: any) {
       throw new HttpException({ ok: false, message: error.message }, HttpStatus.INTERNAL_SERVER_ERROR);
     }

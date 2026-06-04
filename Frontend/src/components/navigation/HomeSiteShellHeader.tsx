@@ -18,6 +18,7 @@ const userNavItems = [
 
 const adminNavItems = [
   { label: "Dashboard", href: "/admin" },
+  { label: "Usuarios", href: "/admin/usuarios" },
   { label: "Torneos", href: "/admin/torneos" },
   { label: "Eventos", href: "/admin/eventos" },
   { label: "Actividades", href: "/admin/activities" },
