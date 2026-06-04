@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, Fragment, useEffect, useMemo, useState, useTransition } from "react";
+import { FormEvent, Fragment, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { AdminSectionScaffold, formatAdminDate, getErrorMessage, humanizeAdminToken } from "@/components/content/admin/shared";
 import {
   IDENTITY_DOCUMENT_TYPES,
@@ -65,14 +65,17 @@ export function UsersAdminPanel() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [isEditorVisible, setIsEditorVisible] = useState(false);
   const [activeUserId, setActiveUserId] = useState<string | null>(null);
   const [draft, setDraft] = useState<EditDraft | null>(null);
   const [feedbackByUser, setFeedbackByUser] = useState<Record<string, FeedbackState>>({});
   const [closingFeedbackByUser, setClosingFeedbackByUser] = useState<Record<string, boolean>>({});
+  const editorCloseTimerRef = useRef<number | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const roleCount = useMemo(() => users.filter((user) => user.role === "CUSTOMER").length, [users]);
   const webEmailCount = useMemo(() => users.filter((user) => Boolean(user.webAuth?.email)).length, [users]);
+  const editingUser = useMemo(() => users.find((user) => user._id === expandedUserId) ?? null, [users, expandedUserId]);
 
   async function refreshUsers(options?: { searchTerm?: string; pageNumber?: number }) {
     const searchTerm = options?.searchTerm ?? search;
@@ -144,9 +147,43 @@ export function UsersAdminPanel() {
     };
   }, [feedbackByUser]);
 
+  useEffect(() => {
+    return () => {
+      if (editorCloseTimerRef.current) {
+        window.clearTimeout(editorCloseTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!expandedUserId) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeEditor();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [expandedUserId]);
+
   function openEditor(user: AdminUser) {
+    if (editorCloseTimerRef.current) {
+      window.clearTimeout(editorCloseTimerRef.current);
+      editorCloseTimerRef.current = null;
+    }
+
     setExpandedUserId(user._id);
     setDraft(toEditDraft(user));
+    requestAnimationFrame(() => {
+      setIsEditorVisible(true);
+    });
     setFeedbackByUser((current) => ({
       ...current,
       [user._id]: { kind: "idle" },
@@ -154,8 +191,17 @@ export function UsersAdminPanel() {
   }
 
   function closeEditor() {
-    setExpandedUserId(null);
-    setDraft(null);
+    setIsEditorVisible(false);
+
+    if (editorCloseTimerRef.current) {
+      window.clearTimeout(editorCloseTimerRef.current);
+    }
+
+    editorCloseTimerRef.current = window.setTimeout(() => {
+      setExpandedUserId(null);
+      setDraft(null);
+      editorCloseTimerRef.current = null;
+    }, 220);
   }
 
   function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
@@ -301,8 +347,8 @@ export function UsersAdminPanel() {
                 <th className="whitespace-nowrap px-3 py-2">Rol</th>
                 <th className="whitespace-nowrap px-3 py-2">Estado</th>
                 <th className="whitespace-nowrap px-3 py-2">Categoria</th>
-                <th className="whitespace-nowrap px-3 py-2">Creado</th>
-                <th className="whitespace-nowrap px-3 py-2">Accion</th>
+                <th className="min-w-36 whitespace-nowrap px-3 py-2 pr-10">Creado</th>
+                <th className="sticky right-0 z-10 w-36 min-w-36 whitespace-nowrap border-l border-white/8 bg-[#10141c] px-3 py-2 text-right">Accion</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/6">
@@ -317,8 +363,8 @@ export function UsersAdminPanel() {
                     <td className="whitespace-nowrap px-3 py-3">{humanizeAdminToken(user.role ?? null)}</td>
                     <td className="whitespace-nowrap px-3 py-3">{humanizeAdminToken(user.status ?? null)}</td>
                     <td className="whitespace-nowrap px-3 py-3">{humanizeAdminToken(user.playerCategory ?? null)}</td>
-                    <td className="whitespace-nowrap px-3 py-3 text-white/64">{formatAdminDate(user.createdAt ?? null)}</td>
-                    <td className="whitespace-nowrap px-3 py-3">
+                    <td className="min-w-36 whitespace-nowrap px-3 py-3 pr-10 text-white/64">{formatAdminDate(user.createdAt ?? null)}</td>
+                    <td className="sticky right-0 z-10 w-36 min-w-36 whitespace-nowrap border-l border-white/8 bg-[#10141c] px-3 py-3 text-right">
                       <button
                         type="button"
                         onClick={() => openEditor(user)}
@@ -328,149 +374,6 @@ export function UsersAdminPanel() {
                       </button>
                     </td>
                   </tr>
-
-                  {expandedUserId === user._id && draft ? (
-                    <tr key={`${user._id}-editor`}>
-                      <td colSpan={10} className="px-3 py-4">
-                        <form
-                          onSubmit={(event) => handleUpdateUserSubmit(event, user._id)}
-                          className="grid gap-3 rounded-[1.2rem] border border-white/10 bg-black/16 p-4 md:grid-cols-2 xl:grid-cols-4"
-                        >
-                          <label className="grid gap-2 text-sm text-white/72">
-                            Nombre
-                            <input
-                              className="rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-white outline-none focus:border-accent"
-                              value={draft.name}
-                              onChange={(event) => {
-                                const value = event.currentTarget.value;
-                                setDraft((current) => (current ? { ...current, name: value } : current));
-                              }}
-                              required
-                            />
-                          </label>
-
-                          <label className="grid gap-2 text-sm text-white/72">
-                            Telefono
-                            <input
-                              className="rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-white outline-none focus:border-accent"
-                              type="tel"
-                              value={draft.phone}
-                              onChange={(event) => {
-                                const value = sanitizePhone(event.currentTarget.value);
-                                setDraft((current) => (current ? { ...current, phone: value } : current));
-                              }}
-                              inputMode="numeric"
-                              pattern="[1-9][0-9]{9,14}"
-                              title={PHONE_FORMAT_ERROR}
-                              minLength={10}
-                              maxLength={15}
-                              required
-                            />
-                          </label>
-
-                          <label className="grid gap-2 text-sm text-white/72">
-                            Documento
-                            <input
-                              className="rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-white outline-none focus:border-accent"
-                              value={draft.identityDocument}
-                              onChange={(event) => {
-                                const value = event.currentTarget.value;
-                                setDraft((current) => (current ? { ...current, identityDocument: value } : current));
-                              }}
-                              required
-                            />
-                          </label>
-
-                          <label className="grid gap-2 text-sm text-white/72">
-                            Tipo de documento
-                            <select
-                              className="rounded-xl border border-white/10 bg-[#17191d] px-3 py-2 text-white outline-none focus:border-accent"
-                              value={draft.identityDocumentType}
-                              onChange={(event) => {
-                                const value = event.currentTarget.value as IdentityDocumentType;
-                                setDraft((current) => (current ? { ...current, identityDocumentType: value } : current));
-                              }}
-                            >
-                              {IDENTITY_DOCUMENT_TYPES.map((item) => (
-                                <option key={item} value={item} className="bg-[#0b0d12]">{humanizeAdminToken(item)}</option>
-                              ))}
-                            </select>
-                          </label>
-
-                          <label className="grid gap-2 text-sm text-white/72">
-                            Rol
-                            <select
-                              className="rounded-xl border border-white/10 bg-[#17191d] px-3 py-2 text-white outline-none focus:border-accent"
-                              value={draft.role}
-                              onChange={(event) => {
-                                const value = event.currentTarget.value as UserRole;
-                                setDraft((current) => (current ? { ...current, role: value } : current));
-                              }}
-                            >
-                              {USER_ROLES.map((item) => (
-                                <option key={item} value={item} className="bg-[#0b0d12]">{humanizeAdminToken(item)}</option>
-                              ))}
-                            </select>
-                          </label>
-
-                          <label className="grid gap-2 text-sm text-white/72">
-                            Estado
-                            <select
-                              className="rounded-xl border border-white/10 bg-[#17191d] px-3 py-2 text-white outline-none focus:border-accent"
-                              value={draft.status}
-                              onChange={(event) => {
-                                const value = event.currentTarget.value as UserStatus;
-                                setDraft((current) => (current ? { ...current, status: value } : current));
-                              }}
-                            >
-                              {USER_STATUSES.map((item) => (
-                                <option key={item} value={item} className="bg-[#0b0d12]">{humanizeAdminToken(item)}</option>
-                              ))}
-                            </select>
-                          </label>
-
-                          <label className="grid gap-2 text-sm text-white/72">
-                            Categoria
-                            <select
-                              className="rounded-xl border border-white/10 bg-[#17191d] px-3 py-2 text-white outline-none focus:border-accent"
-                              value={draft.playerCategory}
-                              onChange={(event) => {
-                                const value = event.currentTarget.value as PlayerCategory;
-                                setDraft((current) => (current ? { ...current, playerCategory: value } : current));
-                              }}
-                            >
-                              {PLAYER_CATEGORIES.map((item) => (
-                                <option key={item} value={item} className="bg-[#0b0d12]">{humanizeAdminToken(item)}</option>
-                              ))}
-                            </select>
-                          </label>
-
-                          <div className="flex items-end gap-2 xl:col-span-4">
-                            <button
-                              type="submit"
-                              disabled={isPending && activeUserId === user._id}
-                              className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              {isPending && activeUserId === user._id ? "Guardando..." : "Guardar"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={closeEditor}
-                              className="rounded-full border border-white/12 px-4 py-2 text-sm font-semibold text-white/82 transition hover:bg-white/8"
-                            >
-                              Cancelar
-                            </button>
-                          </div>
-
-                          {feedbackByUser[user._id]?.kind === "error" ? (
-                            <p className="xl:col-span-4 rounded-xl border border-rose-300/24 bg-rose-400/10 px-3 py-2 text-sm text-rose-100">
-                              {feedbackByUser[user._id]?.message}
-                            </p>
-                          ) : null}
-                        </form>
-                      </td>
-                    </tr>
-                  ) : null}
 
                   {feedbackByUser[user._id]?.kind === "success" ? (
                     <tr key={`${user._id}-feedback`}>
@@ -525,6 +428,177 @@ export function UsersAdminPanel() {
           </div>
         ) : null}
       </section>
+
+      {expandedUserId && draft ? (
+        <div
+          className={`fixed inset-0 z-50 transition-all duration-200 ${isEditorVisible ? "bg-black/45 backdrop-blur-[2px] opacity-100" : "bg-black/0 opacity-0"}`}
+          onClick={closeEditor}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" || event.key === "Enter" || event.key === " ") {
+              closeEditor();
+            }
+          }}
+        >
+          <aside
+            className={`absolute right-0 top-0 h-full w-full max-w-136 overflow-y-auto border-l border-white/12 bg-[linear-gradient(180deg,#0f1219,#0b0e14)] p-5 shadow-[-18px_0_40px_rgba(0,0,0,0.45)] transition-transform duration-200 ease-out ${isEditorVisible ? "translate-x-0" : "translate-x-6"}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/48">Editar usuario</p>
+                <h2 className="mt-1 text-xl font-semibold text-white">{editingUser?.name ?? "Usuario"}</h2>
+                <p className="mt-1 text-sm text-white/62">{editingUser?.webAuth?.email ?? "Sin email"}</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeEditor}
+                className="rounded-full border border-white/14 px-3 py-1.5 text-xs font-semibold text-white/78 transition hover:bg-white/10"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            <form
+              onSubmit={(event) => handleUpdateUserSubmit(event, expandedUserId)}
+              className="grid gap-3 rounded-[1.2rem] border border-white/10 bg-black/16 p-4 md:grid-cols-2"
+            >
+              <label className="grid gap-2 text-sm text-white/72 md:col-span-2">
+                Nombre
+                <input
+                  className="rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-white outline-none focus:border-accent"
+                  value={draft.name}
+                  onChange={(event) => {
+                    const value = event.currentTarget.value;
+                    setDraft((current) => (current ? { ...current, name: value } : current));
+                  }}
+                  required
+                />
+              </label>
+
+              <label className="grid gap-2 text-sm text-white/72">
+                Telefono
+                <input
+                  className="rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-white outline-none focus:border-accent"
+                  type="tel"
+                  value={draft.phone}
+                  onChange={(event) => {
+                    const value = sanitizePhone(event.currentTarget.value);
+                    setDraft((current) => (current ? { ...current, phone: value } : current));
+                  }}
+                  inputMode="numeric"
+                  pattern="[1-9][0-9]{9,14}"
+                  title={PHONE_FORMAT_ERROR}
+                  minLength={10}
+                  maxLength={15}
+                  required
+                />
+              </label>
+
+              <label className="grid gap-2 text-sm text-white/72">
+                Documento
+                <input
+                  className="rounded-xl border border-white/10 bg-white/8 px-3 py-2 text-white outline-none focus:border-accent"
+                  value={draft.identityDocument}
+                  onChange={(event) => {
+                    const value = event.currentTarget.value;
+                    setDraft((current) => (current ? { ...current, identityDocument: value } : current));
+                  }}
+                  required
+                />
+              </label>
+
+              <label className="grid gap-2 text-sm text-white/72 md:col-span-2">
+                Tipo de documento
+                <select
+                  className="rounded-xl border border-white/10 bg-[#17191d] px-3 py-2 text-white outline-none focus:border-accent"
+                  value={draft.identityDocumentType}
+                  onChange={(event) => {
+                    const value = event.currentTarget.value as IdentityDocumentType;
+                    setDraft((current) => (current ? { ...current, identityDocumentType: value } : current));
+                  }}
+                >
+                  {IDENTITY_DOCUMENT_TYPES.map((item) => (
+                    <option key={item} value={item} className="bg-[#0b0d12]">{humanizeAdminToken(item)}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-2 text-sm text-white/72">
+                Rol
+                <select
+                  className="rounded-xl border border-white/10 bg-[#17191d] px-3 py-2 text-white outline-none focus:border-accent"
+                  value={draft.role}
+                  onChange={(event) => {
+                    const value = event.currentTarget.value as UserRole;
+                    setDraft((current) => (current ? { ...current, role: value } : current));
+                  }}
+                >
+                  {USER_ROLES.map((item) => (
+                    <option key={item} value={item} className="bg-[#0b0d12]">{humanizeAdminToken(item)}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-2 text-sm text-white/72">
+                Estado
+                <select
+                  className="rounded-xl border border-white/10 bg-[#17191d] px-3 py-2 text-white outline-none focus:border-accent"
+                  value={draft.status}
+                  onChange={(event) => {
+                    const value = event.currentTarget.value as UserStatus;
+                    setDraft((current) => (current ? { ...current, status: value } : current));
+                  }}
+                >
+                  {USER_STATUSES.map((item) => (
+                    <option key={item} value={item} className="bg-[#0b0d12]">{humanizeAdminToken(item)}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-2 text-sm text-white/72 md:col-span-2">
+                Categoria
+                <select
+                  className="rounded-xl border border-white/10 bg-[#17191d] px-3 py-2 text-white outline-none focus:border-accent"
+                  value={draft.playerCategory}
+                  onChange={(event) => {
+                    const value = event.currentTarget.value as PlayerCategory;
+                    setDraft((current) => (current ? { ...current, playerCategory: value } : current));
+                  }}
+                >
+                  {PLAYER_CATEGORIES.map((item) => (
+                    <option key={item} value={item} className="bg-[#0b0d12]">{humanizeAdminToken(item)}</option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="flex justify-end gap-2 md:col-span-2">
+                <button
+                  type="button"
+                  onClick={closeEditor}
+                  className="rounded-full border border-white/12 px-4 py-2 text-sm font-semibold text-white/82 transition hover:bg-white/8"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending && activeUserId === expandedUserId}
+                  className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-[#10110f] transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isPending && activeUserId === expandedUserId ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+
+              {feedbackByUser[expandedUserId]?.kind === "error" ? (
+                <p className="md:col-span-2 rounded-xl border border-rose-300/24 bg-rose-400/10 px-3 py-2 text-sm text-rose-100">
+                  {feedbackByUser[expandedUserId]?.message}
+                </p>
+              ) : null}
+            </form>
+          </aside>
+        </div>
+      ) : null}
     </AdminSectionScaffold>
   );
 }
