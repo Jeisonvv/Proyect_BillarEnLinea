@@ -129,18 +129,17 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
             </span>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-7 xl:p-8">
-            <div className="max-w-3xl space-y-4">
-              <p className="font-mono text-[0.72rem] uppercase tracking-[0.34em] text-[rgba(246,196,79,0.82)]">Torneo Billar En Linea</p>
-              <h1 className="text-3xl font-semibold leading-tight text-white sm:text-4xl xl:text-5xl">{tournament.name}</h1>
-              <p className="max-w-2xl whitespace-pre-line text-sm leading-7 text-white/78 sm:text-base">
-                {tournament.shortDescription ?? tournament.description ?? "Detalle del torneo disponible próximamente."}
-              </p>
-            </div>
-          </div>
         </div>
 
         <div className="grid gap-8 p-5 sm:p-7 xl:p-8">
+          <section className="rounded-[1.45rem] border border-white/8 bg-white/6 p-4">
+            <p className="font-mono text-[0.72rem] uppercase tracking-[0.3em] text-[rgba(246,196,79,0.82)]">Torneo Billar En Linea</p>
+            <h1 className="mt-3 text-3xl font-semibold leading-tight text-white sm:text-4xl">{tournament.name}</h1>
+            <p className="mt-3 whitespace-pre-line text-sm leading-7 text-white/78 sm:text-base">
+              {tournament.shortDescription ?? tournament.description ?? "Detalle del torneo disponible próximamente."}
+            </p>
+          </section>
+
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <article className="rounded-[1.45rem] border border-white/8 bg-white/6 p-4">
               <p className="font-mono text-[0.66rem] uppercase tracking-[0.24em] text-white/44">Inicio</p>
@@ -161,7 +160,7 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
-            <div className="space-y-6">
+            <div className="order-2 space-y-6 xl:order-1">
               <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5">
                 <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Resumen</p>
                 <p className="mt-4 whitespace-pre-line text-sm leading-8 text-white/78 sm:text-base">
@@ -192,7 +191,7 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
               ) : null}
             </div>
 
-            <aside className="grid gap-4 self-start">
+            <aside className="order-1 grid gap-4 self-start xl:order-2">
               <div className="flex flex-wrap gap-3">
                 <Link className="inline-flex rounded-full border border-white/10 bg-white/8 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/12" href="/home">
                   Volver al home
