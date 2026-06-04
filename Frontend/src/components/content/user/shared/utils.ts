@@ -20,6 +20,7 @@ export function formatDate(value: string | null) {
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: "America/Bogota",
   });
 
   const parsed = new Date(value);

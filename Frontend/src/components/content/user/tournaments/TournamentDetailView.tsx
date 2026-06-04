@@ -37,6 +37,7 @@ function formatLongDate(value: string | null) {
   return new Intl.DateTimeFormat("es-CO", {
     dateStyle: "full",
     timeStyle: "short",
+    timeZone: "America/Bogota",
   }).format(parsed);
 }
 
@@ -52,11 +53,18 @@ function formatShortDate(value: string | null) {
 
   return new Intl.DateTimeFormat("es-CO", {
     dateStyle: "medium",
+    timeZone: "America/Bogota",
   }).format(parsed);
 }
 
 function getRegistrantInitial(name: string | null) {
   return (name ?? "?").trim().charAt(0).toUpperCase() || "?";
+}
+
+function buildWhatsAppLink(phone: string, tournamentName: string) {
+  const normalizedPhone = phone.replace(/\D/g, "");
+  const message = `Quiero saber más del ${tournamentName}.`;
+  return `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(message)}`;
 }
 
 export function TournamentDetailView({ tournament }: { tournament: TournamentDetail }) {
@@ -125,7 +133,7 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
             <div className="max-w-3xl space-y-4">
               <p className="font-mono text-[0.72rem] uppercase tracking-[0.34em] text-[rgba(246,196,79,0.82)]">Torneo Billar En Linea</p>
               <h1 className="text-3xl font-semibold leading-tight text-white sm:text-4xl xl:text-5xl">{tournament.name}</h1>
-              <p className="max-w-2xl text-sm leading-7 text-white/78 sm:text-base">
+              <p className="max-w-2xl whitespace-pre-line text-sm leading-7 text-white/78 sm:text-base">
                 {tournament.shortDescription ?? tournament.description ?? "Detalle del torneo disponible próximamente."}
               </p>
             </div>
@@ -156,14 +164,14 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
             <div className="space-y-6">
               <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5">
                 <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Resumen</p>
-                <p className="mt-4 text-sm leading-8 text-white/78 sm:text-base">
+                <p className="mt-4 whitespace-pre-line text-sm leading-8 text-white/78 sm:text-base">
                   {tournament.description ?? "Este torneo aún no tiene descripción ampliada publicada."}
                 </p>
               </section>
 
               <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5">
                 <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Formato</p>
-                <p className="mt-4 text-sm leading-8 text-white/78 sm:text-base">
+                <p className="mt-4 whitespace-pre-line text-sm leading-8 text-white/78 sm:text-base">
                   {tournament.formatDetails ?? humanizeToken(tournament.format)}
                 </p>
               </section>
@@ -256,7 +264,14 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
               {tournament.contactPhone ? (
                 <section className="rounded-[1.8rem] border border-white/8 bg-white/5 p-5">
                   <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Contacto</p>
-                  <p className="mt-4 text-sm leading-7 text-white/78">{tournament.contactPhone}</p>
+                  <Link
+                    className="mt-4 inline-flex rounded-full border border-[rgba(37,211,102,0.42)] bg-[rgba(37,211,102,0.14)] px-4 py-2 text-sm font-semibold text-[rgba(222,255,236,0.96)] transition hover:bg-[rgba(37,211,102,0.22)]"
+                    href={buildWhatsAppLink(tournament.contactPhone, tournament.name)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    WhatsApp: {tournament.contactPhone}
+                  </Link>
                 </section>
               ) : null}
             </section>
