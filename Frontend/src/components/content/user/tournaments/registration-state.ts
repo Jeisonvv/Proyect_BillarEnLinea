@@ -23,7 +23,7 @@ export type SelfTournamentRegistrationState = {
     createdAt: string | null;
     updatedAt: string | null;
   } | null;
-  pendingReason: "CATEGORY_REVIEW" | "PAYMENT_UNDER_REVIEW" | "PAYMENT_REQUIRED" | null;
+  pendingReason: "CATEGORY_REVIEW" | "PAYMENT_UNDER_REVIEW" | "PAYMENT_REQUIRED" | "TOURNAMENT_FULL" | null;
   canPay: boolean;
 };
 

@@ -73,6 +73,8 @@ export type UpdateAdminTournamentInput = {
   registrationDeadline?: string;
   discount20Deadline?: string;
   discount10Deadline?: string;
+  entryFee?: number;
+  maxParticipants?: number;
   venueName?: string;
   location?: string;
   address?: string;
@@ -206,6 +208,8 @@ export type UpdateAdminTournamentResponse = {
     registrationDeadline?: string;
     discount20Deadline?: string;
     discount10Deadline?: string;
+    entryFee?: number;
+    maxParticipants?: number;
     venueName?: string;
     location?: string;
     address?: string;

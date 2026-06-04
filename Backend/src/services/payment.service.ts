@@ -968,6 +968,10 @@ export async function createWompiCheckoutForTournament(
     throw new Error("La inscripción fue cancelada y no admite pago.");
   }
 
+  if (tournament.currentParticipants >= tournament.maxParticipants) {
+    throw new Error("El torneo ya no tiene cupos disponibles para confirmar la inscripción.");
+  }
+
   if (registration.groupStageSlotId) {
     const lockedGroupStageSlotId = registration.groupStageSlotId.toString();
 

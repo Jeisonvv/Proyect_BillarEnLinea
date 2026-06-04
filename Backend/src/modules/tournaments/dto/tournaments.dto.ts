@@ -234,6 +234,16 @@ export class UpdateAdminTournamentDto {
   discount10Deadline?: string;
 
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  entryFee?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(2)
+  maxParticipants?: number;
+
+  @IsOptional()
   @IsString()
   venueName?: string;
 

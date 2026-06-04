@@ -61,6 +61,20 @@ function toOptionalDate(value: FormDataEntryValue | null) {
   return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
 }
 
+function toOptionalNumber(value: FormDataEntryValue | null) {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const numeric = Number(trimmed);
+  return Number.isFinite(numeric) ? numeric : undefined;
+}
+
 function toDateTimeLocalValue(value: string | null) {
   if (!value) {
     return "";
@@ -203,6 +217,8 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
         const response = await updateTournamentAdmin(tournament.id, {
           name: toOptionalString(formData.get("name")),
           status: (toOptionalString(formData.get("status")) as TournamentStatus | undefined),
+          entryFee: toOptionalNumber(formData.get("entryFee")),
+          maxParticipants: toOptionalNumber(formData.get("maxParticipants")),
           description: toOptionalString(formData.get("description")),
           shortDescription: toOptionalString(formData.get("shortDescription")),
           formatDetails: toOptionalString(formData.get("formatDetails")),
@@ -240,6 +256,8 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
           registrationDeadline: response.data.registrationDeadline ?? null,
           discount20Deadline: response.data.discount20Deadline ?? null,
           discount10Deadline: response.data.discount10Deadline ?? null,
+          entryFee: response.data.entryFee ?? current.entryFee,
+          maxParticipants: response.data.maxParticipants ?? current.maxParticipants,
           groupStageSlots: response.data.groupStageSlots ?? current.groupStageSlots,
           venueName: response.data.venueName ?? null,
           location: response.data.location ?? null,
@@ -346,12 +364,13 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
     <AdminSectionScaffold
       kicker="Admin torneo"
       title={`Gestiona ${tournament.name}`}
-      description="Esta URL administrativa concentra los cambios seguros del torneo: contenido visible, agenda operativa y ajustes de inscripción por jugador. Los campos estructurales del formato y del cobro siguen protegidos para no romper pagos ni brackets."
+      description="Esta URL administrativa concentra los cambios del torneo: contenido visible, agenda operativa, costo de inscripción, cupos y ajustes por jugador."
       primaryAction={{ label: "Volver a torneos", href: "/admin/torneos" }}
       secondaryAction={{ label: "Ver página pública", href: `/home/torneos/${tournament.slug}` }}
       metrics={[
         { label: "Estado", value: humanizeAdminToken(tournament.status), helper: "Ciclo actual del torneo." },
         { label: "Confirmados", value: String(confirmedRegistrations), helper: "Jugadores con cupo activo hoy." },
+        { label: "Cupos máximos", value: String(tournament.maxParticipants ?? 0), helper: "Capacidad total configurada." },
         { label: "Inscritos", value: String(totalRegistrations), helper: "Registros totales visibles en la tabla." },
       ]}
     >
@@ -381,6 +400,31 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
                     <option key={status} value={status}>{humanizeAdminToken(status)}</option>
                   ))}
                 </select>
+              </label>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="grid gap-2 text-sm text-white/72">
+                Costo de inscripción (COP)
+                <input
+                  className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none transition focus:border-accent"
+                  defaultValue={tournament.entryFee ?? 0}
+                  min={0}
+                  name="entryFee"
+                  step="1000"
+                  type="number"
+                />
+              </label>
+              <label className="grid gap-2 text-sm text-white/72">
+                Cupos máximos
+                <input
+                  className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none transition focus:border-accent"
+                  defaultValue={tournament.maxParticipants ?? 2}
+                  min={2}
+                  name="maxParticipants"
+                  step="1"
+                  type="number"
+                />
               </label>
             </div>
 
@@ -544,13 +588,11 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
         </section>
 
         <section className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.03))] p-5">
-          <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[#f6c44f]">Campos protegidos</p>
-          <h2 className="mt-2 text-2xl font-semibold text-white">Lo que no se toca aquí</h2>
+          <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[#f6c44f]">Campos de referencia</p>
+          <h2 className="mt-2 text-2xl font-semibold text-white">Configuración estructural</h2>
           <div className="mt-5 grid gap-3">
             {[
               `Formato: ${humanizeAdminToken(tournament.format)}`,
-              `Costo de inscripción: ${tournament.entryFee ?? 0}`,
-              `Cupos máximos: ${tournament.maxParticipants ?? 0}`,
               `Mesas por grupos: ${tournament.groupStageTables ?? 0}`,
               `Jugadores por grupo: ${tournament.playersPerGroup ?? 0}`,
               `Horarios de grupos: ${tournament.groupStageSlots.length}`,
@@ -560,7 +602,7 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
           </div>
 
           <div className="mt-6 rounded-[1.3rem] border border-[rgba(246,196,79,0.18)] bg-[rgba(246,196,79,0.08)] p-4 text-sm leading-7 text-[rgba(255,244,214,0.86)]">
-            Desde esta vista puedes cambiar contenido, estado operativo y el estado de cada inscripción. Los cambios estructurales de cupos, costos o formato deben pasar por una evolución controlada del backend para no desalinear pagos ni brackets.
+            Desde esta vista puedes cambiar contenido, estado operativo, costo de inscripción y cupos máximos. Si reduces cupos, no puede quedar por debajo de los jugadores ya confirmados.
           </div>
 
           <div className="mt-6 grid gap-3 text-sm text-white/62">

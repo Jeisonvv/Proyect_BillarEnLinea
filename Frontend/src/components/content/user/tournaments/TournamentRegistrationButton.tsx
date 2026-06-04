@@ -343,12 +343,14 @@ export function TournamentRegistrationButton({
   const pendingReason = selfRegistrationState?.pendingReason ?? null;
   const canPay = selfRegistrationState?.canPay ?? false;
   const registrationStatusClass = getRegistrationStatusClass(effectiveRegistrationStatus);
+  const isTournamentFullPending = pendingReason === "TOURNAMENT_FULL";
   const hasLockedGroupStageSlot = Boolean(selfRegistrationState?.registration?.groupStageSlotId);
   const canResumePendingPayment = effectiveRegistrationStatus === "PENDING"
     && pendingReason === "PAYMENT_UNDER_REVIEW";
   const hasBlockingRegistration = effectiveRegistrationStatus === "CONFIRMED"
     || effectiveRegistrationStatus === "WAITLIST"
-    || pendingReason === "CATEGORY_REVIEW";
+    || pendingReason === "CATEGORY_REVIEW"
+    || pendingReason === "TOURNAMENT_FULL";
   const disabled = !isOpen
     || isFull
     || areAllSlotsFull
@@ -388,6 +390,10 @@ export function TournamentRegistrationButton({
 
     if (pendingReason === "CATEGORY_REVIEW") {
       return "Tu inscripción está pendiente porque tu categoría aún no ha sido aprobada por administración.";
+    }
+
+    if (pendingReason === "TOURNAMENT_FULL") {
+      return "Tu inscripción está pendiente, pero el torneo ya no tiene cupos confirmables disponibles.";
     }
 
     if (requiresGroupStageSlot && !effectiveSlotId) {
@@ -432,6 +438,10 @@ export function TournamentRegistrationButton({
     if (effectiveRegistrationStatus === "PENDING") {
       if (pendingReason === "CATEGORY_REVIEW") {
         return "Pendiente por categoría";
+      }
+
+      if (pendingReason === "TOURNAMENT_FULL") {
+        return "Cupos agotados";
       }
 
       if (pendingReason === "PAYMENT_UNDER_REVIEW") {
@@ -611,7 +621,11 @@ export function TournamentRegistrationButton({
       ) : null}
 
       <button
-        className="inline-flex w-full items-center justify-center rounded-full bg-accent px-5 py-3 text-sm font-semibold text-[#0b0b0d] transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/45"
+        className={`inline-flex w-full items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed ${
+          isTournamentFullPending
+            ? "bg-rose-500 text-white hover:bg-rose-500 disabled:bg-rose-900/45 disabled:text-rose-100"
+            : "bg-accent text-[#0b0b0d] hover:bg-accent-strong disabled:bg-white/10 disabled:text-white/45"
+        }`}
         type="button"
         disabled={disabled}
         onClick={handleRegister}

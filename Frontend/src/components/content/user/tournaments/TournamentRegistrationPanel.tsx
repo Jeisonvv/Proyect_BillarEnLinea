@@ -83,6 +83,10 @@ function getRegistrationMessage(status: string | null, pendingReason: SelfTourna
       return "Ya tienes una inscripción creada en este torneo, pero sigue pendiente porque tu categoría aún no ha sido definida. Un administrador debe revisarla antes de confirmar tu cupo.";
     }
 
+    if (pendingReason === "TOURNAMENT_FULL") {
+      return "Tu inscripción sigue pendiente, pero el torneo ya completó todos sus cupos confirmados. Por ahora no es posible continuar con el pago.";
+    }
+
     if (pendingReason === "PAYMENT_UNDER_REVIEW") {
       return "Ya tienes una inscripción creada en este torneo y tu pago está en proceso de validación. Cuando sea aprobado, tu cupo quedará confirmado.";
     }

@@ -95,6 +95,10 @@ function deriveSelfRegistrationPendingReason(
     status?: string;
     expiresAt?: Date | null;
   } | null,
+  tournament?: {
+    currentParticipants?: number;
+    maxParticipants?: number;
+  } | null,
 ) {
   if (!registration || registration.status !== RegistrationStatus.PENDING) {
     return null;
@@ -102,6 +106,15 @@ function deriveSelfRegistrationPendingReason(
 
   if (registration.playerCategory === PlayerCategory.SIN_DEFINIR) {
     return "CATEGORY_REVIEW";
+  }
+
+  if (
+    tournament
+    && typeof tournament.currentParticipants === "number"
+    && typeof tournament.maxParticipants === "number"
+    && tournament.currentParticipants >= tournament.maxParticipants
+  ) {
+    return "TOURNAMENT_FULL";
   }
 
   if (payment?.status === PaymentTransactionStatus.PENDING) {
@@ -176,6 +189,8 @@ export async function updateTournamentAdminService(id: string, data: Record<stri
     'registrationDeadline',
     'discount20Deadline',
     'discount10Deadline',
+    'entryFee',
+    'maxParticipants',
     'venueName',
     'location',
     'address',
@@ -206,6 +221,34 @@ export async function updateTournamentAdminService(id: string, data: Record<stri
           ? value.map((tag) => String(tag).trim()).filter(Boolean)
           : [],
       );
+      hasChanges = true;
+      continue;
+    }
+
+    if (field === 'entryFee') {
+      const numericValue = typeof value === 'string' ? Number(value.trim()) : Number(value);
+
+      if (!Number.isFinite(numericValue) || numericValue < 0) {
+        throw new Error('El costo de inscripción debe ser un número mayor o igual a 0.');
+      }
+
+      tournament.set(field, numericValue);
+      hasChanges = true;
+      continue;
+    }
+
+    if (field === 'maxParticipants') {
+      const numericValue = typeof value === 'string' ? Number(value.trim()) : Number(value);
+
+      if (!Number.isInteger(numericValue) || numericValue < 2) {
+        throw new Error('El cupo máximo debe ser un entero mayor o igual a 2.');
+      }
+
+      if (numericValue < tournament.currentParticipants) {
+        throw new Error('El cupo máximo no puede ser menor a los participantes ya confirmados.');
+      }
+
+      tournament.set(field, numericValue);
       hasChanges = true;
       continue;
     }
@@ -708,7 +751,7 @@ export async function getTournamentSelfRegistrationStateService(
   const userObjectId = toTournamentObjectId(userId, "User ID");
 
   const tournament = await Tournament.findById(tournamentObjectId)
-    .select("_id")
+    .select("_id currentParticipants maxParticipants")
     .lean();
 
   if (!tournament) {
@@ -740,7 +783,7 @@ export async function getTournamentSelfRegistrationStateService(
     .sort({ updatedAt: -1 })
     .lean();
 
-  const pendingReason = deriveSelfRegistrationPendingReason(registration, payment);
+  const pendingReason = deriveSelfRegistrationPendingReason(registration, payment, tournament);
   const canPay = pendingReason === "PAYMENT_REQUIRED";
 
   return {

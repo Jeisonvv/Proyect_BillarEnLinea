@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import type { TournamentDetail } from "@/lib/api/public-content";
 import { TournamentRegistrationPanel } from "./TournamentRegistrationPanel";
 import { formatMoney, humanizeToken } from "../shared/utils";
@@ -57,6 +60,7 @@ function getRegistrantInitial(name: string | null) {
 }
 
 export function TournamentDetailView({ tournament }: { tournament: TournamentDetail }) {
+  const [registrationFilter, setRegistrationFilter] = useState<"ALL" | "PENDING" | "CONFIRMED">("ALL");
   const statusBadgeClass = getStatusBadgeClass(tournament.status);
   const locationLabel = [tournament.venueName, tournament.city, tournament.country].filter(Boolean).join(" · ");
   const confirmedLabel = tournament.currentParticipants !== null && tournament.maxParticipants !== null
@@ -68,6 +72,19 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
   const confirmedRegistrationsLabel = tournament.confirmedRegistrations !== null
     ? `${tournament.confirmedRegistrations} confirmados`
     : confirmedLabel;
+  const pendingCount = tournament.registrations.filter((registration) => registration.status === "PENDING").length;
+  const pendingRegistrationsLabel = `${pendingCount} pendientes`;
+  const filteredRegistrations = useMemo(() => {
+    if (registrationFilter === "PENDING") {
+      return tournament.registrations.filter((registration) => registration.status === "PENDING");
+    }
+
+    if (registrationFilter === "CONFIRMED") {
+      return tournament.registrations.filter((registration) => registration.status === "CONFIRMED");
+    }
+
+    return tournament.registrations;
+  }, [registrationFilter, tournament.registrations]);
   const isOpen = tournament.status === "OPEN";
   const isFull = tournament.currentParticipants !== null
     && tournament.maxParticipants !== null
@@ -250,17 +267,45 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
               <div className="max-w-3xl">
                 <p className="font-mono text-[0.7rem] uppercase tracking-[0.28em] text-[rgba(246,196,79,0.76)]">Inscritos</p>
                 <p className="mt-3 text-sm leading-7 text-white/74 sm:text-base">
-                  Consulta quiénes ya reservaron cupo, en qué estado está su inscripción y la categoría con la que entran al torneo.
+                  Consulta quiénes ya reservaron cupo, en qué estado está su inscripción y la categoría con la que entran al torneo. Un estado PENDING es reserva y no garantiza entrada hasta quedar CONFIRMED.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 lg:justify-end">
                 <span className="rounded-full border border-white/10 bg-black/24 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/82">
                   {registrationsLabel}
                 </span>
+                <span className="rounded-full border border-[rgba(246,196,79,0.22)] bg-[rgba(246,196,79,0.1)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[rgba(255,233,174,0.96)]">
+                  {pendingRegistrationsLabel}
+                </span>
                 <span className="rounded-full border border-emerald-300/18 bg-emerald-400/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
                   {confirmedRegistrationsLabel}
                 </span>
               </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {[
+                { key: "ALL", label: "Todos" },
+                { key: "PENDING", label: "Pendientes" },
+                { key: "CONFIRMED", label: "Confirmados" },
+              ].map((filterOption) => {
+                const isActive = registrationFilter === filterOption.key;
+
+                return (
+                  <button
+                    key={filterOption.key}
+                    type="button"
+                    onClick={() => setRegistrationFilter(filterOption.key as "ALL" | "PENDING" | "CONFIRMED")}
+                    className={`rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition ${
+                      isActive
+                        ? "border-[rgba(246,196,79,0.34)] bg-[rgba(246,196,79,0.18)] text-[rgba(255,239,202,0.96)]"
+                        : "border-white/10 bg-black/20 text-white/74 hover:border-white/20 hover:text-white"
+                    }`}
+                  >
+                    {filterOption.label}
+                  </button>
+                );
+              })}
             </div>
 
             {tournament.registrations.length > 0 ? (
@@ -278,7 +323,7 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
                   </div>
 
                   <div className="min-w-195 w-full divide-y divide-white/8 bg-[linear-gradient(180deg,rgba(12,18,30,0.9),rgba(8,12,20,0.96))] text-white">
-                {tournament.registrations.map((registration, index) => {
+                {filteredRegistrations.map((registration, index) => {
                   const displayName = registration.user?.name ?? "Jugador registrado";
                   const category = registration.playerCategory ?? registration.user?.playerCategory ?? null;
                   const avatarUrl = registration.user?.avatarUrl ?? null;
@@ -346,6 +391,12 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
                     </article>
                   );
                 })}
+
+                {filteredRegistrations.length === 0 ? (
+                  <article className="px-5 py-8 text-sm leading-7 text-white/62">
+                    No hay jugadores {registrationFilter === "PENDING" ? "pendientes" : "confirmados"} para mostrar en este torneo.
+                  </article>
+                ) : null}
                   </div>
                 </div>
               </div>
