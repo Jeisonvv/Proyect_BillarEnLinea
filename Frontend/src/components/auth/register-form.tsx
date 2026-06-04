@@ -289,12 +289,12 @@ export function RegisterForm() {
             />
           </label>
         <label className="grid min-w-0 gap-2">
-          <span className="text-sm font-medium text-stone-200">Telefono</span>
+          <span className="text-sm font-medium text-stone-200">Telefono (Digito pais + numero)</span>
           <input
             className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-base text-white outline-none placeholder:text-stone-500 focus:border-accent"
             type="tel"
             name="phone"
-            placeholder="14155552671"
+            placeholder="573002212345"
             autoComplete="tel"
             inputMode="numeric"
             pattern="[1-9][0-9]{9,14}"
