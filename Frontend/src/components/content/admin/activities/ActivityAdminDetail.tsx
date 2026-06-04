@@ -302,9 +302,9 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid max-w-full min-w-0 gap-6 overflow-x-hidden">
       {/* Resumen */}
-      <section className="overflow-hidden rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
+      <section className="min-w-0 overflow-hidden rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
         <div className="grid gap-5 lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-start">
           <div className="relative aspect-4/5 min-h-48 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(135deg,rgba(246,196,79,0.16),rgba(13,110,174,0.16),rgba(255,255,255,0.04))]">
             {activity.imageUrl ? (
@@ -395,7 +395,7 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
       </section>
 
       {/* Edición */}
-      <section className="rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
+      <section className="min-w-0 rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
         <header className="mb-4 flex items-center justify-between gap-3">
           <div>
             <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[#f6c44f]">Editar actividad</p>
@@ -520,7 +520,7 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
                 accept="image/*"
                 onChange={(e) => handleImageChange(e, "image")}
                 disabled={isDrawn}
-                className="text-sm text-white/70 file:mr-3 file:rounded-full file:border-0 file:bg-[rgba(246,196,79,0.18)] file:px-4 file:py-2 file:text-[#f6c44f] hover:file:bg-[rgba(246,196,79,0.28)]"
+                className="block w-full max-w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-white/70 file:mr-3 file:rounded-full file:border-0 file:bg-[rgba(246,196,79,0.18)] file:px-4 file:py-2 file:text-[#f6c44f] hover:file:bg-[rgba(246,196,79,0.28)]"
               />
               <span className="text-[0.7rem] text-white/45">La imagen se sube al guardar cambios.</span>
               {imageUploading ? <span className="text-xs text-white/55">Subiendo imagen…</span> : null}
@@ -539,7 +539,7 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
                 accept="image/*"
                 onChange={(e) => handleImageChange(e, "prizeImage")}
                 disabled={isDrawn}
-                className="text-sm text-white/70 file:mr-3 file:rounded-full file:border-0 file:bg-[rgba(246,196,79,0.18)] file:px-4 file:py-2 file:text-[#f6c44f] hover:file:bg-[rgba(246,196,79,0.28)]"
+                className="block w-full max-w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-sm text-white/70 file:mr-3 file:rounded-full file:border-0 file:bg-[rgba(246,196,79,0.18)] file:px-4 file:py-2 file:text-[#f6c44f] hover:file:bg-[rgba(246,196,79,0.28)]"
               />
               <span className="text-[0.7rem] text-white/45">La imagen se sube al guardar cambios.</span>
               {prizeImageUploading ? <span className="text-xs text-white/55">Subiendo foto…</span> : null}
@@ -576,7 +576,7 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
       </section>
 
       {/* Sorteo */}
-      <section className="rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
+      <section className="min-w-0 rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
         <header className="mb-4 flex items-center justify-between gap-3">
           <div>
             <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[#f6c44f]">Sorteo</p>
@@ -626,7 +626,7 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
       </section>
 
       {/* Listado de números */}
-      <section className="rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
+      <section className="min-w-0 rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5">
         <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[0.72rem] uppercase tracking-[0.28em] text-[#f6c44f]">Boletos</p>
