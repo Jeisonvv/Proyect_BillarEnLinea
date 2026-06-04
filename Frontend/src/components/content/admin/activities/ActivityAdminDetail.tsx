@@ -671,22 +671,22 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
             {ownersLoading ? "Cargando…" : "No hay boletos vendidos o reservados con este filtro."}
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-160 table-auto text-sm">
+          <div className="max-w-full overflow-x-auto">
+            <table className="min-w-190 table-auto text-sm">
               <thead className="text-left text-[0.7rem] uppercase tracking-[0.18em] text-white/52">
                 <tr>
-                  <th className="px-3 py-2">Número</th>
-                  <th className="px-3 py-2">Estado</th>
-                  <th className="px-3 py-2">Comprador</th>
-                  <th className="px-3 py-2">Contacto</th>
-                  <th className="px-3 py-2">Fecha</th>
+                  <th className="whitespace-nowrap px-3 py-2">Número</th>
+                  <th className="whitespace-nowrap px-3 py-2">Estado</th>
+                  <th className="whitespace-nowrap px-3 py-2">Comprador</th>
+                  <th className="whitespace-nowrap px-3 py-2">Contacto</th>
+                  <th className="whitespace-nowrap px-3 py-2">Fecha</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/6">
                 {owners.map((owner) => (
                   <tr key={owner._id ?? owner.number} className="text-white/82">
-                    <td className="px-3 py-3 font-semibold text-white">{owner.number}</td>
-                    <td className="px-3 py-3">
+                    <td className="whitespace-nowrap px-3 py-3 font-semibold text-white">{owner.number}</td>
+                    <td className="whitespace-nowrap px-3 py-3">
                       <span
                         className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.16em] ${getNumberStatusBadgeClass(
                           owner.status,
@@ -695,13 +695,13 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
                         {NUMBER_STATUS_LABELS[owner.status as ActivityNumberStatus] ?? owner.status}
                       </span>
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="whitespace-nowrap px-3 py-3">
                       {owner.user?.name ?? owner.participantName ?? "—"}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="whitespace-nowrap px-3 py-3">
                       {owner.user?.phone ?? owner.participantPhone ?? "—"}
                     </td>
-                    <td className="px-3 py-3 text-white/64">
+                    <td className="whitespace-nowrap px-3 py-3 text-white/64">
                       {owner.paidAt
                         ? formatAdminDate(owner.paidAt)
                         : owner.reservedAt
