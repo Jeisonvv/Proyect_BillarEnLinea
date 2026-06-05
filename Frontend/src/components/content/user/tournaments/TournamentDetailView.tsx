@@ -67,6 +67,15 @@ function buildWhatsAppLink(phone: string, tournamentName: string) {
   return `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(message)}`;
 }
 
+function getRegistrationTimestamp(createdAt: string | null | undefined) {
+  if (!createdAt) {
+    return 0;
+  }
+
+  const timestamp = new Date(createdAt).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
 export function TournamentDetailView({ tournament }: { tournament: TournamentDetail }) {
   const [registrationFilter, setRegistrationFilter] = useState<"ALL" | "PENDING" | "CONFIRMED">("ALL");
   const statusBadgeClass = getStatusBadgeClass(tournament.status);
@@ -83,15 +92,19 @@ export function TournamentDetailView({ tournament }: { tournament: TournamentDet
   const pendingCount = tournament.registrations.filter((registration) => registration.status === "PENDING").length;
   const pendingRegistrationsLabel = `${pendingCount} pendientes`;
   const filteredRegistrations = useMemo(() => {
-    if (registrationFilter === "PENDING") {
-      return tournament.registrations.filter((registration) => registration.status === "PENDING");
-    }
+    const baseRegistrations = tournament.registrations.filter((registration) => {
+      if (registrationFilter === "PENDING") {
+        return registration.status === "PENDING";
+      }
 
-    if (registrationFilter === "CONFIRMED") {
-      return tournament.registrations.filter((registration) => registration.status === "CONFIRMED");
-    }
+      if (registrationFilter === "CONFIRMED") {
+        return registration.status === "CONFIRMED";
+      }
 
-    return tournament.registrations;
+      return true;
+    });
+
+    return [...baseRegistrations].sort((a, b) => getRegistrationTimestamp(b.createdAt) - getRegistrationTimestamp(a.createdAt));
   }, [registrationFilter, tournament.registrations]);
   const isOpen = tournament.status === "OPEN";
   const isFull = tournament.currentParticipants !== null

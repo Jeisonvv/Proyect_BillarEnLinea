@@ -503,7 +503,7 @@ export async function getActivityNumberOwnersService(
     ActivityNumber.find(filter)
       .populate("user", "name avatarUrl phone webAuth.email identityDocument")
       .populate("ticket", "status paymentStatus paymentReference paidAt createdAt")
-      .sort({ numericValue: 1 })
+      .sort({ paidAt: -1, reservedAt: -1, createdAt: -1, numericValue: 1 })
       .skip(skip)
       .limit(options.limit)
       .lean(),
