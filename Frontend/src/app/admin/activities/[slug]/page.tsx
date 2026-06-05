@@ -27,10 +27,16 @@ export default async function AdminActivityDetailPage({
   if (!activity) notFound();
 
   let initialOwners: ActivityNumberOwner[] = [];
+  let initialOwnersTotal = 0;
+  let initialOwnersPage = 1;
+  let initialOwnersLimit = 50;
   let ownersError: string | null = null;
   try {
-    const ownersResponse = await getActivityNumberOwnersAdmin(activity._id, { limit: 200 });
+    const ownersResponse = await getActivityNumberOwnersAdmin(activity._id, { page: 1, limit: 50 });
     initialOwners = ownersResponse.data?.numbers ?? [];
+    initialOwnersTotal = ownersResponse.data?.total ?? initialOwners.length;
+    initialOwnersPage = ownersResponse.data?.page ?? 1;
+    initialOwnersLimit = ownersResponse.data?.limit ?? 50;
   } catch (error) {
     ownersError = error instanceof Error ? error.message : "No se pudieron cargar los compradores.";
   }
@@ -62,7 +68,14 @@ export default async function AdminActivityDetailPage({
         },
       ]}
     >
-      <ActivityAdminDetail activity={activity} initialOwners={initialOwners} ownersError={ownersError} />
+      <ActivityAdminDetail
+        activity={activity}
+        initialOwners={initialOwners}
+        initialOwnersTotal={initialOwnersTotal}
+        initialOwnersPage={initialOwnersPage}
+        initialOwnersLimit={initialOwnersLimit}
+        ownersError={ownersError}
+      />
     </AdminSectionScaffold>
   );
 }

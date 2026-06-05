@@ -81,10 +81,20 @@ function getNumberStatusBadgeClass(status: ActivityNumberStatus | string | null 
 export type ActivityAdminDetailProps = {
   activity: ActivityAdminDetailDto;
   initialOwners: ActivityNumberOwner[];
+  initialOwnersTotal?: number;
+  initialOwnersPage?: number;
+  initialOwnersLimit?: number;
   ownersError?: string | null;
 };
 
-export function ActivityAdminDetail({ activity: initialActivity, initialOwners, ownersError }: ActivityAdminDetailProps) {
+export function ActivityAdminDetail({
+  activity: initialActivity,
+  initialOwners,
+  initialOwnersTotal,
+  initialOwnersPage,
+  initialOwnersLimit,
+  ownersError,
+}: ActivityAdminDetailProps) {
   const router = useRouter();
   const [activity, setActivity] = useState<ActivityAdminDetailDto>(initialActivity);
   const [editFeedback, setEditFeedback] = useState<FeedbackState>({ kind: "idle" });
@@ -105,6 +115,9 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
 
   const [ownersFilter, setOwnersFilter] = useState<ActivityNumberStatus | "ALL">("ALL");
   const [owners, setOwners] = useState<ActivityNumberOwner[]>(initialOwners);
+  const [ownersPage, setOwnersPage] = useState(initialOwnersPage ?? 1);
+  const [ownersTotal, setOwnersTotal] = useState(initialOwnersTotal ?? initialOwners.length);
+  const [ownersLimit, setOwnersLimit] = useState(initialOwnersLimit ?? 50);
   const [ownersLoading, setOwnersLoading] = useState(false);
   const [ownersFeedback, setOwnersFeedback] = useState<FeedbackState>(() =>
     ownersError && initialOwners.length === 0
@@ -116,6 +129,13 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
   const totalSold = activity.soldTickets ?? 0;
   const total = activity.totalTickets ?? 0;
   const percent = total > 0 ? Math.min(100, Math.round((totalSold / total) * 100)) : 0;
+  const ownersTotalPages = Math.max(1, Math.ceil(ownersTotal / ownersLimit));
+  const ownersPaginationWindowStart = Math.floor((ownersPage - 1) / 5) * 5 + 1;
+  const ownersPaginationWindowEnd = Math.min(ownersPaginationWindowStart + 4, ownersTotalPages);
+  const ownersVisiblePageNumbers = Array.from(
+    { length: Math.max(ownersPaginationWindowEnd - ownersPaginationWindowStart + 1, 0) },
+    (_, index) => ownersPaginationWindowStart + index,
+  );
 
   useEffect(() => {
     return () => {
@@ -124,20 +144,39 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
     };
   }, []);
 
-  async function refreshOwners(nextFilter: ActivityNumberStatus | "ALL" = ownersFilter) {
+  async function refreshOwners(
+    nextFilter: ActivityNumberStatus | "ALL" = ownersFilter,
+    nextPage = ownersPage,
+  ) {
     setOwnersLoading(true);
     setOwnersFeedback({ kind: "idle" });
     try {
-      const params: { status?: string; limit: number } = { limit: 200 };
+      const params: { status?: string; page: number; limit: number } = { page: nextPage, limit: 50 };
       if (nextFilter !== "ALL") params.status = nextFilter;
       const result = await getActivityNumberOwnersAdmin(activity._id, params);
       setOwners(result.data?.numbers ?? []);
+      setOwnersTotal(result.data?.total ?? 0);
+      setOwnersPage(result.data?.page ?? nextPage);
+      setOwnersLimit(result.data?.limit ?? 50);
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudieron cargar los números.";
       setOwnersFeedback({ kind: "error", message });
     } finally {
       setOwnersLoading(false);
     }
+  }
+
+  function changeOwnersPage(nextPage: number) {
+    if (nextPage < 1 || nextPage > ownersTotalPages || ownersLoading) {
+      return;
+    }
+
+    void refreshOwners(ownersFilter, nextPage);
+  }
+
+  function changeOwnersPageWindow(direction: -1 | 1) {
+    const nextPage = direction === -1 ? ownersPaginationWindowStart - 5 : ownersPaginationWindowStart + 5;
+    changeOwnersPage(nextPage);
   }
 
   async function handleImageChange(
@@ -638,7 +677,8 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
               onChange={(e) => {
                 const next = e.target.value as ActivityNumberStatus | "ALL";
                 setOwnersFilter(next);
-                refreshOwners(next);
+                setOwnersPage(1);
+                void refreshOwners(next, 1);
               }}
               className="rounded-full border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/82"
             >
@@ -651,7 +691,7 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
             </select>
             <button
               type="button"
-              onClick={() => refreshOwners()}
+              onClick={() => void refreshOwners()}
               disabled={ownersLoading}
               className="rounded-full border border-white/12 bg-white/5 px-3 py-2 text-xs font-medium text-white/82 transition hover:bg-white/10 disabled:opacity-60"
             >
@@ -671,48 +711,105 @@ export function ActivityAdminDetail({ activity: initialActivity, initialOwners, 
             {ownersLoading ? "Cargando…" : "No hay boletos vendidos o reservados con este filtro."}
           </p>
         ) : (
-          <div className="max-w-full overflow-x-auto">
-            <table className="min-w-190 table-auto text-sm">
-              <thead className="text-left text-[0.7rem] uppercase tracking-[0.18em] text-white/52">
-                <tr>
-                  <th className="whitespace-nowrap px-3 py-2">Número</th>
-                  <th className="whitespace-nowrap px-3 py-2">Estado</th>
-                  <th className="whitespace-nowrap px-3 py-2">Comprador</th>
-                  <th className="whitespace-nowrap px-3 py-2">Contacto</th>
-                  <th className="whitespace-nowrap px-3 py-2">Fecha</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/6">
-                {owners.map((owner) => (
-                  <tr key={owner._id ?? owner.number} className="text-white/82">
-                    <td className="whitespace-nowrap px-3 py-3 font-semibold text-white">{owner.number}</td>
-                    <td className="whitespace-nowrap px-3 py-3">
-                      <span
-                        className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.16em] ${getNumberStatusBadgeClass(
-                          owner.status,
-                        )}`}
-                      >
-                        {NUMBER_STATUS_LABELS[owner.status as ActivityNumberStatus] ?? owner.status}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3">
-                      {owner.user?.name ?? owner.participantName ?? "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3">
-                      {owner.user?.phone ?? owner.participantPhone ?? "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3 text-white/64">
-                      {owner.paidAt
-                        ? formatAdminDate(owner.paidAt)
-                        : owner.reservedAt
-                          ? formatAdminDate(owner.reservedAt)
-                          : "—"}
-                    </td>
+          <>
+            <div className="max-w-full overflow-x-auto">
+              <table className="min-w-190 table-auto text-sm">
+                <thead className="text-left text-[0.7rem] uppercase tracking-[0.18em] text-white/52">
+                  <tr>
+                    <th className="whitespace-nowrap px-3 py-2">Número</th>
+                    <th className="whitespace-nowrap px-3 py-2">Estado</th>
+                    <th className="whitespace-nowrap px-3 py-2">Comprador</th>
+                    <th className="whitespace-nowrap px-3 py-2">Contacto</th>
+                    <th className="whitespace-nowrap px-3 py-2">Fecha</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-white/6">
+                  {owners.map((owner) => (
+                    <tr key={owner._id ?? owner.number} className="text-white/82">
+                      <td className="whitespace-nowrap px-3 py-3 font-semibold text-white">{owner.number}</td>
+                      <td className="whitespace-nowrap px-3 py-3">
+                        <span
+                          className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.16em] ${getNumberStatusBadgeClass(
+                            owner.status,
+                          )}`}
+                        >
+                          {NUMBER_STATUS_LABELS[owner.status as ActivityNumberStatus] ?? owner.status}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3">
+                        {owner.user?.name ?? owner.participantName ?? "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3">
+                        {owner.user?.phone ?? owner.participantPhone ?? "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3 text-white/64">
+                        {owner.paidAt
+                          ? formatAdminDate(owner.paidAt)
+                          : owner.reservedAt
+                            ? formatAdminDate(owner.reservedAt)
+                            : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {ownersTotalPages > 1 ? (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[1.3rem] border border-white/10 bg-black/12 px-4 py-3 text-sm text-white/72">
+                <p>
+                  Página {ownersPage} de {ownersTotalPages} · {ownersTotal} boletos en este filtro
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => changeOwnersPage(ownersPage - 1)}
+                    disabled={ownersLoading || ownersPage <= 1}
+                    className="rounded-full border border-white/12 bg-white/5 px-3 py-1.5 font-medium text-white/82 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => changeOwnersPageWindow(-1)}
+                    disabled={ownersLoading || ownersPaginationWindowStart <= 1}
+                    className="rounded-full border border-white/12 bg-white/5 px-3 py-1.5 font-medium text-white/82 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    -5
+                  </button>
+                  {ownersVisiblePageNumbers.map((currentPage) => (
+                    <button
+                      key={currentPage}
+                      type="button"
+                      onClick={() => changeOwnersPage(currentPage)}
+                      className={`min-w-10 rounded-full border px-3 py-1.5 font-semibold transition ${currentPage === ownersPage
+                        ? "border-accent bg-accent text-[#10110f]"
+                        : "border-white/12 bg-white/5 text-white/82 hover:bg-white/10"
+                      }`}
+                    >
+                      {currentPage}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => changeOwnersPageWindow(1)}
+                    disabled={ownersLoading || ownersPaginationWindowEnd >= ownersTotalPages}
+                    className="rounded-full border border-white/12 bg-white/5 px-3 py-1.5 font-medium text-white/82 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    +5
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => changeOwnersPage(ownersPage + 1)}
+                    disabled={ownersLoading || ownersPage >= ownersTotalPages}
+                    className="rounded-full border border-white/12 bg-white/5 px-3 py-1.5 font-medium text-white/82 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </>
         )}
       </section>
     </div>
