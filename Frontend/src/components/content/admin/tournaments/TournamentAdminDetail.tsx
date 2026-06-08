@@ -183,6 +183,33 @@ function getRegistrationStatusBadgeClass(status: string | null | undefined) {
   }
 }
 
+function formatSlotDate(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat("es-CO", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(parsed);
+}
+
+function formatRegistrationSlotLabel(slot: TournamentDetail["groupStageSlots"][number] | null) {
+  if (!slot) {
+    return "Sin escoger";
+  }
+
+  const timeRange = [slot.startTime, slot.endTime].filter(Boolean).join(" - ");
+  const parts = [slot.label, formatSlotDate(slot.date), timeRange].filter(Boolean);
+  return parts.join(" · ") || "Sin escoger";
+}
+
 function updateRegistrationInState(
   registrations: TournamentDetail["registrations"],
   registrationId: string,
@@ -627,11 +654,12 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
         <div className="overflow-hidden rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))]">
           {tournament.registrations.length > 0 ? (
             <>
-              <div className="hidden sticky top-0 z-10 grid-cols-[minmax(15rem,2fr)_minmax(7rem,0.8fr)_minmax(7rem,0.8fr)_minmax(11rem,1fr)_auto] gap-4 border-b border-white/8 bg-[linear-gradient(180deg,rgba(16,19,27,0.96),rgba(16,19,27,0.92))] px-5 py-4 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/42 backdrop-blur sm:grid">
+              <div className="hidden sticky top-0 z-10 grid-cols-[minmax(15rem,2fr)_minmax(7rem,0.8fr)_minmax(7rem,0.8fr)_minmax(11rem,1fr)_minmax(12rem,1fr)_auto] gap-4 border-b border-white/8 bg-[linear-gradient(180deg,rgba(16,19,27,0.96),rgba(16,19,27,0.92))] px-5 py-4 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/42 backdrop-blur sm:grid">
                 <div>Jugador</div>
                 <div>Categoría</div>
                 <div>Estado</div>
                 <div>Registro</div>
+                <div>Horario</div>
                 <div className="text-right">Acción</div>
               </div>
 
@@ -639,6 +667,10 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
             const userId = registration.user?.id ?? "";
             const feedback = registrationFeedback[registration.id] ?? { kind: "idle" as const };
             const isExpanded = expandedRegistrationId === registration.id;
+            const selectedGroupStageSlot = registration.groupStageSlotId
+              ? tournament.groupStageSlots.find((slot) => slot.id === registration.groupStageSlotId) ?? null
+              : null;
+            const selectedGroupStageSlotLabel = formatRegistrationSlotLabel(selectedGroupStageSlot);
 
             return (
               <div key={registration.id} className="border-b border-white/8 last:border-b-0">
@@ -648,7 +680,7 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
                 >
                   <input name="userId" type="hidden" value={userId} />
 
-                  <div className="grid gap-3 py-1 sm:grid-cols-[minmax(15rem,2fr)_minmax(7rem,0.8fr)_minmax(7rem,0.8fr)_minmax(11rem,1fr)_auto] sm:items-center sm:gap-4">
+                  <div className="grid gap-3 py-1 sm:grid-cols-[minmax(15rem,2fr)_minmax(7rem,0.8fr)_minmax(7rem,0.8fr)_minmax(11rem,1fr)_minmax(12rem,1fr)_auto] sm:items-center sm:gap-4">
                     <div>
                       <p className="text-base font-semibold text-white">{registration.user?.name ?? "Jugador registrado"}</p>
                       <p className="mt-1 text-sm text-white/56">{registration.user?.phone ?? registration.notes ?? "Sin notas adicionales"}</p>
@@ -667,6 +699,11 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
                     <div>
                       <p className="text-[0.68rem] uppercase tracking-[0.16em] text-white/42 sm:hidden">Registro</p>
                       <p className="mt-1 text-sm font-medium text-white/82">{formatAdminDate(registration.createdAt)}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-[0.68rem] uppercase tracking-[0.16em] text-white/42 sm:hidden">Horario</p>
+                      <p className="mt-1 text-sm font-medium text-white/74">{selectedGroupStageSlotLabel}</p>
                     </div>
 
                     <div className="flex justify-start sm:justify-end">
