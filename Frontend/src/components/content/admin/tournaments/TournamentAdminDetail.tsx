@@ -654,11 +654,10 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
         <div className="overflow-hidden rounded-[1.6rem] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))]">
           {tournament.registrations.length > 0 ? (
             <>
-              <div className="hidden sticky top-0 z-10 grid-cols-[minmax(15rem,2fr)_minmax(7rem,0.8fr)_minmax(7rem,0.8fr)_minmax(11rem,1fr)_minmax(12rem,1fr)_auto] gap-4 border-b border-white/8 bg-[linear-gradient(180deg,rgba(16,19,27,0.96),rgba(16,19,27,0.92))] px-5 py-4 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/42 backdrop-blur sm:grid">
+              <div className="hidden sticky top-0 z-10 grid-cols-[minmax(15rem,2fr)_minmax(7rem,0.8fr)_minmax(7rem,0.8fr)_minmax(14rem,1fr)_auto] gap-4 border-b border-white/8 bg-[linear-gradient(180deg,rgba(16,19,27,0.96),rgba(16,19,27,0.92))] px-5 py-4 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/42 backdrop-blur sm:grid">
                 <div>Jugador</div>
                 <div>Categoría</div>
                 <div>Estado</div>
-                <div>Registro</div>
                 <div>Horario</div>
                 <div className="text-right">Acción</div>
               </div>
@@ -680,7 +679,7 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
                 >
                   <input name="userId" type="hidden" value={userId} />
 
-                  <div className="grid gap-3 py-1 sm:grid-cols-[minmax(15rem,2fr)_minmax(7rem,0.8fr)_minmax(7rem,0.8fr)_minmax(11rem,1fr)_minmax(12rem,1fr)_auto] sm:items-center sm:gap-4">
+                  <div className="grid gap-3 py-1 sm:grid-cols-[minmax(15rem,2fr)_minmax(7rem,0.8fr)_minmax(7rem,0.8fr)_minmax(14rem,1fr)_auto] sm:items-center sm:gap-4">
                     <div>
                       <p className="text-base font-semibold text-white">{registration.user?.name ?? "Jugador registrado"}</p>
                       <p className="mt-1 text-sm text-white/56">{registration.user?.phone ?? registration.notes ?? "Sin notas adicionales"}</p>
@@ -697,12 +696,7 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
                     </div>
 
                     <div>
-                      <p className="text-[0.68rem] uppercase tracking-[0.16em] text-white/42 sm:hidden">Registro</p>
-                      <p className="mt-1 text-sm font-medium text-white/82">{formatAdminDate(registration.createdAt)}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-[0.68rem] uppercase tracking-[0.16em] text-white/42 sm:hidden">Horario</p>
+                      <p className="text-[0.68rem] uppercase tracking-[0.16em] text-white/42 sm:hidden">Horario escogido</p>
                       <p className="mt-1 text-sm font-medium text-white/74">{selectedGroupStageSlotLabel}</p>
                     </div>
 
