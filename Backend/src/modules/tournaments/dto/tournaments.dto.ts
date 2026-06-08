@@ -374,6 +374,11 @@ export class SelfRegisterTournamentDto {
   groupStageSlotId?: string;
 }
 
+export class SaveSelfTournamentSlotDto {
+  @IsMongoId()
+  groupStageSlotId!: string;
+}
+
 export class CreateTournamentCheckoutDto {
   @IsOptional()
   @IsMongoId()
@@ -411,6 +416,11 @@ export class UpdateTournamentRegistrationPlayerCategoryDto {
   @IsString()
   @IsNotEmpty()
   playerCategory!: string;
+}
+
+export class UpdateTournamentRegistrationGroupStageSlotDto {
+  @IsMongoId()
+  groupStageSlotId!: string;
 }
 
 export class UpdateTournamentRegistrationStatusDto {

@@ -1238,6 +1238,62 @@ export async function updateTournamentRegistrationPlayerCategoryService(
   return mapTournamentRegistrationForResponse(registration);
 }
 
+export async function updateTournamentRegistrationGroupStageSlotService(
+  tournamentId: string,
+  userId: string,
+  groupStageSlotId: string,
+) {
+  const tournament = await Tournament.findById(tournamentId)
+    .select('_id status groupStageSlots groupStageTables playersPerGroup')
+    .lean();
+
+  if (!tournament) {
+    throw new Error('Torneo no encontrado.');
+  }
+
+  if ([TournamentStatus.IN_PROGRESS, TournamentStatus.FINISHED].includes(tournament.status)) {
+    throw new Error('No puedes cambiar horarios cuando el torneo ya está en curso o finalizado.');
+  }
+
+  const registration = await TournamentRegistration.findOne({
+    tournament: tournamentId,
+    user: userId,
+  })
+    .select('_id')
+    .lean();
+
+  if (!registration?._id) {
+    throw new Error('Inscripción no encontrada para este jugador en el torneo.');
+  }
+
+  const selectedGroupStageSlot = resolveSelectedGroupStageSlot(tournament, groupStageSlotId);
+  if (!selectedGroupStageSlot) {
+    throw new Error('El torneo no tiene horarios de grupos configurados.');
+  }
+
+  await ensureGroupStageSlotAvailability(
+    tournamentId,
+    selectedGroupStageSlot.slotId,
+    selectedGroupStageSlot.slotCapacity,
+    registration._id,
+  );
+
+  await TournamentRegistration.updateOne(
+    { _id: registration._id },
+    { $set: { groupStageSlotId: selectedGroupStageSlot.slotId } },
+  );
+
+  const updatedRegistration = await TournamentRegistration.findById(registration._id)
+    .populate('user', 'name phone avatarUrl playerCategory')
+    .lean();
+
+  if (!updatedRegistration) {
+    throw new Error('No fue posible cargar la inscripción actualizada.');
+  }
+
+  return mapTournamentRegistrationForResponse(updatedRegistration);
+}
+
 export async function setTournamentRegistrationStatusService(
   tournamentId: string,
   userId: string,

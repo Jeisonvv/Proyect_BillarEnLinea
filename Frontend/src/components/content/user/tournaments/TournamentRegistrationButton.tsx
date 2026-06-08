@@ -171,6 +171,11 @@ function subscribeToHydration() {
   return () => {};
 }
 
+type SaveSlotResponse = {
+  ok: boolean;
+  message?: string;
+};
+
 export function TournamentRegistrationButton({
   tournamentId,
   isOpen,
@@ -281,9 +286,30 @@ export function TournamentRegistrationButton({
     setSelectedGroupStageSlotId("");
   }
 
+  async function persistSelectedSlot(nextSlotId: string) {
+    if (!nextSlotId || hasLockedGroupStageSlot) {
+      return;
+    }
+
+    try {
+      await postJson<SaveSlotResponse, { groupStageSlotId: string }>(
+        `/api/tournaments/${tournamentId}/self-registration-slot`,
+        { groupStageSlotId: nextSlotId },
+        { credentials: "include" },
+      );
+
+      await syncRegistrationState();
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        setShowAuthPrompt(true);
+      }
+    }
+  }
+
   function handleHourChange(nextSlotId: string) {
     setFeedback("");
     setSelectedGroupStageSlotId(nextSlotId);
+    void persistSelectedSlot(nextSlotId);
   }
 
   useEffect(() => {

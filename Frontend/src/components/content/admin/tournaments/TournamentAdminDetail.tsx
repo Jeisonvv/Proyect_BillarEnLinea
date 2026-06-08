@@ -18,6 +18,7 @@ import {
   updateTournamentAdmin,
   updateTournamentHandicapAdmin,
   updateTournamentRegistrationPlayerCategoryAdmin,
+  updateTournamentRegistrationGroupStageSlotAdmin,
   updateTournamentRegistrationStatusAdmin,
   type PaymentMethod,
   type RegistrationPlayerCategory,
@@ -319,6 +320,8 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
     const handicap = handicapRaw ? Number(handicapRaw) : null;
     const playerCategoryRaw = String(formData.get("playerCategory") ?? "").trim();
     const playerCategory = playerCategoryRaw ? (playerCategoryRaw as RegistrationPlayerCategory) : null;
+    const groupStageSlotIdRaw = String(formData.get("groupStageSlotId") ?? "").trim();
+    const groupStageSlotId = groupStageSlotIdRaw.length > 0 ? groupStageSlotIdRaw : null;
 
     if (!userId) {
       setRegistrationFeedback((current) => ({
@@ -358,6 +361,15 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
           nextRegistrations = updateRegistrationInState(nextRegistrations, registrationId, {
             playerCategory: categoryResponse.data.playerCategory ?? playerCategory,
             status: categoryResponse.data.status ?? nextRegistrations.find((item) => item.id === registrationId)?.status ?? status,
+          });
+        }
+
+        const currentGroupStageSlotId = currentRegistration?.groupStageSlotId ?? null;
+        if (groupStageSlotId && groupStageSlotId !== currentGroupStageSlotId) {
+          const slotResponse = await updateTournamentRegistrationGroupStageSlotAdmin(tournament.id, userId, { groupStageSlotId });
+          nextRegistrations = updateRegistrationInState(nextRegistrations, registrationId, {
+            groupStageSlotId: slotResponse.data.groupStageSlotId ?? groupStageSlotId,
+            status: slotResponse.data.status ?? nextRegistrations.find((item) => item.id === registrationId)?.status ?? status,
           });
         }
 
@@ -759,6 +771,22 @@ export function TournamentAdminDetail({ initialTournament }: { initialTournament
                           Fecha de pago
                           <input className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none transition focus:border-accent" name="paidAt" type="date" />
                         </label>
+
+                        {tournament.groupStageSlots.length > 0 ? (
+                          <label className="grid gap-2 text-sm text-white/72 lg:col-span-2">
+                            Horario de grupos
+                            <select
+                              className="rounded-2xl border border-white/10 bg-[#17191d] px-4 py-3 text-white outline-none transition focus:border-accent"
+                              defaultValue={registration.groupStageSlotId ?? ""}
+                              name="groupStageSlotId"
+                            >
+                              <option value="">No cambiar horario</option>
+                              {tournament.groupStageSlots.map((slot) => (
+                                <option key={slot.id} value={slot.id}>{formatRegistrationSlotLabel(slot)}</option>
+                              ))}
+                            </select>
+                          </label>
+                        ) : null}
                       </div>
 
                       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">

@@ -25,9 +25,11 @@ import {
   CreateTournamentDto,
   ListTournamentsQueryDto,
   RegisterTournamentPlayerDto,
+  SaveSelfTournamentSlotDto,
   SelfRegisterTournamentDto,
   UpdateAdminTournamentDto,
   UpdateTournamentHandicapDto,
+  UpdateTournamentRegistrationGroupStageSlotDto,
   UpdateTournamentRegistrationPlayerCategoryDto,
   UpdateTournamentRegistrationStatusDto,
 } from './dto/tournaments.dto.js';
@@ -133,6 +135,34 @@ export class TournamentsNestController {
     try {
       const data = await this.tournamentsService.getTournamentSelfRegistrationState(id, req.user.id);
       return { ok: true, data };
+    } catch (error: any) {
+      const status = error.message === 'Torneo no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
+  @Post(':id/self-registration-slot')
+  @UseGuards(AuthGuard)
+  async saveSelfRegistrationSlot(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() body: SaveSelfTournamentSlotDto,
+  ) {
+    if (!req.user?.id) {
+      throw new HttpException({ ok: false, message: 'No autenticado.' }, HttpStatus.UNAUTHORIZED);
+    }
+
+    try {
+      const registration = await this.tournamentsService.selfRegisterToTournament(id, req.user.id, {
+        groupStageSlotId: body.groupStageSlotId,
+        channel: 'WEB',
+      });
+
+      return {
+        ok: true,
+        message: 'Horario guardado correctamente.',
+        data: registration,
+      };
     } catch (error: any) {
       const status = error.message === 'Torneo no encontrado.' ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
       throw new HttpException({ ok: false, message: error.message }, status);
@@ -304,6 +334,29 @@ export class TournamentsNestController {
       return {
         ok: true,
         message: `Categoría actualizada a ${body.playerCategory}.`,
+        data: registration,
+      };
+    } catch (error: any) {
+      const status = error.message.includes('no encontrado') || error.message.includes('Inscripción no encontrada')
+        ? HttpStatus.NOT_FOUND
+        : HttpStatus.BAD_REQUEST;
+      throw new HttpException({ ok: false, message: error.message }, status);
+    }
+  }
+
+  @Patch(':id/registrations/:userId/group-stage-slot')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  async updateRegistrationGroupStageSlot(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Body() body: UpdateTournamentRegistrationGroupStageSlotDto,
+  ) {
+    try {
+      const registration = await this.tournamentsService.updateRegistrationGroupStageSlot(id, userId, body.groupStageSlotId);
+      return {
+        ok: true,
+        message: 'Horario de grupos actualizado.',
         data: registration,
       };
     } catch (error: any) {

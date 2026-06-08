@@ -102,6 +102,10 @@ export type UpdateTournamentRegistrationPlayerCategoryInput = {
   playerCategory: RegistrationPlayerCategory;
 };
 
+export type UpdateTournamentRegistrationGroupStageSlotInput = {
+  groupStageSlotId: string;
+};
+
 export type UploadImageResponse = {
   ok: boolean;
   data: {
@@ -265,6 +269,23 @@ export type UpdateTournamentRegistrationPlayerCategoryResponse = {
   };
 };
 
+export type UpdateTournamentRegistrationGroupStageSlotResponse = {
+  ok: boolean;
+  message?: string;
+  data: {
+    _id?: string;
+    status?: string;
+    groupStageSlotId?: string | null;
+    user?: {
+      _id?: string;
+      name?: string | null;
+      phone?: string | null;
+      avatarUrl?: string | null;
+      playerCategory?: string | null;
+    };
+  };
+};
+
 export async function uploadTournamentImage(file: File, name?: string) {
   const formData = new FormData();
   formData.append("file", file);
@@ -331,6 +352,23 @@ export async function updateTournamentRegistrationPlayerCategoryAdmin(
     UpdateTournamentRegistrationPlayerCategoryInput
   >(
     `/api/tournaments/${tournamentId}/registrations/${userId}/player-category`,
+    input,
+    {
+      credentials: "include",
+    },
+  );
+}
+
+export async function updateTournamentRegistrationGroupStageSlotAdmin(
+  tournamentId: string,
+  userId: string,
+  input: UpdateTournamentRegistrationGroupStageSlotInput,
+) {
+  return patchJson<
+    UpdateTournamentRegistrationGroupStageSlotResponse,
+    UpdateTournamentRegistrationGroupStageSlotInput
+  >(
+    `/api/tournaments/${tournamentId}/registrations/${userId}/group-stage-slot`,
     input,
     {
       credentials: "include",
