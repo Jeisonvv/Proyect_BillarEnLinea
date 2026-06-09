@@ -10,7 +10,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { sanitize as mongoSanitize } from 'express-mongo-sanitize';
 import { getMongoConnectionStatus } from './db/connection.js';
-import { generalLimiter } from './middlewares/rateLimiter.middleware.js';
+import { generalLimiter, publicReadLimiter } from './middlewares/rateLimiter.middleware.js';
 import { errorHandler } from './middlewares/errorHandler.middleware.js';
 import { logInfo } from './utils/logger.js';
 import { parseTrustProxySetting } from './utils/runtime-env.js';
@@ -63,6 +63,7 @@ export function createExpressApp(): Application {
   }));
 
   // ── Seguridad: Rate Limiting general ─────────────────────────────────────
+  app.use('/api', publicReadLimiter);
   app.use('/api', generalLimiter);
 
   // ── Parseo de body ────────────────────────────────────────────────────────
