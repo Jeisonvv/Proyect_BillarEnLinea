@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { EventDetailView } from "@/components/content/user/events";
 import { getEventDetailBySlug } from "@/lib/api/public-content";
 import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
+import { EventBrowserDetailPage } from "@/components/content/user/events/EventBrowserDetailPage";
 
 type EventPageProps = {
   params: Promise<{
@@ -10,70 +9,34 @@ type EventPageProps = {
   }>;
 };
 
-function buildEventDescription(event: NonNullable<Awaited<ReturnType<typeof getEventDetailBySlug>>>) {
-  if (event.description) {
-    return event.description;
-  }
-
-  const locationParts = [event.city, event.country].filter(Boolean).join(", ");
-  if (locationParts) {
-    return `Conoce todos los detalles de ${event.name}, un evento de billar programado en ${locationParts}.`;
-  }
-
-  return `Detalle del evento ${event.name}.`;
-}
-
-function buildEventKeywords(event: NonNullable<Awaited<ReturnType<typeof getEventDetailBySlug>>>) {
-  const seoTitleKeywords = (event.seoTitle ?? "")
-    .split(/[|,]/)
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  return Array.from(
-    new Set(
-      [
-        ...seoTitleKeywords,
-        ...siteConfig.keywords,
-        event.name,
-        event.type,
-        event.tier,
-        event.city,
-        event.department,
-        event.country,
-        event.organizer,
-      ].filter((value): value is string => typeof value === "string" && value.trim().length > 0),
-    ),
-  );
+function buildSlugFallbackText(slug: string) {
+  const normalized = slug.trim().replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!normalized) return "Evento";
+  return normalized.split(" ").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
 }
 
 export async function generateMetadata({ params }: EventPageProps): Promise<Metadata> {
   const { slug } = await params;
   const event = await getEventDetailBySlug(slug);
+  const slugLabel = buildSlugFallbackText(slug);
 
   if (!event) {
     return {
-      title: "Evento no encontrado",
-      description: "No encontramos el evento solicitado en Billar en Linea.",
-      robots: {
-        index: false,
-        follow: false,
-      },
+      title: `${slugLabel} | ${siteConfig.name}`,
+      description: `Conoce la información del evento ${slugLabel} en ${siteConfig.name}.`,
+      alternates: { canonical: `/home/eventos/${slug}` },
     };
   }
 
   const title = event.seoTitle?.trim() || event.name;
-  const description = event.seoDescription?.trim() || buildEventDescription(event);
-  const keywords = buildEventKeywords(event);
-  const pageUrl = `/home/eventos/${event.slug}`;
+  const description = event.seoDescription?.trim() || event.description?.trim() || `Conoce los detalles del evento ${event.name} en ${siteConfig.name}.`;
+  const pageUrl = `/home/eventos/${event.slug ?? slug}`;
   const imageUrl = getSocialShareImageUrl(event.image ?? siteConfig.socialImage);
 
   return {
     title,
     description,
-    keywords,
-    alternates: {
-      canonical: pageUrl,
-    },
+    alternates: { canonical: pageUrl },
     openGraph: {
       type: "website",
       locale: siteConfig.locale,
@@ -101,11 +64,5 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
 
 export default async function EventDetailPage({ params }: EventPageProps) {
   const { slug } = await params;
-  const event = await getEventDetailBySlug(slug);
-
-  if (!event) {
-    notFound();
-  }
-
-  return <EventDetailView event={event} />;
+  return <EventBrowserDetailPage slug={slug} />;
 }

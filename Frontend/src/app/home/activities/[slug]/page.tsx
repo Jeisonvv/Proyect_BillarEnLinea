@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { ActivityDetailView } from "@/components/content/user/activities";
-import { getActivityDetailById, getActivityNumbers } from "@/lib/api/public-content";
-import { getMyActivityNumbers } from "@/lib/api/public-content/activities";
+import { getActivityDetailById } from "@/lib/api/public-content";
 import { getSocialShareImageUrl, siteConfig, socialImageDimensions } from "@/lib/site";
+import { ActivityBrowserDetailPage } from "@/components/content/user/activities/ActivityBrowserDetailPage";
 
 type ActivityPageProps = {
   params: Promise<{ slug: string }>;
@@ -21,11 +19,8 @@ export async function generateMetadata({ params }: ActivityPageProps): Promise<M
     };
   }
 
-  const description =
-    activity.seoDescription?.trim() ||
-    activity.description?.trim() ||
-    (activity.prize ? `Participa por ${activity.prize} en la actividad ${activity.name}.` : `Detalle de la actividad ${activity.name}.`);
   const title = activity.seoTitle?.trim() || activity.name;
+  const description = activity.seoDescription?.trim() || activity.description?.trim() || (activity.prize ? `Participa por ${activity.prize} en la actividad ${activity.name}.` : `Detalle de la actividad ${activity.name}.`);
   const pageSlug = activity.slug ?? activity.id;
   const pageUrl = `/home/activities/${pageSlug}`;
   const imageUrl = getSocialShareImageUrl(activity.image ?? activity.prizeImage ?? siteConfig.socialImage);
@@ -61,23 +56,5 @@ export async function generateMetadata({ params }: ActivityPageProps): Promise<M
 
 export default async function HomeActivityDetailPage({ params }: ActivityPageProps) {
   const { slug } = await params;
-  const activity = await getActivityDetailById(slug);
-
-  if (!activity) {
-    notFound();
-  }
-
-  const isFreeActivity = activity.isFree === true || activity.ticketPrice === 0;
-  const [numbersResponse, myNumbers] = await Promise.all([
-    isFreeActivity ? Promise.resolve(null) : getActivityNumbers(activity.id, 1000),
-    getMyActivityNumbers(activity.id),
-  ]);
-
-  return (
-    <ActivityDetailView
-      activity={activity}
-      initialNumbers={numbersResponse?.numbers ?? []}
-      myNumbers={myNumbers}
-    />
-  );
+  return <ActivityBrowserDetailPage slug={slug} />;
 }
