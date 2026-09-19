@@ -43,7 +43,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const snapshot = await getLandingSnapshot();
+  const snapshot = await getLandingSnapshot("OPEN");
 
   return <HomeContent snapshot={snapshot} />;
 }

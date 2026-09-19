@@ -76,7 +76,7 @@ export function HomeBrowserPage() {
     let active = true;
 
     void Promise.all([
-      getLandingTournaments(),
+      getLandingTournaments(3, "OPEN"),
       getLandingEvents(),
       getLandingActivities(),
       getLandingPosts(),

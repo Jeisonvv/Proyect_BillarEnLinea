@@ -5,9 +5,9 @@ import { getLandingActivities } from "./activities";
 import { getLandingTournaments } from "./tournaments";
 import type { LandingSnapshot } from "./types";
 
-export async function getLandingSnapshot(): Promise<LandingSnapshot> {
+export async function getLandingSnapshot(tournamentStatus?: string): Promise<LandingSnapshot> {
   const [tournaments, events, activities, posts, products] = await Promise.all([
-    getLandingTournaments(3),
+    getLandingTournaments(3, tournamentStatus),
     getLandingEvents(3),
     getLandingActivities(3),
     getLandingPosts(3),

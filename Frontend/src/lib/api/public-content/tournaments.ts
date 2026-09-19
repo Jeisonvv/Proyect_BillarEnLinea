@@ -122,9 +122,15 @@ function normalizeTournamentDetail(record: JsonRecord): TournamentDetail | null 
   };
 }
 
-export async function getLandingTournaments(limit = 3) {
+export async function getLandingTournaments(limit = 3, status?: string) {
   try {
-    const payload = await getJson(`/api/tournaments?limit=${limit}`, {
+    const query = new URLSearchParams({ limit: String(limit) });
+
+    if (status) {
+      query.set("status", status);
+    }
+
+    const payload = await getJson(`/api/tournaments?${query.toString()}`, {
       cache: "no-store",
     });
 
