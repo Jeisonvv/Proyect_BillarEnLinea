@@ -58,8 +58,17 @@ export function TournamentsBrowserPage() {
     );
   }
 
-  const firstTournaments = state.items.slice(0, 2);
-  const remainingTournaments = state.items.slice(2);
+  const sortedTournaments = [...state.items].sort((firstTournament, secondTournament) => {
+    const getStatusPriority = (status: string | null) => {
+      if (status === "OPEN") return 0;
+      if (status === "FINISHED") return 2;
+      return 1;
+    };
+
+    return getStatusPriority(firstTournament.status) - getStatusPriority(secondTournament.status);
+  });
+  const firstTournaments = sortedTournaments.slice(0, 2);
+  const remainingTournaments = sortedTournaments.slice(2);
 
   return (
     <main className="grid gap-6">
